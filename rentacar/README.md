@@ -86,5 +86,3 @@ El frontend por defecto corre en http://localhost:3000 (o el puerto configurado 
 - Si necesitas cargar datos de ejemplo, revisa `rentacar/front/files/public/data/autos.json` y `reservas.json`.
 
 ---
-
-Si quieres que lo deje en la raíz del repositorio (fuera de `rentacar/`) o que agregue una sección con comandos para Docker / despliegue, dímelo y lo incluyo.
