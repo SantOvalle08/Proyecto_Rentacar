@@ -1,0 +1,9 @@
+Para completar la solución, descarga las siguientes imágenes y guárdalas en este directorio:
+
+1. toyota-corolla.jpg - Una imagen de un Toyota Corolla
+2. honda-civic.jpg - Una imagen de un Honda Civic
+3. ford-explorer.jpg - Una imagen de una Ford Explorer
+
+Estas imágenes deben ser aproximadamente de 300px x 200px para una mejor visualización en la aplicación.
+
+También puedes crear un archivo default-car.jpg que se usará como imagen de respaldo cuando no se encuentre una imagen específica. 

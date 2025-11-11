@@ -1,0 +1,249 @@
+.registerContainer {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: var(--space-6);
+  background-color: var(--surface-bg);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--surface-border);
+}
+
+.title {
+  text-align: center;
+  margin-bottom: var(--space-6);
+  color: var(--text-primary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.formGroup label {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+.formGroup input,
+.formGroup select {
+  padding: var(--input-padding-y) var(--input-padding-x);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-border-radius);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--input-focus-ring);
+}
+
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.checkboxGroup input {
+  width: 18px;
+  height: 18px;
+}
+
+.errorText {
+  font-size: var(--font-size-sm);
+  color: var(--error-700);
+  margin-top: var(--space-1);
+}
+
+.submitButton {
+  margin-top: var(--space-4);
+  padding: var(--button-padding-y) var(--button-padding-x);
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: none;
+  border-radius: var(--button-border-radius);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: var(--btn-primary-hover);
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error {
+  background-color: var(--error-50);
+  border: 1px solid var(--error-100);
+  color: var(--error-700);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.success {
+  background-color: var(--success-50);
+  border: 1px solid var(--success-100);
+  color: var(--success-700);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.loginLink {
+  text-align: center;
+  margin-top: var(--space-6);
+  color: var(--text-secondary);
+}
+
+.loginLink a {
+  color: var(--primary-color);
+  font-weight: var(--font-weight-medium);
+  transition: color var(--transition-fast);
+}
+
+.loginLink a:hover {
+  color: var(--primary-color-hover);
+  text-decoration: underline;
+}
+
+.testButton {
+  margin-bottom: var(--space-6);
+  padding: var(--button-padding-y) var(--button-padding-x);
+  background-color: var(--neutral-600);
+  color: white;
+  border: none;
+  border-radius: var(--button-border-radius);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  width: 100%;
+}
+
+.testButton:hover:not(:disabled) {
+  background-color: var(--neutral-700);
+}
+
+.testButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .registerContainer {
+    margin: 1rem;
+    padding: var(--space-4);
+  }
+}
+
+/* Add these styles to the existing CSS file */
+
+.serverStatus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+}
+
+.refreshButton {
+  padding: 0.4rem 0.8rem;
+  background-color: #4d70b0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.refreshButton:hover {
+  background-color: #3a5a92;
+}
+
+.refreshButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.statusOnline {
+  color: green;
+  font-weight: bold;
+}
+
+.statusOffline {
+  color: red;
+  font-weight: bold;
+}
+
+.statusUnknown {
+  color: #888888;
+  font-style: italic;
+}
+
+.testButtonsContainer {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.testButton {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.testButton:hover {
+  background-color: #2a75f3;
+}
+
+.testButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.serverOfflineMessage {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: #fff0f0;
+  border-left: 4px solid #ff4d4d;
+  border-radius: 4px;
+}
+
+.serverOfflineMessage p {
+  margin-top: 0;
+  font-weight: bold;
+}
+
+.serverOfflineMessage ol {
+  margin-bottom: 0;
+}
+
+.serverOfflineMessage code {
+  background-color: #f5f5f5;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: monospace;
+} 
