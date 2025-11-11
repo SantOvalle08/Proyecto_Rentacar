@@ -1,0 +1,153 @@
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.pageTitle {
+  color: var(--text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+}
+
+.error {
+  background-color: var(--error-50);
+  border: 1px solid var(--error-100);
+  color: var(--error-700);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--space-4);
+}
+
+/* Tags for reservation status */
+.tagSuccess {
+  background-color: var(--success-100);
+  color: var(--success-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  display: inline-block;
+}
+
+.tagWarning {
+  background-color: var(--warning-100);
+  color: var(--warning-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  display: inline-block;
+}
+
+.tagError {
+  background-color: var(--error-100);
+  color: var(--error-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  display: inline-block;
+}
+
+.tagInfo {
+  background-color: var(--primary-100);
+  color: var(--primary-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  display: inline-block;
+}
+
+.backLink {
+  margin-top: var(--space-6);
+}
+
+.backLink a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  transition: color 0.3s ease;
+}
+
+.backLink a:hover {
+  color: var(--primary-color-dark);
+  text-decoration: underline;
+}
+
+/* Action buttons */
+.cancelButton {
+  background-color: var(--error-600);
+  color: white;
+  border: none;
+  border-radius: var(--button-border-radius);
+  padding: var(--space-1) var(--space-3);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: var(--font-size-xs);
+}
+
+.cancelButton:hover:not(:disabled) {
+  background-color: var(--error-700);
+}
+
+.cancelButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Delete confirmation */
+.deleteConfirmation {
+  text-align: center;
+  padding: var(--space-2) var(--space-4);
+}
+
+.deleteWarning {
+  color: var(--error-600);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-6);
+}
+
+.deleteActions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.deleteButton {
+  background-color: var(--error-600);
+  color: white;
+  border: none;
+  border-radius: var(--button-border-radius);
+  padding: var(--space-2) var(--space-4);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background-color: var(--error-700);
+}
+
+.deleteButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+  
+  .deleteActions {
+    flex-direction: column;
+  }
+  
+  .deleteButton,
+  .cancelButton {
+    width: 100%;
+  }
+} 

@@ -1,0 +1,255 @@
+.reservasContainer {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: var(--space-6);
+  background-color: var(--surface-bg);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-md);
+}
+
+.title {
+  color: var(--text-primary);
+  margin-bottom: var(--space-6);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}
+
+.error {
+  background-color: var(--error-50);
+  border: 1px solid var(--error-100);
+  color: var(--error-700);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  background-color: var(--neutral-50);
+  border-radius: var(--border-radius-lg);
+  margin: var(--space-6) 0;
+}
+
+.emptyState p {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-lg);
+}
+
+.primaryButton {
+  display: inline-block;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  background-color: var(--primary-color);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--button-border-radius);
+  font-weight: var(--font-weight-medium);
+  transition: background-color 0.3s ease;
+}
+
+.primaryButton:hover {
+  background-color: var(--primary-color-dark);
+  text-decoration: none;
+}
+
+.reservasList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.reservaCard {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.reservaCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.carInfo {
+  display: flex;
+  padding: var(--space-4);
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.carImage {
+  width: 100px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: var(--border-radius-md);
+}
+
+.carInfo h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-lg);
+}
+
+.licensePlate {
+  color: var(--text-secondary);
+  margin: var(--space-1) 0 0 0;
+  font-size: var(--font-size-sm);
+}
+
+.reservaDetails {
+  padding: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.dateRange, .priceInfo, .status {
+  flex-grow: 1;
+  min-width: 150px;
+}
+
+.label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-1);
+}
+
+.date, .price {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.price {
+  color: var(--success-700);
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.activa {
+  background-color: var(--success-50);
+  color: var(--success-700);
+}
+
+.completada {
+  background-color: var(--neutral-100);
+  color: var(--neutral-700);
+}
+
+.cancelada {
+  background-color: var(--error-50);
+  color: var(--error-700);
+}
+
+.pendiente {
+  background-color: var(--warning-50);
+  color: var(--warning-700);
+}
+
+.actions {
+  display: flex;
+  padding: var(--space-4);
+  gap: var(--space-3);
+}
+
+.viewButton, .cancelButton {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--button-border-radius);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.viewButton {
+  background-color: var(--primary-50);
+  color: var(--primary-700);
+  text-decoration: none;
+  flex: 1;
+}
+
+.viewButton:hover {
+  background-color: var(--primary-100);
+  text-decoration: none;
+}
+
+.cancelButton {
+  background-color: white;
+  color: var(--error-600);
+  border: 1px solid var(--error-200);
+  cursor: pointer;
+  flex: 1;
+}
+
+.cancelButton:hover {
+  background-color: var(--error-50);
+}
+
+.linkContainer {
+  margin-top: var(--space-6);
+  text-align: center;
+}
+
+.backLink {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  font-size: var(--font-size-xl);
+  color: var(--text-secondary);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .reservasContainer {
+    margin: 1rem;
+    padding: var(--space-4);
+  }
+  
+  .reservaCard {
+    flex-direction: column;
+  }
+  
+  .carInfo {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .carImage {
+    width: 150px;
+    height: 100px;
+  }
+  
+  .reservaDetails {
+    flex-direction: column;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+} 

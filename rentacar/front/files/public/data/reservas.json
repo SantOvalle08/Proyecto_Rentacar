@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "682a6c96f2b7edfe4812f59d",
+    "id": "RES-1-1-0774989",
+    "autoId": 1,
+    "usuarioId": 1,
+    "fechaInicio": "2023-11-15T05:00:00.000Z",
+    "fechaFin": "2023-11-20T05:00:00.000Z",
+    "fechaCreacion": "2025-05-18T23:26:14.990Z",
+    "precioTotal": 250,
+    "diasReserva": 5,
+    "metodoPago": "tarjeta",
+    "estado": "completada",
+    "datosPago": {
+      "tipoTarjeta": "visa",
+      "ultimosDigitos": "1234",
+      "fotoPasaporte": "pasaporte.jpg",
+      "fotoLicencia": "licencia.jpg"
+    },
+    "auto": {
+      "id": 1,
+      "marca": "Toyota",
+      "modelo": "Corolla",
+      "anio": 2022,
+      "placa": "ABC-123",
+      "tipo": "Sedan",
+      "imagen": "/images/autos/toyota-corolla-1747587917636.jpg"
+    },
+    "usuario": {
+      "id": 1,
+      "nombre": "Santiago Ovalle",
+      "email": "santi8861@gmail.com"
+    },
+    "createdAt": "2025-05-18T23:26:14.999Z",
+    "updatedAt": "2025-05-18T23:26:14.999Z",
+    "__v": 0
+  }
+]

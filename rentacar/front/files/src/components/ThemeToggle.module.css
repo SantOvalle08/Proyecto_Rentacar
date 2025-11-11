@@ -1,0 +1,23 @@
+.themeToggle {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.themeToggle:hover {
+  background-color: var(--neutral-200);
+}
+
+.themeToggle svg {
+  position: absolute;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+} 

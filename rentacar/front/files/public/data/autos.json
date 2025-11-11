@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "marca": "Toyota",
+    "modelo": "Corolla",
+    "anio": 2022,
+    "año": 2022,
+    "tipo": "Sedan",
+    "tipoCoche": "Sedan",
+    "color": "Blanco",
+    "matricula": "ABC-123",
+    "disponible": true,
+    "precioBase": 50,
+    "precioDia": 50,
+    "imagen": "/images/autos/toyota-corolla.jpg"
+  },
+  {
+    "id": 2,
+    "marca": "Honda",
+    "modelo": "Civic",
+    "anio": 2021,
+    "año": 2021,
+    "tipo": "Sedan",
+    "tipoCoche": "Sedan",
+    "color": "Azul",
+    "matricula": "XYZ-789",
+    "disponible": true,
+    "precioBase": 45,
+    "precioDia": 45,
+    "imagen": "/images/autos/honda-civic.jpg"
+  },
+  {
+    "id": 3,
+    "marca": "Ford",
+    "modelo": "Explorer",
+    "anio": 2023,
+    "año": 2023,
+    "tipo": "SUV",
+    "tipoCoche": "SUV",
+    "color": "Negro",
+    "matricula": "DEF-456",
+    "disponible": true,
+    "precioBase": 75,
+    "precioDia": 75,
+    "imagen": "/images/autos/ford-explorer.jpg"
+  }
+]

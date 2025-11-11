@@ -1,0 +1,300 @@
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.loading::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  margin-left: 12px;
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.error h2 {
+  color: #d32f2f;
+  margin-top: 0;
+}
+
+.backButton, .volverButton {
+  display: inline-block;
+  background-color: var(--color-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  margin-top: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.backButton:hover, .volverButton:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.detalleContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.imageSection {
+  position: relative;
+  flex: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 400px;
+}
+
+.autoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.noDisponible {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: rgba(244, 67, 54, 0.9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.infoSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.autoTitle {
+  font-size: 2rem;
+  margin: 0 0 1rem;
+  color: var(--color-primary);
+}
+
+.infoDetails {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.infoDetails h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: var(--color-secondary);
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.infoLabel {
+  font-weight: 500;
+  color: #666;
+}
+
+.infoValue {
+  color: #333;
+}
+
+.precioBase {
+  font-weight: bold;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+.reservaSection {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.reservaSection h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: var(--color-secondary);
+}
+
+.fechasContainer {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.fechaItem {
+  flex: 1;
+}
+
+.fechaItem label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.fechaInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.precioCalculadora {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.calcularButton {
+  background-color: var(--color-secondary);
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.calcularButton:hover:not(:disabled) {
+  background-color: var(--color-secondary-dark);
+}
+
+.calcularButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.precioTotal {
+  background-color: #e9ecef;
+  padding: 1rem;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.precioLabel {
+  font-weight: 500;
+}
+
+.precioValue {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+}
+
+.reservarButton {
+  flex: 2;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.reservarButton:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.reservarButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.volverButton {
+  flex: 1;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.volverButton:hover {
+  background-color: #5a6268;
+}
+
+.noDisponibleMessage {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.noDisponibleMessage p {
+  margin-bottom: 1.5rem;
+}
+
+/* Media queries para responsividad */
+@media (min-width: 768px) {
+  .detalleContainer {
+    flex-direction: row;
+  }
+
+  .imageSection {
+    flex: 1;
+    max-height: none;
+  }
+
+  .infoSection {
+    flex: 1;
+  }
+} 

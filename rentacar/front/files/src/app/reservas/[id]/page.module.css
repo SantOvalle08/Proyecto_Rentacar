@@ -1,0 +1,244 @@
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.backLink:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.error, .notFound {
+  padding: 2rem;
+  border-radius: 8px;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.notFound {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #343a40;
+}
+
+.reservaDetallesContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .reservaDetallesContainer {
+    grid-template-columns: 1fr;
+  }
+}
+
+.infoSection {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.detailItem {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #f0f0f0;
+}
+
+.detailLabel {
+  font-weight: 500;
+  color: #666;
+}
+
+.detailValue {
+  color: #333;
+  text-align: right;
+}
+
+.estadoActiva {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.estadoPendiente {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.estadoCompletada {
+  color: #17a2b8;
+  font-weight: 600;
+}
+
+.estadoCancelada {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.cancelarContainer {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.cancelarButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.cancelarButton:hover {
+  background-color: #c82333;
+}
+
+.cancelarButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.vehiculoContainer {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 576px) {
+  .vehiculoContainer {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vehiculoImage {
+  position: relative;
+  height: 150px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f0f0f0;
+}
+
+.noImage {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-style: italic;
+}
+
+.vehiculoDetails h3 {
+  margin-top: 0;
+  font-size: 1.3rem;
+  color: #333;
+}
+
+.fechasReserva {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.documentosContainer {
+  margin-top: 1rem;
+}
+
+.documentosContainer h3 {
+  font-size: 1.2rem;
+  color: #495057;
+  margin: 1.5rem 0 1rem;
+}
+
+.documentosContainer h3:first-child {
+  margin-top: 0;
+}
+
+.documentosList {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.documentoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.documentoItem:last-child {
+  border-bottom: none;
+}
+
+.documentoLabel {
+  font-weight: 500;
+  color: #555;
+}
+
+.documentoValue {
+  color: #666;
+  font-style: italic;
+  margin: 0 1rem;
+  text-align: right;
+}
+
+.noDocumentos {
+  color: #6c757d;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem 0;
+  margin: 0;
+} 
