@@ -241,4 +241,56 @@
   text-align: center;
   padding: 1rem 0;
   margin: 0;
+}
+
+/* Sección de factura */
+.facturaSection {
+  background: linear-gradient(135deg, var(--surface-secondary, #f8f9fa) 0%, var(--bg-white, #ffffff) 100%);
+  border: 2px solid var(--color-primary, #0066cc);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.1);
+}
+
+.facturaDescripcion {
+  color: var(--text-secondary, #6c757d);
+  margin: 0.5rem 0 1.5rem 0;
+  font-size: 1rem;
+}
+
+.btnFactura {
+  background: linear-gradient(135deg, var(--btn-primary-bg, #0066cc) 0%, #0052a3 100%);
+  color: var(--btn-primary-text, #ffffff);
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
+}
+
+.btnFactura:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 102, 204, 0.3);
+  background: linear-gradient(135deg, #0052a3 0%, #003d7a 100%);
+}
+
+.btnFactura:active {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .facturaSection {
+    padding: 1.5rem 1rem;
+  }
+
+  .btnFactura {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
 } 

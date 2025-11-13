@@ -162,21 +162,23 @@
   display: flex;
   padding: var(--space-4);
   gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
-.viewButton, .cancelButton {
+.viewButton, .cancelButton, .facturaButton {
   padding: var(--space-2) var(--space-4);
   border-radius: var(--button-border-radius);
   font-weight: var(--font-weight-medium);
   text-align: center;
   transition: all 0.3s ease;
+  flex: 1;
+  min-width: 120px;
 }
 
 .viewButton {
   background-color: var(--primary-50);
   color: var(--primary-700);
   text-decoration: none;
-  flex: 1;
 }
 
 .viewButton:hover {
@@ -184,12 +186,24 @@
   text-decoration: none;
 }
 
+.facturaButton {
+  background: linear-gradient(135deg, var(--btn-primary-bg, #0066cc) 0%, #0052a3 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 102, 204, 0.2);
+}
+
+.facturaButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
 .cancelButton {
   background-color: white;
   color: var(--error-600);
   border: 1px solid var(--error-200);
   cursor: pointer;
-  flex: 1;
 }
 
 .cancelButton:hover {
