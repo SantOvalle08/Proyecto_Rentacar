@@ -960,6 +960,273 @@ const uploads = {
   }
 };
 
+// Checklist endpoints - Basado en localStorage con sincronización opcional a backend
+const checklists = {
+  /**
+   * Obtiene todos los checklists del localStorage
+   * @returns {Object} - Objeto con todos los checklists indexados por autoId
+   */
+  _getChecklistsFromStorage: () => {
+    if (typeof window === 'undefined') return {};
+    const stored = localStorage.getItem('vehicleChecklists');
+    return stored ? JSON.parse(stored) : {};
+  },
+
+  /**
+   * Guarda todos los checklists en localStorage
+   * @param {Object} checklists - Objeto con todos los checklists
+   */
+  _saveChecklistsToStorage: (checklists) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('vehicleChecklists', JSON.stringify(checklists));
+  },
+
+  /**
+   * Crea un checklist por defecto
+   * @param {number} autoId - ID del vehículo
+   * @returns {Object} - Checklist con valores por defecto
+   */
+  _createDefaultChecklist: (autoId) => {
+    return {
+      id: `checklist_${autoId}_${Date.now()}`,
+      idAuto: parseInt(autoId),
+      nivelGasolina: 'Lleno',
+      porcentajeGasolina: 100,
+      rayones: [],
+      inventario: [
+        { id: `inv_${Date.now()}_1`, nombre: 'Gato hidráulico', presente: true, condicion: 'Bueno', notas: '' },
+        { id: `inv_${Date.now()}_2`, nombre: 'Llanta de repuesto', presente: true, condicion: 'Bueno', notas: '' },
+        { id: `inv_${Date.now()}_3`, nombre: 'Llave de ruedas', presente: true, condicion: 'Bueno', notas: '' },
+        { id: `inv_${Date.now()}_4`, nombre: 'Triángulos de seguridad', presente: true, condicion: 'Bueno', notas: '' },
+        { id: `inv_${Date.now()}_5`, nombre: 'Botiquín de primeros auxilios', presente: true, condicion: 'Bueno', notas: '' },
+        { id: `inv_${Date.now()}_6`, nombre: 'Extintor', presente: true, condicion: 'Bueno', notas: '' },
+        { id: `inv_${Date.now()}_7`, nombre: 'Manual del vehículo', presente: true, condicion: 'Bueno', notas: '' },
+        { id: `inv_${Date.now()}_8`, nombre: 'Cables de arranque', presente: true, condicion: 'Bueno', notas: '' }
+      ],
+      estadoGeneral: 'Bueno',
+      observaciones: '',
+      fechaUltimaRevision: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      sincronizado: false
+    };
+  },
+
+  /**
+   * Sincroniza checklist con el backend (opcional)
+   * @param {number} autoId - ID del vehículo
+   * @param {Object} checklistData - Datos del checklist
+   */
+  _syncToBackend: async (autoId, checklistData) => {
+    try {
+      // Intentar sincronizar con el backend, pero no fallar si no funciona
+      await fetchWithAuth(`/api/autos/${autoId}/checklist`, {
+        method: 'PUT',
+        body: JSON.stringify(checklistData)
+      });
+      console.log(`✓ Checklist del auto ${autoId} sincronizado con el backend`);
+      return true;
+    } catch (error) {
+      console.warn(`⚠ No se pudo sincronizar checklist del auto ${autoId} con backend:`, error.message);
+      return false;
+    }
+  },
+
+  /**
+   * Obtiene el checklist de un vehículo (localStorage primero)
+   * @param {number} autoId - ID del vehículo
+   * @returns {Promise<Object>} - Respuesta con los datos del checklist
+   */
+  getByAuto: async (autoId) => {
+    try {
+      // Obtener de localStorage primero
+      const allChecklists = checklists._getChecklistsFromStorage();
+      let checklist = allChecklists[autoId];
+      
+      // Si no existe, crear uno nuevo
+      if (!checklist) {
+        console.log(`Creando nuevo checklist para auto ${autoId}`);
+        checklist = checklists._createDefaultChecklist(autoId);
+        allChecklists[autoId] = checklist;
+        checklists._saveChecklistsToStorage(allChecklists);
+      }
+      
+      // Intentar sincronizar con backend en segundo plano (no bloqueante)
+      checklists._syncToBackend(autoId, checklist).then(synced => {
+        if (synced) {
+          checklist.sincronizado = true;
+          allChecklists[autoId] = checklist;
+          checklists._saveChecklistsToStorage(allChecklists);
+        }
+      });
+      
+      return {
+        success: true,
+        data: checklist,
+        source: 'localStorage'
+      };
+    } catch (error) {
+      console.error(`Error al obtener checklist del auto ${autoId}:`, error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Actualiza el checklist de un vehículo (localStorage primero)
+   * @param {number} autoId - ID del vehículo
+   * @param {Object} checklistData - Datos del checklist a actualizar
+   * @returns {Promise<Object>} - Respuesta con el checklist actualizado
+   */
+  update: async (autoId, checklistData) => {
+    try {
+      // Obtener checklists actuales
+      const allChecklists = checklists._getChecklistsFromStorage();
+      let checklist = allChecklists[autoId];
+      
+      // Si no existe, crear uno nuevo
+      if (!checklist) {
+        checklist = checklists._createDefaultChecklist(autoId);
+      }
+      
+      // Actualizar campos
+      checklist = {
+        ...checklist,
+        ...checklistData,
+        updatedAt: new Date().toISOString(),
+        sincronizado: false
+      };
+      
+      // Guardar en localStorage inmediatamente
+      allChecklists[autoId] = checklist;
+      checklists._saveChecklistsToStorage(allChecklists);
+      
+      // Intentar sincronizar con backend en segundo plano
+      checklists._syncToBackend(autoId, checklist).then(synced => {
+        if (synced) {
+          checklist.sincronizado = true;
+          allChecklists[autoId] = checklist;
+          checklists._saveChecklistsToStorage(allChecklists);
+        }
+      });
+      
+      return {
+        success: true,
+        data: checklist,
+        source: 'localStorage'
+      };
+    } catch (error) {
+      console.error(`Error al actualizar checklist del auto ${autoId}:`, error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Agrega un rayón al checklist (localStorage primero)
+   * @param {number} autoId - ID del vehículo
+   * @param {Object} rayonData - Datos del rayón (descripcion, ubicacion)
+   * @returns {Promise<Object>} - Respuesta con el checklist actualizado
+   */
+  agregarRayon: async (autoId, rayonData) => {
+    try {
+      // Obtener checklist actual
+      const allChecklists = checklists._getChecklistsFromStorage();
+      let checklist = allChecklists[autoId];
+      
+      if (!checklist) {
+        checklist = checklists._createDefaultChecklist(autoId);
+      }
+      
+      // Agregar nuevo rayón
+      const nuevoRayon = {
+        id: `rayon_${Date.now()}`,
+        descripcion: rayonData.descripcion,
+        ubicacion: rayonData.ubicacion,
+        fecha: new Date().toISOString()
+      };
+      
+      checklist.rayones = [...(checklist.rayones || []), nuevoRayon];
+      checklist.updatedAt = new Date().toISOString();
+      checklist.sincronizado = false;
+      
+      // Guardar en localStorage inmediatamente
+      allChecklists[autoId] = checklist;
+      checklists._saveChecklistsToStorage(allChecklists);
+      
+      // Sincronizar con backend en segundo plano
+      checklists._syncToBackend(autoId, checklist);
+      
+      return {
+        success: true,
+        data: checklist,
+        source: 'localStorage'
+      };
+    } catch (error) {
+      console.error(`Error al agregar rayón al auto ${autoId}:`, error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Elimina un rayón del checklist (localStorage primero)
+   * @param {number} autoId - ID del vehículo
+   * @param {string} rayonId - ID del rayón a eliminar
+   * @returns {Promise<Object>} - Respuesta con el checklist actualizado
+   */
+  eliminarRayon: async (autoId, rayonId) => {
+    try {
+      // Obtener checklist actual
+      const allChecklists = checklists._getChecklistsFromStorage();
+      let checklist = allChecklists[autoId];
+      
+      if (!checklist) {
+        throw new Error('Checklist no encontrado');
+      }
+      
+      // Eliminar rayón
+      checklist.rayones = (checklist.rayones || []).filter(r => r.id !== rayonId);
+      checklist.updatedAt = new Date().toISOString();
+      checklist.sincronizado = false;
+      
+      // Guardar en localStorage inmediatamente
+      allChecklists[autoId] = checklist;
+      checklists._saveChecklistsToStorage(allChecklists);
+      
+      // Sincronizar con backend en segundo plano
+      checklists._syncToBackend(autoId, checklist);
+      
+      return {
+        success: true,
+        data: checklist,
+        source: 'localStorage'
+      };
+    } catch (error) {
+      console.error(`Error al eliminar rayón del auto ${autoId}:`, error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Obtiene todos los checklists del localStorage
+   * @returns {Promise<Object>} - Respuesta con la lista de checklists
+   */
+  getAll: async () => {
+    try {
+      const allChecklists = checklists._getChecklistsFromStorage();
+      const checklistsArray = Object.values(allChecklists);
+      
+      return {
+        success: true,
+        data: checklistsArray,
+        count: checklistsArray.length,
+        source: 'localStorage'
+      };
+    } catch (error) {
+      console.error('Error al obtener todos los checklists:', error);
+      throw error;
+    }
+  }
+};
+
 // Exportar los servicios
 const apiService = {
   auth,
@@ -967,7 +1234,8 @@ const apiService = {
   autos,
   reservas,
   catalogo,
-  uploads
+  uploads,
+  checklists
 };
 
 export default apiService;

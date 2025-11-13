@@ -1,10 +1,17 @@
+/* ========================================
+   DASHBOARD - Estilos Globales
+   Modo Día: Fondos Blancos + Texto Negro
+   Modo Noche: Fondos Oscuros + Texto Blanco
+   ======================================== */
+
 .dashboardContainer {
   max-width: 1200px;
   margin: 2rem auto;
   padding: var(--space-6);
-  background-color: var(--surface-bg);
+  background-color: var(--card-bg);
   border-radius: var(--card-border-radius);
   box-shadow: var(--shadow-md);
+  border: 1px solid var(--card-border);
 }
 
 .title {
@@ -17,19 +24,20 @@
 .welcomeMessage {
   margin-bottom: var(--space-8);
   padding: var(--space-4);
-  background-color: var(--primary-50);
-  border-left: 4px solid var(--primary-color);
+  background-color: var(--primary-color);
+  border-left: 4px solid var(--primary-color-hover);
   border-radius: var(--border-radius-md);
 }
 
 .welcomeMessage p {
   margin: var(--space-2) 0;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .welcomeMessage p:first-child {
   font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
+  color: white;
+  font-size: var(--font-size-lg);
 }
 
 .statsContainer {
@@ -40,12 +48,13 @@
 }
 
 .statCard {
-  background-color: white;
+  background-color: var(--surface-bg);
   padding: var(--space-5);
   border-radius: var(--card-border-radius);
   box-shadow: var(--shadow-sm);
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid var(--border-light);
 }
 
 .statCard:hover {
@@ -57,6 +66,7 @@
   color: var(--text-secondary);
   font-size: var(--font-size-lg);
   margin-bottom: var(--space-2);
+  font-weight: var(--font-weight-semibold);
 }
 
 .statValue {
@@ -78,7 +88,7 @@
 }
 
 .actionButton:hover {
-  background-color: var(--primary-color-dark);
+  background-color: var(--primary-color-hover);
 }
 
 .actionContainer {
@@ -106,19 +116,19 @@
 }
 
 .primaryButton {
-  background-color: #0066cc;
+  background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  border-radius: var(--border-radius-md);
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--font-size-md);
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .primaryButton:before {
@@ -128,24 +138,24 @@
 }
 
 .primaryButton:hover {
-  background-color: #004e9e;
+  background-color: var(--primary-color-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
 .primaryButton:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .secondaryButton {
-  background-color: white;
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--btn-secondary-border);
 }
 
 .secondaryButton:hover {
-  background-color: var(--primary-50);
+  background-color: var(--btn-secondary-hover-bg);
 }
 
 .loading {
@@ -172,4 +182,4 @@
     margin: 1rem;
     padding: var(--space-4);
   }
-} 
+}

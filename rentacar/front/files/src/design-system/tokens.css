@@ -1,7 +1,11 @@
 /* Design System - Tokens & Variables */
 
 :root {
-  /* Colors */
+  /* ============================================
+     MODO DÍA (Light Mode) - Fondos Blancos
+     ============================================ */
+  
+  /* Colors - Primary Palette */
   --primary-50: #e6f0ff;
   --primary-100: #cce0ff;
   --primary-200: #99c2ff;
@@ -13,6 +17,7 @@
   --primary-800: #002966;
   --primary-900: #001433;
 
+  /* Neutral Colors */
   --neutral-50: #f8fafc;
   --neutral-100: #f1f5f9;
   --neutral-200: #e2e8f0;
@@ -22,23 +27,79 @@
   --neutral-600: #475569;
   --neutral-700: #334155;
   --neutral-800: #1e293b;
+  --neutral-850: #172033;
   --neutral-900: #0f172a;
 
+  /* Success Colors */
   --success-50: #ecfdf5;
   --success-100: #d1fae5;
   --success-500: #10b981;
   --success-700: #047857;
 
+  /* Warning Colors */
   --warning-50: #fffbeb;
   --warning-100: #fef3c7;
   --warning-500: #f59e0b;
   --warning-700: #b45309;
 
+  /* Error Colors */
   --error-50: #fef2f2;
   --error-100: #fee2e2;
   --error-500: #ef4444;
   --error-700: #b91c1c;
 
+  /* ============================================
+     TEMA DE LA APLICACIÓN - MODO DÍA
+     Fondo Blanco + Texto Negro
+     ============================================ */
+  
+  /* Background Colors - MODO DÍA */
+  --body-bg: #ffffff;
+  --surface-bg: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-tertiary: #f1f5f9;
+  
+  /* Text Colors - MODO DÍA */
+  --text-primary: #0f172a;      /* Negro principal */
+  --text-secondary: #334155;    /* Gris oscuro */
+  --text-tertiary: #64748b;     /* Gris medio */
+  --text-disabled: #94a3b8;     /* Gris claro */
+  
+  /* Border Colors */
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-dark: #94a3b8;
+  
+  /* Interactive Colors */
+  --primary-color: var(--primary-500);
+  --primary-color-hover: var(--primary-600);
+  --primary-color-active: var(--primary-700);
+  --primary-color-light: var(--primary-50);
+  
+  /* Component Specific */
+  --card-bg: #ffffff;
+  --card-border: var(--border-light);
+  
+  --input-bg: #ffffff;
+  --input-border: var(--border-medium);
+  --input-focus-ring: var(--primary-100);
+  --input-text: var(--text-primary);
+  
+  --btn-primary-bg: var(--primary-500);
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: var(--primary-600);
+  
+  --btn-secondary-bg: #f1f5f9;
+  --btn-secondary-text: #334155;
+  --btn-secondary-border: #cbd5e1;
+  --btn-secondary-hover: #e2e8f0;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
   /* Typography */
   --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-family-heading: var(--font-family-base);
@@ -128,59 +189,79 @@
   --input-padding-y: var(--space-3);
   --input-padding-x: var(--space-4);
   --input-border-radius: var(--border-radius-md);
-  
-  /* Application Theme Colors - Set light theme default */
-  --body-bg: var(--neutral-50);
-  --body-color: var(--neutral-900);
-  
-  --text-primary: var(--neutral-900);
-  --text-secondary: var(--neutral-700);
-  --text-tertiary: var(--neutral-500);
-  
-  --primary-color: var(--primary-500);
-  --primary-color-hover: var(--primary-600);
-  --primary-color-active: var(--primary-700);
-  --primary-color-light: var(--primary-100);
-  
-  --surface-bg: white;
-  --surface-border: var(--neutral-200);
-  
-  --input-border: var(--neutral-300);
-  --input-bg: white;
-  --input-focus-ring: var(--primary-100);
-  
-  --btn-primary-bg: var(--primary-500);
-  --btn-primary-text: white;
-  --btn-primary-hover: var(--primary-600);
-  
-  --btn-secondary-bg: white;
-  --btn-secondary-text: var(--primary-500);
-  --btn-secondary-border: var(--primary-200);
-  --btn-secondary-hover-bg: var(--primary-50);
 }
 
-/* Dark mode theme */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --body-bg: var(--neutral-900);
-    --body-color: var(--neutral-100);
-    
-    --text-primary: var(--neutral-100);
-    --text-secondary: var(--neutral-300);
-    --text-tertiary: var(--neutral-500);
-    
-    --surface-bg: var(--neutral-800);
-    --surface-border: var(--neutral-700);
-    
-    --input-border: var(--neutral-700);
-    --input-bg: var(--neutral-800);
-    --input-focus-ring: var(--primary-900);
-    
-    --btn-secondary-bg: var(--neutral-800);
-    --btn-secondary-text: var(--primary-300);
-    --btn-secondary-border: var(--primary-800);
-    --btn-secondary-hover-bg: var(--neutral-700);
-    
-    --card-bg: var(--neutral-800);
-  }
+/* ============================================
+   MODO NOCHE (Dark Mode) - Fondos Oscuros
+   Fondo Oscuro + Texto Blanco
+   ============================================ */
+
+[data-theme='dark'] {
+  /* Background Colors - MODO NOCHE */
+  --body-bg: #0f172a;           /* Negro profundo */
+  --surface-bg: #1e293b;        /* Gris muy oscuro */
+  --surface-secondary: #334155; /* Gris oscuro medio */
+  --surface-tertiary: #475569;  /* Gris medio-oscuro */
+  
+  /* Text Colors - MODO NOCHE */
+  --text-primary: #f8fafc;      /* Blanco principal */
+  --text-secondary: #e2e8f0;    /* Gris muy claro */
+  --text-tertiary: #cbd5e1;     /* Gris claro */
+  --text-disabled: #94a3b8;     /* Gris medio */
+  
+  /* Border Colors */
+  --border-light: #334155;
+  --border-medium: #475569;
+  --border-dark: #64748b;
+  
+  /* Interactive Colors */
+  --primary-color: var(--primary-400);
+  --primary-color-hover: var(--primary-300);
+  --primary-color-active: var(--primary-200);
+  --primary-color-light: rgba(51, 133, 255, 0.1);
+  
+  /* Component Specific */
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  
+  --input-bg: #1e293b;
+  --input-border: #475569;
+  --input-focus-ring: rgba(51, 133, 255, 0.25);
+  --input-text: var(--text-primary);
+  
+  --btn-primary-bg: var(--primary-500);
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: var(--primary-400);
+  
+  --btn-secondary-bg: #334155;
+  --btn-secondary-text: #f8fafc;
+  --btn-secondary-border: #475569;
+  --btn-secondary-hover: #475569;
+  
+  /* Shadows - Más intensas en modo oscuro */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  
+  /* Status Colors - Ajustados para modo oscuro */
+  --success-50: rgba(16, 185, 129, 0.1);
+  --success-100: rgba(16, 185, 129, 0.2);
+  --success-500: #34d399;
+  --success-700: #10b981;
+  
+  --warning-50: rgba(245, 158, 11, 0.1);
+  --warning-100: rgba(245, 158, 11, 0.2);
+  --warning-500: #fbbf24;
+  --warning-700: #f59e0b;
+  
+  --error-50: rgba(239, 68, 68, 0.1);
+  --error-100: rgba(239, 68, 68, 0.2);
+  --error-500: #f87171;
+  --error-700: #ef4444;
+}
+
+/* Transiciones suaves al cambiar de tema */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 } 

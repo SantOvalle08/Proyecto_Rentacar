@@ -29,26 +29,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // For development/testing purposes, allow a mock login
-      if (formData.email === 'admin@rentacar.com' && formData.contraseña === 'admin123') {
-        // Mock successful login
-        localStorage.setItem('token', 'mock-jwt-token');
-        localStorage.setItem('user', JSON.stringify({
-          id: 1,
-          nombre: 'Admin User',
-          email: 'admin@rentacar.com',
-          rol: 'admin'
-        }));
-        
-        // Trigger storage event for Header component to update
-        window.dispatchEvent(new Event('storage'));
-        
-        // Redirect to dashboard
-        router.push('/dashboard');
-        return;
-      }
-      
-      // Use the API service for real authentication
+      // Use the API service for authentication
       const response = await apiService.auth.login(formData);
       
       // Check response structure and extract user and token

@@ -9,6 +9,7 @@ const router = express.Router();
 const usuarioController = require('../controllers/usuarioController');
 const autoController = require('../controllers/autoController');
 const reservaController = require('../controllers/reservaController');
+const checklistController = require('../controllers/checklistController');
 const { verifyToken, isAdmin } = require('../middleware/auth');
 
 /**
@@ -152,5 +153,48 @@ router.put('/api/reservas/:id/cancelar', verifyToken, reservaController.cancelar
  * @access Private
  */
 router.get('/api/reservas/:id/factura', verifyToken, reservaController.generarFactura);
+
+// Checklist routes
+/**
+ * @route GET /api/checklists
+ * @description Obtener todos los checklists
+ * @access Private/Admin
+ */
+router.get('/api/checklists', verifyToken, isAdmin, checklistController.getAllChecklists);
+
+/**
+ * @route GET /api/autos/:autoId/checklist
+ * @description Obtener checklist de un vehículo específico
+ * @access Private (usuarios y admin pueden ver)
+ */
+router.get('/api/autos/:autoId/checklist', verifyToken, checklistController.getChecklistByAuto);
+
+/**
+ * @route PUT /api/autos/:autoId/checklist
+ * @description Actualizar checklist de un vehículo
+ * @access Private (usuarios y admin pueden actualizar)
+ */
+router.put('/api/autos/:autoId/checklist', verifyToken, checklistController.updateChecklist);
+
+/**
+ * @route POST /api/autos/:autoId/checklist/rayones
+ * @description Agregar un rayón al checklist
+ * @access Private
+ */
+router.post('/api/autos/:autoId/checklist/rayones', verifyToken, checklistController.agregarRayon);
+
+/**
+ * @route DELETE /api/autos/:autoId/checklist/rayones/:rayonId
+ * @description Eliminar un rayón del checklist
+ * @access Private
+ */
+router.delete('/api/autos/:autoId/checklist/rayones/:rayonId', verifyToken, checklistController.eliminarRayon);
+
+/**
+ * @route DELETE /api/autos/:autoId/checklist
+ * @description Eliminar checklist completo (solo admin)
+ * @access Private/Admin
+ */
+router.delete('/api/autos/:autoId/checklist', verifyToken, isAdmin, checklistController.deleteChecklist);
 
 module.exports = router; 

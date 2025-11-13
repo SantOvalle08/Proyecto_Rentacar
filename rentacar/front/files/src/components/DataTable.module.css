@@ -1,9 +1,16 @@
+/* ========================================
+   DATATABLE - Estilos Globales
+   Modo Día: Fondos Blancos + Texto Negro
+   Modo Noche: Fondos Oscuros + Texto Blanco
+   ======================================== */
+
 .tableContainer {
   width: 100%;
   overflow-x: auto;
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-sm);
-  background-color: white;
+  background-color: var(--surface-bg);
+  border: 1px solid var(--border-light);
 }
 
 .dataTable {
@@ -16,20 +23,25 @@
 .dataTable td {
   padding: var(--space-3) var(--space-4);
   text-align: left;
-  border-bottom: 1px solid var(--neutral-200);
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
 }
 
 .dataTable th {
-  background-color: var(--neutral-50);
-  font-weight: var(--font-weight-medium);
-  color: var(--neutral-700);
+  background-color: var(--surface-secondary);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
+.dataTable tbody tr {
+  transition: background-color 0.2s;
+}
+
 .dataTable tbody tr:hover {
-  background-color: var(--neutral-50);
+  background-color: var(--surface-tertiary);
 }
 
 .actions {
@@ -52,12 +64,12 @@
 }
 
 .viewButton {
-  background-color: var(--primary-50);
-  color: var(--primary-700);
+  background-color: var(--primary-color-light);
+  color: var(--primary-color);
 }
 
 .viewButton:hover {
-  background-color: var(--primary-100);
+  background-color: var(--primary-200);
 }
 
 .editButton {
@@ -81,10 +93,11 @@
 .sortable {
   cursor: pointer;
   user-select: none;
+  transition: background-color 0.2s;
 }
 
 .sortable:hover {
-  background-color: var(--neutral-100);
+  background-color: var(--surface-tertiary);
 }
 
 .sortIndicator {
@@ -101,16 +114,16 @@
 .loading {
   padding: var(--space-8);
   text-align: center;
-  color: var(--neutral-500);
-  background-color: var(--neutral-50);
+  color: var(--text-secondary);
+  background-color: var(--surface-secondary);
   border-radius: var(--border-radius-md);
 }
 
 .emptyState {
   padding: var(--space-8);
   text-align: center;
-  color: var(--neutral-500);
-  background-color: var(--neutral-50);
+  color: var(--text-secondary);
+  background-color: var(--surface-secondary);
   border-radius: var(--border-radius-md);
 }
 
@@ -131,4 +144,4 @@
     width: 100%;
     margin-bottom: var(--space-1);
   }
-} 
+}
