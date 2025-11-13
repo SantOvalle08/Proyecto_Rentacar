@@ -210,6 +210,14 @@
   color: var(--text-secondary);
 }
 
+.fileName {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-success);
+  font-weight: 500;
+}
+
 .formGroupRow {
   display: grid;
   grid-template-columns: 1fr 1fr;

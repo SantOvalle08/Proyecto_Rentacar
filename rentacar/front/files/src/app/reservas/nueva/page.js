@@ -64,6 +64,7 @@ function ReservaFormulario() {
   // Estado para el método de pago
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState(null);
   const [datosPago, setDatosPago] = useState({});
+  const [archivosDocumentos, setArchivosDocumentos] = useState({}); // Para guardar los archivos reales
   const [enviandoReserva, setEnviandoReserva] = useState(false);
   const [reservaExitosa, setReservaExitosa] = useState(false);
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
@@ -242,13 +243,12 @@ function ReservaFormulario() {
   const datosPagoCompletos = () => {
     if (!metodoPagoSeleccionado) return false;
     
-    // Verificar documentos obligatorios en todos los métodos
-    if (!datosPago.fotoPasaporte || !datosPago.fotoLicencia) {
-      return false;
-    }
+    // Verificar que todos los campos requeridos (excepto archivos) tengan datos según el método de pago
+    const camposTexto = metodoPagoSeleccionado.campos.filter(campo => 
+      campo !== 'fotoPasaporte' && campo !== 'fotoLicencia'
+    );
     
-    // Verificar que todos los campos requeridos tengan datos según el método de pago
-    return metodoPagoSeleccionado.campos.every(campo => 
+    return camposTexto.every(campo => 
       datosPago[campo] && datosPago[campo].trim() !== ''
     );
   };
@@ -260,8 +260,20 @@ function ReservaFormulario() {
     }
     
     if (!datosPagoCompletos()) {
-      alert('Por favor, complete todos los campos obligatorios, incluyendo la documentación requerida.');
+      alert('Por favor, complete todos los campos obligatorios.');
       return;
+    }
+
+    // Advertir si no hay documentos pero permitir continuar
+    if (!datosPago.fotoPasaporte || !datosPago.fotoLicencia) {
+      const confirmar = confirm(
+        '⚠️ No ha adjuntado todos los documentos requeridos (pasaporte y licencia).\n\n' +
+        'La reserva se creará pero deberá presentar estos documentos al momento de retirar el vehículo.\n\n' +
+        '¿Desea continuar de todas formas?'
+      );
+      if (!confirmar) {
+        return;
+      }
     }
     
     setEnviandoReserva(true);
@@ -274,6 +286,50 @@ function ReservaFormulario() {
       if (!usuario || !usuario.id) {
         throw new Error('Debe iniciar sesión para realizar una reserva');
       }
+
+      // Subir archivos de documentos si existen
+      let urlsPasaporte = [];
+      let urlsLicencia = [];
+      
+      if (archivosDocumentos.fotoPasaporte) {
+        try {
+          console.log('Subiendo foto del pasaporte...');
+          const resultPasaporte = await apiService.uploads.uploadImage(archivosDocumentos.fotoPasaporte);
+          if (resultPasaporte.success && resultPasaporte.url) {
+            urlsPasaporte = [resultPasaporte.url];
+            console.log('Pasaporte subido exitosamente:', resultPasaporte.url);
+          } else {
+            console.warn('No se pudo subir la foto del pasaporte:', resultPasaporte.message);
+          }
+        } catch (uploadError) {
+          console.warn('Error al subir pasaporte:', uploadError);
+          // Continuar sin el archivo - no bloqueamos la reserva
+        }
+      }
+      
+      if (archivosDocumentos.fotoLicencia) {
+        try {
+          console.log('Subiendo foto de la licencia...');
+          const resultLicencia = await apiService.uploads.uploadImage(archivosDocumentos.fotoLicencia);
+          if (resultLicencia.success && resultLicencia.url) {
+            urlsLicencia = [resultLicencia.url];
+            console.log('Licencia subida exitosamente:', resultLicencia.url);
+          } else {
+            console.warn('No se pudo subir la foto de la licencia:', resultLicencia.message);
+          }
+        } catch (uploadError) {
+          console.warn('Error al subir licencia:', uploadError);
+          // Continuar sin el archivo - no bloqueamos la reserva
+        }
+      }
+      
+      // Preparar datos de la reserva con las URLs de los documentos
+      // Si no se pudieron subir, usar los nombres de archivo originales
+      const datosPagoConUrls = {
+        ...datosPago,
+        fotoPasaporte: urlsPasaporte.length > 0 ? urlsPasaporte[0] : (datosPago.fotoPasaporte || 'Pendiente de subir'),
+        fotoLicencia: urlsLicencia.length > 0 ? urlsLicencia[0] : (datosPago.fotoLicencia || 'Pendiente de subir')
+      };
       
       // Preparar datos de la reserva
       const datosReserva = {
@@ -285,7 +341,7 @@ function ReservaFormulario() {
         precioTotal: precioTotal,
         diasReserva: diasReserva,
         metodoPago: metodoPagoSeleccionado.id,
-        datosPago: datosPago,
+        datosPago: datosPagoConUrls,
         estado: 'pendiente',
         fechaCreacion: new Date().toISOString(),
         // Añadir datos del auto y usuario para mostrar en la lista de reservas
@@ -545,14 +601,38 @@ function ReservaFormulario() {
                   accept="image/jpeg,image/png,application/pdf"
                   className={styles.formInput}
                   onChange={(e) => {
-                    setDatosPago(prev => ({
-                      ...prev,
-                      fotoPasaporte: e.target.files[0]?.name || ''
-                    }));
+                    try {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setDatosPago(prev => ({
+                          ...prev,
+                          fotoPasaporte: file.name
+                        }));
+                        setArchivosDocumentos(prev => ({
+                          ...prev,
+                          fotoPasaporte: file
+                        }));
+                      } else {
+                        // Usuario canceló o no seleccionó archivo
+                        setDatosPago(prev => ({
+                          ...prev,
+                          fotoPasaporte: ''
+                        }));
+                        setArchivosDocumentos(prev => {
+                          const newState = { ...prev };
+                          delete newState.fotoPasaporte;
+                          return newState;
+                        });
+                      }
+                    } catch (error) {
+                      console.warn('Error al seleccionar archivo de pasaporte:', error);
+                    }
                   }}
-                  required
                 />
                 <small className={styles.formHelp}>Adjunta una foto clara del pasaporte en formato JPG, PNG o PDF</small>
+                {datosPago.fotoPasaporte && (
+                  <small className={styles.fileName}>📄 {datosPago.fotoPasaporte}</small>
+                )}
               </div>
               
               <div className={styles.formGroup}>
@@ -564,14 +644,39 @@ function ReservaFormulario() {
                   accept="image/jpeg,image/png,application/pdf"
                   className={styles.formInput}
                   onChange={(e) => {
-                    setDatosPago(prev => ({
-                      ...prev,
-                      fotoLicencia: e.target.files[0]?.name || ''
-                    }));
+                    try {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setDatosPago(prev => ({
+                          ...prev,
+                          fotoLicencia: file.name
+                        }));
+                        setArchivosDocumentos(prev => ({
+                          ...prev,
+                          fotoLicencia: file
+                        }));
+                      } else {
+                        // Usuario canceló o no seleccionó archivo
+                        setDatosPago(prev => ({
+                          ...prev,
+                          fotoLicencia: ''
+                        }));
+                        setArchivosDocumentos(prev => {
+                          const newState = { ...prev };
+                          delete newState.fotoLicencia;
+                          return newState;
+                        });
+                      }
+                    } catch (error) {
+                      console.warn('Error al seleccionar archivo de licencia:', error);
+                    }
                   }}
                   required
                 />
                 <small className={styles.formHelp}>Adjunta una foto clara de ambos lados de la licencia en formato JPG, PNG o PDF</small>
+                {datosPago.fotoLicencia && (
+                  <small className={styles.fileName}>📄 {datosPago.fotoLicencia}</small>
+                )}
               </div>
             </div>
             
