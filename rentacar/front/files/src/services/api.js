@@ -76,10 +76,17 @@ const fetchWithAuth = async (url, options = {}) => {
       return data;
     } else {
       const text = await response.text();
-      console.log('Respuesta texto:', text);
+      console.log('Respuesta texto (no JSON):', text.substring(0, 100));
       
       if (!response.ok) {
-        throw new Error('Respuesta inválida del servidor');
+        // Proporcionar más contexto del error
+        const errorMsg = text || `Error del servidor: ${response.status} ${response.statusText}`;
+        console.warn('Error en respuesta del servidor:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorMsg.substring(0, 200)
+        });
+        throw new Error(errorMsg);
       }
       
       // Try to parse as JSON if possible
@@ -698,82 +705,152 @@ const catalogo = {
 // Reservas endpoints
 const reservas = {
   getAll: async () => {
+    // OPTIMIZACIÓN: Usar localStorage primero para carga rápida
+    const localData = getLocalData('reservas');
+    if (localData && Array.isArray(localData)) {
+      console.log('Usando reservas desde localStorage:', localData.length);
+      
+      // Sincronizar con backend en segundo plano
+      setTimeout(async () => {
+        try {
+          const response = await fetchWithAuth('/api/reservas');
+          if (response.success && Array.isArray(response.data)) {
+            console.log('Actualizando reservas desde backend');
+            saveLocalData('reservas', response.data);
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('rentacarDataUpdate'));
+            }
+          }
+        } catch (error) {
+          console.warn('No se pudo sincronizar reservas con backend');
+        }
+      }, 100);
+      
+      return { success: true, data: localData, source: 'localStorage' };
+    }
+    
+    // Si no hay datos locales, intentar obtener del backend
     try {
-      // Try to get from API first
+      console.log('Obteniendo reservas desde backend');
       const response = await fetchWithAuth('/api/reservas');
       
       if (response.success && response.data) {
-        // If successful, update localStorage
         saveLocalData('reservas', response.data);
         return response;
       }
       
-      throw new Error('API request failed or returned invalid data');
+      console.warn('Backend no retornó reservas válidas');
+      return { success: true, data: [] };
     } catch (error) {
-      console.warn('Error in reservas.getAll, using localStorage:', error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('reservas');
-      if (localData) {
-        return { success: true, data: localData };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+      console.warn('Error in reservas.getAll:', error.message);
+      // Retornar array vacío si hay error y no hay datos locales
+      return { success: true, data: [] };
     }
   },
   
   getUserReservas: async (userId) => {
+    // OPTIMIZACIÓN: Intentar localStorage primero para carga rápida
+    const localData = getLocalData('reservas');
+    if (localData && Array.isArray(localData)) {
+      const userReservas = localData.filter(r => r.usuario && r.usuario.id == userId);
+      console.log(`Usando reservas desde localStorage para usuario ${userId}:`, userReservas.length);
+      
+      // Intentar sincronizar con backend en segundo plano
+      setTimeout(async () => {
+        try {
+          const response = await fetchWithAuth(`/api/reservas/usuario/${userId}`);
+          if (response.success && Array.isArray(response.data)) {
+            console.log('Actualizando reservas desde backend');
+            // Actualizar solo las reservas de este usuario en localStorage
+            const allReservas = getLocalData('reservas') || [];
+            const otherReservas = allReservas.filter(r => r.usuario && r.usuario.id != userId);
+            const updatedReservas = [...otherReservas, ...response.data];
+            saveLocalData('reservas', updatedReservas);
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('rentacarDataUpdate'));
+            }
+          }
+        } catch (error) {
+          console.warn('No se pudo sincronizar reservas con backend');
+        }
+      }, 100);
+      
+      return { success: true, data: userReservas, source: 'localStorage' };
+    }
+    
+    // Si no hay datos locales, intentar obtener del backend
     try {
-      // Try to get from API first
+      console.log(`Obteniendo reservas desde backend para usuario ${userId}`);
       const response = await fetchWithAuth(`/api/reservas/usuario/${userId}`);
       
       if (response.success && response.data) {
+        // Guardar en localStorage
+        saveLocalData('reservas', response.data);
         return response;
       }
       
-      throw new Error('API request failed or returned invalid data');
+      console.warn('Backend no retornó datos válidos');
+      return { success: true, data: [] }; // Retornar array vacío si no hay datos
     } catch (error) {
-      console.error(`Error in reservas.getUserReservas(${userId}), using localStorage:`, error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('reservas');
-      if (localData) {
-        const userReservas = localData.filter(r => r.usuario && r.usuario.id == userId);
-        if (userReservas) {
-          return { success: true, data: userReservas };
-        }
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+      console.warn(`Error obteniendo reservas del backend:`, error.message);
+      // Retornar array vacío en caso de error
+      return { success: true, data: [] };
     }
   },
   
   getById: async (id) => {
+    // Intentar localStorage primero
+    const localData = getLocalData('reservas');
+    if (localData && Array.isArray(localData)) {
+      const reserva = localData.find(r => r.id == id);
+      if (reserva) {
+        console.log(`Usando reserva ${id} desde localStorage`);
+        
+        // Sincronizar con backend en segundo plano
+        setTimeout(async () => {
+          try {
+            const response = await fetchWithAuth(`/api/reservas/${id}`);
+            if (response.success && response.data) {
+              // Actualizar en localStorage
+              const allReservas = getLocalData('reservas') || [];
+              const index = allReservas.findIndex(r => r.id == id);
+              if (index !== -1) {
+                allReservas[index] = response.data;
+                saveLocalData('reservas', allReservas);
+              }
+            }
+          } catch (error) {
+            console.warn('No se pudo sincronizar reserva con backend');
+          }
+        }, 100);
+        
+        return { success: true, data: reserva, source: 'localStorage' };
+      }
+    }
+    
+    // Si no está en localStorage, intentar backend
     try {
-      // Try to get from API first
+      console.log(`Obteniendo reserva ${id} desde backend`);
       const response = await fetchWithAuth(`/api/reservas/${id}`);
       
       if (response.success && response.data) {
+        // Guardar en localStorage
+        const allReservas = getLocalData('reservas') || [];
+        const index = allReservas.findIndex(r => r.id == id);
+        if (index !== -1) {
+          allReservas[index] = response.data;
+        } else {
+          allReservas.push(response.data);
+        }
+        saveLocalData('reservas', allReservas);
         return response;
       }
       
-      throw new Error('API request failed or returned invalid data');
+      console.warn('Backend no retornó la reserva');
+      return { success: false, message: 'Reserva no encontrada' };
     } catch (error) {
-      console.error(`Error in reservas.getById(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('reservas');
-      if (localData) {
-        const reserva = localData.find(r => r.id == id);
-        if (reserva) {
-          return { success: true, data: reserva };
-        }
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+      console.warn(`Error obteniendo reserva ${id}:`, error.message);
+      return { success: false, message: 'Error al obtener la reserva' };
     }
   },
   
