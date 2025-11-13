@@ -33,9 +33,9 @@ const fetchWithAuth = async (url, options = {}) => {
       body: options.body
     });
     
-    // Añadir un timeout para la solicitud
+    // Añadir un timeout para la solicitud (reducido para carga rápida)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 segundos - más rápido
     
     // Make the request with CORS options
     const response = await fetch(`${API_BASE_URL}${url}`, {
@@ -69,7 +69,7 @@ const fetchWithAuth = async (url, options = {}) => {
       
       // If response is not ok, throw an error
       if (!response.ok) {
-        console.error('Error en respuesta del servidor:', data);
+        console.warn('Error en respuesta del servidor:', data);
         throw new Error(data.message || 'Ocurrió un error en la solicitud');
       }
       
@@ -93,30 +93,30 @@ const fetchWithAuth = async (url, options = {}) => {
   } catch (error) {
     // Check if it's a timeout error
     if (error.name === 'AbortError') {
-      console.error('Timeout en la solicitud');
+      console.warn('Timeout en la solicitud');
       throw new Error('La solicitud ha excedido el tiempo de espera. Verifique que el servidor esté respondiendo.');
     }
     
     // Check if it's a network error
     if (error instanceof TypeError && error.message.includes('NetworkError')) {
-      console.error('Error de red:', error);
-      throw new Error('Error de conexión con el servidor. Verifique que el servidor esté en ejecución y accesible. Si está usando Firefox, pruebe con Chrome o Edge.');
+      console.warn('Error de red:', error.message);
+      throw new Error('Error de conexión con el servidor. Verifique que el servidor esté en ejecución y accesible.');
     }
     
     // Check if it's a CORS error
     if (error instanceof DOMException && error.name === 'NetworkError') {
-      console.error('Error CORS:', error);
-      throw new Error('Error de CORS. Pruebe abriendo la aplicación en Chrome con --disable-web-security o use otro navegador.');
+      console.warn('Error CORS:', error.message);
+      throw new Error('Error de CORS. Verifique la configuración del servidor.');
     }
     
     // Check if it's a JSON parsing error
     if (error instanceof SyntaxError && error.message.includes('JSON')) {
-      console.error('Error al analizar respuesta JSON:', error);
+      console.warn('Error al analizar respuesta JSON:', error.message);
       throw new Error('Error en formato de respuesta del servidor');
     }
     
     // Re-throw other errors
-    console.error('Error general en fetch:', error);
+    console.warn('Error general en fetch:', error.message);
     throw error;
   }
 };
@@ -136,7 +136,7 @@ const getLocalData = (key) => {
     const data = localStorage.getItem(localStorageKeys[key]);
     return data ? JSON.parse(data) : null;
   } catch (error) {
-    console.error(`Error getting ${key} from localStorage:`, error);
+    console.warn(`Error getting ${key} from localStorage:`, error.message);
     return null;
   }
 };
@@ -148,7 +148,7 @@ const saveLocalData = (key, data) => {
   try {
     localStorage.setItem(localStorageKeys[key], JSON.stringify(data));
   } catch (error) {
-    console.error(`Error saving ${key} to localStorage:`, error);
+    console.warn(`Error saving ${key} to localStorage:`, error.message);
   }
 };
 
@@ -182,7 +182,7 @@ const usuarios = {
       
       throw new Error('API request failed or returned invalid data');
     } catch (error) {
-      console.error('Error in usuarios.getAll, using localStorage:', error);
+      console.warn('Error in usuarios.getAll, using localStorage:', error);
       
       // Fallback to localStorage
       const localData = getLocalData('usuarios');
@@ -240,7 +240,7 @@ const usuarios = {
       
       throw new Error('API request failed or returned invalid data');
     } catch (error) {
-      console.error('Error in usuarios.create, using localStorage:', error);
+      console.warn('Error in usuarios.create, using localStorage:', error);
       
       // Fallback to localStorage
       const localData = getLocalData('usuarios') || [];
@@ -338,6 +338,35 @@ const autos = {
     try {
       console.log('API Service: Obteniendo lista de autos');
       
+      // OPTIMIZACIÓN: Obtener desde localStorage PRIMERO para carga rápida
+      const localData = getLocalData('autos');
+      if (localData && Array.isArray(localData) && localData.length > 0) {
+        console.log('Usando datos de vehículos desde localStorage (carga rápida):', localData.length);
+        
+        // Intentar sincronizar con backend en segundo plano (no bloqueante)
+        setTimeout(async () => {
+          try {
+            console.log('Sincronizando con backend en segundo plano...');
+            const response = await fetchWithAuth('/api/autos');
+            if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+              console.log(`Backend retornó ${response.data.length} autos - actualizando localStorage`);
+              saveLocalData('autos', response.data);
+              // Disparar evento para notificar a componentes
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new Event('rentacarDataUpdate'));
+              }
+            }
+          } catch (error) {
+            console.warn('No se pudo sincronizar con backend (modo offline)');
+          }
+        }, 100); // Esperar 100ms para no bloquear
+        
+        return { success: true, data: localData, source: 'localStorage' };
+      }
+      
+      // Si no hay datos locales, intentar obtener del backend
+      console.log('No hay datos locales, intentando backend...');
+      
       // Función auxiliar para sincronizar datos JSON con el backend
       const syncJsonDataWithBackend = async (jsonData) => {
         // Solo importar si tenemos datos
@@ -354,7 +383,7 @@ const autos = {
             });
             console.log(`Auto sincronizado: ${auto.marca} ${auto.modelo}`);
           } catch (error) {
-            console.error(`Error al sincronizar auto ${auto.marca} ${auto.modelo}:`, error);
+            console.warn(`Error al sincronizar auto ${auto.marca} ${auto.modelo}:`, error.message);
           }
         }
       };
@@ -373,7 +402,7 @@ const autos = {
           console.log('API principal no retornó autos válidos');
         }
       } catch (error) {
-        console.error('Error getting autos from API:', error);
+        console.warn('Error getting autos from API:', error.message);
       }
       
       // Intento 2: Obtener desde el catálogo (ruta pública)
@@ -390,17 +419,10 @@ const autos = {
           console.log('Catálogo no retornó autos válidos');
         }
       } catch (error) {
-        console.error('Error getting autos from catalog:', error);
+        console.warn('Error getting autos from catalog:', error.message);
       }
       
-      // Intento 3: Obtener desde localStorage
-      const localData = getLocalData('autos');
-      if (localData && Array.isArray(localData) && localData.length > 0) {
-        console.log('Usando datos de vehículos desde localStorage:', localData.length);
-        return { success: true, data: localData };
-      }
-      
-      // Intento 4: Cargar desde archivo JSON local
+      // Intento 3: Cargar desde archivo JSON local
       try {
         console.log('Intentando cargar datos desde archivo JSON local');
         const response = await fetch('/data/autos.json');
@@ -537,7 +559,7 @@ const autos = {
         throw new Error('La API no devolvió datos del vehículo creado');
       }
     } catch (error) {
-      console.error('Error in autos.create, using localStorage:', error);
+      console.warn('Error in autos.create, using localStorage:', error);
       
       // Fallback to localStorage - crear un ID numérico pequeño
       const localData = getLocalData('autos') || [];
@@ -688,7 +710,7 @@ const reservas = {
       
       throw new Error('API request failed or returned invalid data');
     } catch (error) {
-      console.error('Error in reservas.getAll, using localStorage:', error);
+      console.warn('Error in reservas.getAll, using localStorage:', error);
       
       // Fallback to localStorage
       const localData = getLocalData('reservas');
@@ -774,7 +796,7 @@ const reservas = {
       
       throw new Error('API request failed or returned invalid data');
     } catch (error) {
-      console.error('Error in reservas.create, using localStorage:', error);
+      console.warn('Error in reservas.create, using localStorage:', error);
       
       // Fallback to localStorage - usar el ID que ya viene en los datos
       const localData = getLocalData('reservas') || [];
@@ -929,7 +951,7 @@ const uploads = {
   uploadImage: async (file) => {
     try {
       if (!file) {
-        console.error('No se proporcionó ningún archivo para subir');
+        console.warn('No se proporcionó ningún archivo para subir');
         return { success: false, message: 'No se proporcionó ningún archivo' };
       }
       
@@ -937,24 +959,46 @@ const uploads = {
       const formData = new FormData();
       formData.append('file', file);
       
-      // Enviar la petición al servidor
-      const response = await fetch('/api/upload', {
+      // Obtener token de autenticación
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      
+      // Preparar headers
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      console.log('Subiendo imagen al servidor backend:', `${API_BASE_URL}/api/upload`);
+      
+      // Enviar la petición al servidor BACKEND (no al servidor Next.js)
+      const response = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         body: formData,
+        headers: headers,
+        mode: 'cors',
+        credentials: 'same-origin'
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al subir la imagen');
+        let errorMessage = 'Error al subir la imagen';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          errorMessage = `Error del servidor: ${response.status} ${response.statusText}`;
+        }
+        console.warn('Error en la respuesta de upload:', errorMessage);
+        return { success: false, message: errorMessage };
       }
       
       const result = await response.json();
+      console.log('Imagen subida exitosamente:', result);
       return result;
     } catch (error) {
-      console.error('Error al subir imagen:', error);
+      console.warn('Error al subir imagen:', error.message);
       return {
         success: false,
-        message: error.message || 'Error al subir la imagen',
+        message: error.message || 'Error de conexión al subir la imagen',
       };
     }
   }
