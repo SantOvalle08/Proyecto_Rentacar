@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DataTable from '@/components/DataTable';
 import Modal from '@/components/Modal';
+import FacturaView from '@/components/FacturaView';
 import apiService from '@/services/api';
 import styles from './page.module.css';
 
@@ -17,6 +18,7 @@ export default function ReservasPage() {
   const [currentReserva, setCurrentReserva] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [reservaToDelete, setReservaToDelete] = useState(null);
+  const [reservaFactura, setReservaFactura] = useState(null);
 
   // Fetch reservas on mount
   useEffect(() => {
@@ -353,6 +355,16 @@ export default function ReservasPage() {
         // Custom actions for reservas
         customActionButtons={(reserva) => (
           <>
+            {reserva.estado !== 'cancelada' && (
+              <button
+                onClick={() => setReservaFactura(reserva)}
+                className={styles.facturaButton}
+                aria-label="Ver Factura"
+                title="Ver factura electrónica"
+              >
+                📄
+              </button>
+            )}
             {(reserva.estado === 'activa' || reserva.estado === 'pendiente') && (
               <button
                 onClick={() => handleCancelReservation(reserva)}
@@ -398,6 +410,14 @@ export default function ReservasPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Modal de factura */}
+      {reservaFactura && (
+        <FacturaView 
+          reserva={reservaFactura} 
+          onClose={() => setReservaFactura(null)} 
+        />
+      )}
     </div>
   );
 } 

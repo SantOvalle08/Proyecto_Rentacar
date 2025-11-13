@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import apiService from '@/services/api';
+import FacturaView from '@/components/FacturaView';
 import styles from './page.module.css';
 
 export default function DetallesReservaCliente({ params }) {
@@ -15,6 +16,7 @@ export default function DetallesReservaCliente({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
+  const [mostrarFactura, setMostrarFactura] = useState(false);
   
   // Cargar datos de la reserva
   const loadReserva = useCallback(async (reservaId, userId) => {
@@ -395,7 +397,31 @@ export default function DetallesReservaCliente({ params }) {
             </div>
           )}
         </div>
+
+        {/* Botón para ver factura */}
+        {reserva.estado !== 'cancelada' && (
+          <div className={styles.facturaSection}>
+            <h2 className={styles.sectionTitle}>Facturación</h2>
+            <p className={styles.facturaDescripcion}>
+              Descargue o imprima su factura electrónica oficial
+            </p>
+            <button 
+              onClick={() => setMostrarFactura(true)} 
+              className={styles.btnFactura}
+            >
+              📄 Ver Factura Electrónica
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Modal de factura */}
+      {mostrarFactura && (
+        <FacturaView 
+          reserva={reserva} 
+          onClose={() => setMostrarFactura(false)} 
+        />
+      )}
     </div>
   );
 } 

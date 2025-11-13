@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import apiService from '@/services/api';
+import FacturaView from '@/components/FacturaView';
 import styles from './page.module.css';
 
 export default function Reservas() {
@@ -13,6 +14,7 @@ export default function Reservas() {
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reservaFactura, setReservaFactura] = useState(null);
 
   useEffect(() => {
     // Check if localStorage is available
@@ -210,6 +212,16 @@ export default function Reservas() {
                     Ver Detalles
                   </Link>
                   
+                  {reserva.estado !== 'cancelada' && (
+                    <button 
+                      className={styles.facturaButton}
+                      onClick={() => setReservaFactura(reserva)}
+                      title="Ver factura"
+                    >
+                      📄 Factura
+                    </button>
+                  )}
+                  
                   {(reserva.estado === 'activa' || reserva.estado === 'pendiente') && (
                     <button 
                       className={styles.cancelButton}
@@ -230,6 +242,14 @@ export default function Reservas() {
           </Link>
         </div>
       </div>
+
+      {/* Modal de factura */}
+      {reservaFactura && (
+        <FacturaView 
+          reserva={reservaFactura} 
+          onClose={() => setReservaFactura(null)} 
+        />
+      )}
     </div>
   );
 } 
