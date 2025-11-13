@@ -180,7 +180,7 @@ export function generarFactura(reserva) {
     subtotal: subtotalGeneral,
     iva: ivaGeneral,
     total: totalGeneral,
-    totalLetras: numeroALetras(Math.floor(totalGeneral)) + ' USD',
+    totalLetras: numeroALetras(Math.round(totalGeneral)) + ' USD',
     metodoPago: reserva.metodoPago || 'No especificado',
     periodo: {
       inicio: fechaInicio.toLocaleDateString('es-CO'),
