@@ -108,7 +108,7 @@ const autoController = {
       res.status(201).json({
         success: true,
         message: 'Auto creado con éxito',
-        data: auto.mostrarDetalleAuto()
+        data: auto.mostrarDetalles()
       });
     } catch (error) {
       console.error('Error al crear auto:', error);
@@ -170,7 +170,7 @@ const autoController = {
 
       res.status(200).json({
         success: true,
-        data: autos.map(auto => auto.mostrarDetalleAuto())
+        data: autos.map(auto => auto.mostrarDetalles())
       });
     } catch (error) {
       console.error('Error al obtener autos:', error);
@@ -203,7 +203,7 @@ const autoController = {
 
       res.status(200).json({
         success: true,
-        data: auto.mostrarDetalleAuto()
+        data: auto.mostrarDetalles()
       });
     } catch (error) {
       console.error('Error al obtener auto:', error);
@@ -306,7 +306,7 @@ const autoController = {
       res.status(200).json({
         success: true,
         message: 'Auto actualizado con éxito',
-        data: auto.mostrarDetalleAuto()
+        data: auto.mostrarDetalles()
       });
     } catch (error) {
       console.error('Error al actualizar auto:', error);
@@ -414,7 +414,7 @@ const autoController = {
 
       res.status(200).json({
         success: true,
-        data: autos.map(auto => auto.mostrarDetalleAuto())
+        data: autos.map(auto => auto.mostrarDetalles())
       });
     } catch (error) {
       console.error('Error al buscar autos:', error);

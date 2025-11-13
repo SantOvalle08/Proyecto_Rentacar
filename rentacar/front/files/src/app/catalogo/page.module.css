@@ -1,21 +1,22 @@
 .title {
-  font-size: 2.5rem;
-  margin: 2rem 0;
+  font-size: var(--font-size-4xl);
+  margin: var(--space-8) 0;
   text-align: center;
-  color: var(--text-dark);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-bold);
 }
 
-/* Filters */
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background-color: var(--bg-white);
-  border-radius: 8px;
-  box-shadow: var(--box-shadow);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding: var(--space-5);
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
   align-items: center;
+  border: 1px solid var(--card-border);
 }
 
 .filterItem {
@@ -24,70 +25,81 @@
 
 .filterItem label {
   display: block;
-  margin-bottom: 0.3rem;
-  font-weight: 500;
+  margin-bottom: var(--space-1);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
 }
 
 .filterItem input,
 .filterItem select {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+  padding: var(--space-2);
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-base);
+}
+
+.filterItem input:focus,
+.filterItem select:focus {
+  outline: none;
+  border-color: var(--primary-color);
 }
 
 .filterCheckbox {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin-left: auto;
-  padding: 0.5rem;
+  padding: var(--space-2);
 }
 
 .filterCheckbox input {
   width: 1.1rem;
   height: 1.1rem;
-}
-
-.filterCheckbox label {
-  font-weight: 500;
   cursor: pointer;
 }
 
-/* Loading state */
-.loading {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
-  color: var(--text-light);
+.filterCheckbox label {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  cursor: pointer;
 }
 
-/* Auto grid */
+.loading {
+  text-align: center;
+  padding: var(--space-8);
+  font-size: var(--font-size-xl);
+  color: var(--text-secondary);
+}
+
 .autosGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
 }
 
 .autoCard {
-  background-color: var(--bg-white);
-  border-radius: 8px;
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-lg);
   overflow: hidden;
-  box-shadow: var(--box-shadow);
-  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid var(--card-border);
 }
 
 .autoCard:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
 }
 
 .autoImage {
   position: relative;
   height: 200px;
   overflow: hidden;
+  background-color: var(--surface-secondary);
 }
 
 .autoImage img {
@@ -102,85 +114,88 @@
   right: 10px;
   background-color: rgba(244, 67, 54, 0.9);
   color: white;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: bold;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
 }
 
 .autoInfo {
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 .autoInfo h3 {
   margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-xl);
+  color: var(--text-primary);
 }
 
 .autoYear,
 .autoType {
-  margin: 0.3rem 0;
-  color: #666;
+  margin: var(--space-1) 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .autoPrice {
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: var(--color-primary);
-  margin: 0.7rem 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--primary-color);
+  margin: var(--space-3) 0;
 }
 
 .autoActions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
 }
 
 .btnDetails,
 .btnReserve {
-  padding: 0.5rem 1rem;
+  padding: var(--space-2) var(--space-4);
   border: none;
-  border-radius: 4px;
-  font-weight: 500;
+  border-radius: var(--border-radius-md);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.2s ease;
   text-decoration: none;
   text-align: center;
+  font-size: var(--font-size-sm);
 }
 
 .btnDetails {
-  background-color: #e0e0e0;
-  color: #333;
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--btn-secondary-border);
   flex: 1;
 }
 
 .btnDetails:hover {
-  background-color: #d0d0d0;
+  background-color: var(--btn-secondary-hover);
 }
 
 .btnReserve {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   flex: 1;
 }
 
 .btnReserve:hover {
-  background-color: var(--color-primary-dark);
+  background-color: var(--btn-primary-hover);
 }
 
-/* No results */
 .noResults {
   text-align: center;
-  padding: 2rem;
+  padding: var(--space-8);
   grid-column: 1 / -1;
-  color: #666;
+  color: var(--text-secondary);
+  font-size: var(--font-size-lg);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .title {
-    font-size: 2rem;
+    font-size: var(--font-size-3xl);
   }
   
   .filterItem {
@@ -196,4 +211,8 @@
   .autoActions {
     flex-direction: column;
   }
-} 
+  
+  .filters {
+    padding: var(--space-3);
+  }
+}

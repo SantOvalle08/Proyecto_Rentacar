@@ -1,16 +1,16 @@
 .imageUploader {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   width: 100%;
 }
 
 .previewContainer {
   width: 100%;
   height: 150px;
-  background-color: #f5f5f5;
-  border: 1px dashed #ccc;
-  border-radius: 4px;
+  background-color: var(--surface-secondary);
+  border: 1px dashed var(--border-medium);
+  border-radius: var(--border-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,8 +28,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #888;
-  gap: 8px;
+  color: var(--text-secondary);
+  gap: var(--space-2);
 }
 
 .placeholder svg {
@@ -39,7 +39,7 @@
 .controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .fileInput {
@@ -49,18 +49,19 @@
 .uploadButton {
   display: flex;
   align-items: center;
-  gap: 5px;
-  background-color: #0070f3;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 4px;
+  gap: var(--space-2);
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
+  font-size: var(--font-size-sm);
+  transition: background-color 0.2s ease;
+  border: none;
 }
 
 .uploadButton:hover {
-  background-color: #0051b3;
+  background-color: var(--btn-primary-hover);
 }
 
 .inputContainer {
@@ -69,27 +70,35 @@
 
 .urlInput {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: var(--space-2);
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.urlInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
 }
 
 .error {
-  color: #d32f2f;
-  font-size: 12px;
-  margin-top: 4px;
+  color: var(--error-700);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
 }
 
 .helpText {
-  font-size: 12px;
-  color: #666;
-  margin-top: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
 }
 
 .helpText code {
-  background-color: #f5f5f5;
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
   padding: 2px 4px;
-  border-radius: 3px;
+  border-radius: var(--border-radius-xs);
   font-family: monospace;
-} 
+}

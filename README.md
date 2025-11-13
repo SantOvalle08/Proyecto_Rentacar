@@ -36,6 +36,11 @@ rentacar/
 ```bash
 cd rentacar/back
 npm install
+
+# Inicializar usuario administrador en MongoDB (ejecutar solo la primera vez)
+node init-admin.js
+
+# Iniciar el servidor
 npm start
 ```
 
@@ -46,6 +51,54 @@ npm install
 npm run dev
 ```
 
+## 🔑 Credenciales de Prueba
+
+Para probar la aplicación, puedes usar estas credenciales de desarrollo:
+
+### Usuario Administrador
+- **Email:** `admin@rentacar.com`
+- **Contraseña:** `admin123`
+- **Rol:** Administrador (acceso completo al panel de administración)
+
+### Usuario Cliente (Registro)
+También puedes crear nuevos usuarios cliente registrándote en la aplicación.
+
+**Nota Importante:** 
+- El usuario administrador debe ser inicializado en MongoDB antes del primer uso
+- Ejecuta `node init-admin.js` en la carpeta `rentacar/back` para crear el usuario admin
+- Estas credenciales son solo para desarrollo/testing
+
+## 🔧 Solución de Problemas
+
+### Error "Token inválido" en el Dashboard
+
+Si recibes errores de token inválido al acceder al dashboard:
+
+1. **Asegúrate de que MongoDB esté corriendo**
+   ```bash
+   # En Windows, verifica el servicio MongoDB
+   net start MongoDB
+   ```
+
+2. **Inicializa el usuario administrador**
+   ```bash
+   cd rentacar/back
+   node init-admin.js
+   ```
+
+3. **Limpia el localStorage del navegador**
+   - Abre las DevTools (F12)
+   - Ve a Application > Local Storage
+   - Elimina las entradas de `token` y `user`
+   - Vuelve a iniciar sesión
+
+4. **Reinicia el servidor backend**
+   ```bash
+   cd rentacar/back
+   # Detén el servidor (Ctrl+C) y vuelve a iniciarlo
+   node index.js
+   ```
+
 ## 🔑 Características Principales
 - Gestión de catálogo de vehículos
 - Sistema de reservas
@@ -54,39 +107,13 @@ npm run dev
 - API REST
 - Diseño responsivo
 
-## ⚙️ Variables de Entorno
+## 🔗 URLs del Proyecto
 
-### Backend (.env)
+Después de iniciar el proyecto con `.\start.ps1`:
 
-```
-MONGODB_URI=mongodb://localhost:27017/rentacar
-PORT=3000
-JWT_SECRET=tu_secreto_para_tokens
-```
-
-Ajusta las variables según tu entorno (por ejemplo, si usas Mongo Atlas, usa la cadena de conexión correspondiente).
-
-### Frontend (.env.local)
-```
-NEXT_PUBLIC_API_URL=http://localhost:3000
-```
-
-## 📜 Scripts Útiles
-
-### Backend
-- `start-server.js`: Inicia el servidor
-- `test-db.js`: Prueba la conexión a la base de datos
-- `sync-catalog.js`: Sincroniza el catálogo
-- `json-to-mongodb.js`: Importa datos JSON a MongoDB
-
-### Frontend
-- `npm run dev`: Inicia el servidor de desarrollo
-- `npm run build`: Construye la aplicación
-- `npm start`: Inicia la aplicación en producción
-
-## 🔗 Enlaces Importantes
-- API: `http://localhost:3000/api`
-- Frontend: `http://localhost:3000`
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:5001
+- **Login de prueba:** http://localhost:3000/login (usa admin@rentacar.com / admin123)
 
 ## 👥 Cómo Contribuir
 1. Clona el repositorio

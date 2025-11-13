@@ -1,0 +1,572 @@
+/* ========================================
+   CHECKLIST VEHÍCULO - Estilos Globales
+   Modo Día: Fondos Blancos + Texto Negro
+   Modo Noche: Fondos Oscuros + Texto Blanco
+   ======================================== */
+
+/* Modal Container */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: var(--space-4);
+}
+
+.modalContent {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-lg);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  color: var(--text-primary);
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.header h2 {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  color: var(--text-primary);
+}
+
+.btnCloseX {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-md);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.btnCloseX:hover {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+/* Scrollable Content */
+.scrollContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+  background-color: var(--body-bg);
+}
+
+/* Sections */
+.section {
+  margin-bottom: var(--space-8);
+  padding: var(--space-6);
+  background-color: var(--surface-bg);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.section h3 {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--font-size-xl);
+  color: var(--text-primary);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.sectionHeader h3 {
+  margin: 0;
+}
+
+/* Nivel de Gasolina */
+.gasolinaIndicator {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.gasolinaNiveles {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.nivelBtn {
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid var(--border-medium);
+  background-color: var(--surface-bg);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.nivelBtn:hover {
+  background-color: var(--surface-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.nivelBtn.active {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+  font-weight: 600;
+}
+
+.nivelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gasolinaBarra {
+  height: 30px;
+  background-color: var(--surface-secondary);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  position: relative;
+}
+
+.gasolinaFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+  transition: width 0.3s ease;
+  border-radius: var(--border-radius-md);
+}
+
+.gasolinaPorcentaje {
+  text-align: center;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Rayones */
+.btnAddRayon {
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btnAddRayon:hover {
+  background-color: var(--primary-color-hover);
+  transform: translateY(-2px);
+}
+
+.formRayon {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background-color: var(--surface-secondary);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.input,
+.inputNotas {
+  padding: var(--space-3);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-md);
+  color: var(--input-text);
+  background-color: var(--input-bg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus,
+.inputNotas:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--input-focus-ring);
+}
+
+.input::placeholder,
+.inputNotas::placeholder {
+  color: var(--text-disabled);
+}
+
+.inputNotas {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.formRayonButtons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.btnGuardar,
+.btnCancelar {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btnGuardar {
+  background-color: var(--success-500);
+  color: white;
+}
+
+.btnGuardar:hover {
+  background-color: var(--success-700);
+}
+
+.btnCancelar {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--btn-secondary-border);
+}
+
+.btnCancelar:hover {
+  background-color: var(--btn-secondary-hover-bg);
+}
+
+.rayonesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rayonItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--space-4);
+  background-color: var(--surface-secondary);
+  border-radius: var(--border-radius-md);
+  border-left: 4px solid var(--warning-500);
+}
+
+.rayonInfo {
+  flex: 1;
+}
+
+.rayonInfo strong {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+}
+
+.rayonInfo p {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.rayonInfo small {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.btnDeleteRayon {
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--error-500);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btnDeleteRayon:hover {
+  background-color: var(--error-700);
+}
+
+/* Inventario */
+.inventarioList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.inventarioItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background-color: var(--surface-secondary);
+  border-radius: var(--border-radius-md);
+}
+
+.inventarioCheckbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.inventarioCheckbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+.inventarioCheckbox label {
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.inventarioDetails {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-left: 28px;
+}
+
+.selectCondicion {
+  padding: var(--space-2);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.selectCondicion:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Estado General */
+.estadoButtons {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.estadoBtn {
+  padding: var(--space-3) var(--space-5);
+  border: 2px solid var(--border-medium);
+  background-color: var(--surface-bg);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  color: var(--text-primary);
+}
+
+.estadoBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.estadoBtn.active {
+  color: white;
+  font-weight: 600;
+  border-width: 2px;
+}
+
+.estadoBtn.excelente.active {
+  background-color: #10b981;
+  border-color: #10b981;
+}
+
+.estadoBtn.bueno.active {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.estadoBtn.regular.active {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+}
+
+.estadoBtn.malo.active {
+  background-color: #ef4444;
+  border-color: #ef4444;
+}
+
+.estadoBtn.critico.active {
+  background-color: #991b1b;
+  border-color: #991b1b;
+}
+
+/* Observaciones */
+.observacionesTextarea {
+  width: 100%;
+  min-height: 120px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-md);
+  font-family: inherit;
+  color: var(--input-text);
+  background-color: var(--input-bg);
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.observacionesTextarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--input-focus-ring);
+}
+
+.observacionesTextarea::placeholder {
+  color: var(--text-disabled);
+}
+
+/* Footer Buttons */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border-top: 1px solid var(--border-light);
+  background-color: var(--surface-bg);
+}
+
+.btnClose,
+.btnSave {
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: var(--font-size-md);
+  transition: all 0.2s;
+}
+
+.btnClose {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--btn-secondary-border);
+}
+
+.btnClose:hover {
+  background-color: var(--btn-secondary-hover-bg);
+}
+
+.btnSave {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.btnSave:hover {
+  background-color: var(--btn-primary-hover);
+}
+
+.btnSave:disabled,
+.btnClose:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loading & Error States */
+.loading,
+.error {
+  padding: var(--space-8);
+  text-align: center;
+  font-size: var(--font-size-lg);
+}
+
+.loading {
+  color: var(--text-secondary);
+}
+
+.error {
+  color: var(--error-500);
+  background-color: var(--error-50);
+  border-radius: var(--border-radius-md);
+}
+
+.emptyRayones,
+.emptyInventario {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-style: italic;
+  background-color: var(--surface-secondary);
+  border-radius: var(--border-radius-md);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal {
+    padding: var(--space-2);
+  }
+
+  .modalContent {
+    max-height: 95vh;
+  }
+
+  .header {
+    padding: var(--space-4);
+  }
+
+  .scrollContent {
+    padding: var(--space-4);
+  }
+
+  .section {
+    padding: var(--space-4);
+  }
+
+  .gasolinaNiveles {
+    flex-direction: column;
+  }
+
+  .nivelBtn {
+    width: 100%;
+  }
+
+  .estadoButtons {
+    flex-direction: column;
+  }
+
+  .estadoBtn {
+    width: 100%;
+  }
+
+  .footer {
+    flex-direction: column-reverse;
+    padding: var(--space-4);
+  }
+
+  .btnClose,
+  .btnSave {
+    width: 100%;
+  }
+}

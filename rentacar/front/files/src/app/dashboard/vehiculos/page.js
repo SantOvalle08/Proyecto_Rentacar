@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DataTable from '@/components/DataTable';
 import Modal from '@/components/Modal';
+import ChecklistVehiculo from '@/components/ChecklistVehiculo';
 import apiService from '@/services/api';
 import styles from './page.module.css';
 import ImageUploader from '@/components/ImageUploader';
@@ -17,7 +18,9 @@ export default function VehiculosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [checklistModalOpen, setChecklistModalOpen] = useState(false);
   const [currentVehiculo, setCurrentVehiculo] = useState(null);
+  const [vehiculoChecklist, setVehiculoChecklist] = useState(null);
   const [formData, setFormData] = useState({
     marca: '',
     modelo: '',
@@ -192,6 +195,17 @@ export default function VehiculosPage() {
       imagen: vehiculo.imagen || ''
     });
     setModalOpen(true);
+  }, []);
+
+  const handleChecklist = useCallback((vehiculo) => {
+    if (!vehiculo) {
+      console.error('Attempted to view checklist for null or undefined vehicle');
+      return;
+    }
+    
+    console.log('Abriendo checklist para vehículo:', vehiculo);
+    setVehiculoChecklist(vehiculo);
+    setChecklistModalOpen(true);
   }, []);
 
   const handleDelete = useCallback(async () => {
@@ -529,6 +543,16 @@ export default function VehiculosPage() {
           setDeleteModalOpen(true);
         }}
         onView={(vehiculo) => router.push(`/dashboard/vehiculos/${vehiculo.id}`)}
+        customActionButtons={(vehiculo) => (
+          <button
+            onClick={() => handleChecklist(vehiculo)}
+            className={styles.checklistButton}
+            title="Ver checklist"
+            aria-label="Ver checklist del vehículo"
+          >
+            📋 Checklist
+          </button>
+        )}
         loading={loading}
         itemName="Vehículo"
         emptyMessage="No hay vehículos registrados. ¡Añade uno nuevo!"
@@ -537,6 +561,18 @@ export default function VehiculosPage() {
       <div className={styles.backLink}>
         <Link href="/dashboard">← Volver al Dashboard</Link>
       </div>
+      
+      {/* Checklist Modal */}
+      {checklistModalOpen && vehiculoChecklist && (
+        <ChecklistVehiculo
+          autoId={vehiculoChecklist.id}
+          onClose={() => {
+            setChecklistModalOpen(false);
+            setVehiculoChecklist(null);
+          }}
+          readonly={false}
+        />
+      )}
       
       {/* Form Modal */}
       <Modal 
