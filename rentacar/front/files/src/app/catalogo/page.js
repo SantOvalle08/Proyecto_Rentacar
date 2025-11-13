@@ -87,43 +87,61 @@ export default function Catalogo() {
       setLoading(true);
       setError('');
       
+      console.log('Catálogo: Cargando vehículos...');
+      
+      // OPTIMIZACIÓN: Intentar localStorage primero para carga inmediata
+      if (typeof window !== 'undefined') {
+        const localData = localStorage.getItem('rentacar_autos');
+        if (localData) {
+          try {
+            const parsedData = JSON.parse(localData);
+            if (Array.isArray(parsedData) && parsedData.length > 0) {
+              console.log('Catálogo cargado desde localStorage (instantáneo):', parsedData.length);
+              setAutos(parsedData);
+              setLoading(false);
+              
+              // Intentar sincronizar con API en segundo plano (no bloqueante)
+              setTimeout(async () => {
+                try {
+                  const response = await apiService.autos.getAll();
+                  if (response.success && response.data && response.data.length > 0) {
+                    console.log('Catálogo actualizado desde API en segundo plano');
+                    setAutos(response.data);
+                  }
+                } catch (error) {
+                  console.warn('No se pudo sincronizar con API (modo offline)');
+                }
+              }, 100);
+              
+              return;
+            }
+          } catch (error) {
+            console.warn('Error parsing localStorage:', error);
+          }
+        }
+      }
+      
+      // Si no hay datos en localStorage, obtener desde API
       try {
-        // Intenta obtener datos de la API
         const response = await apiService.autos.getAll();
         
         if (response.success && response.data) {
-          console.log('Datos del catálogo actualizados desde API:', response.data);
+          console.log('Datos del catálogo obtenidos:', response.data.length);
           setAutos(response.data);
           return;
         }
       } catch (error) {
-        console.error('Error fetching autos from API:', error);
-        // Si hay error, continuamos para usar datos de localStorage o mock
+        console.warn('Error al obtener autos:', error);
       }
       
-      // Intenta obtener datos de localStorage
-      try {
-        if (typeof window !== 'undefined') {
-          const localData = localStorage.getItem('rentacar_autos');
-          if (localData) {
-            const parsedData = JSON.parse(localData);
-            if (Array.isArray(parsedData) && parsedData.length > 0) {
-              console.log('Datos del catálogo actualizados desde localStorage:', parsedData);
-              setAutos(parsedData);
-              return;
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error getting autos from localStorage:', error);
-      }
-      
-      // Si no se pudieron obtener datos de la API ni localStorage, usar mock data
+      // Si todo falla, usar datos mock
       console.log('Usando datos mock para el catálogo');
       setAutos(mockAutos);
     } catch (error) {
       console.error('Error general en fetchAutos:', error);
       setError('Error al cargar el catálogo de vehículos');
+      // Usar mock data como último recurso
+      setAutos(mockAutos);
     } finally {
       setLoading(false);
     }

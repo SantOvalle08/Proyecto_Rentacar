@@ -33,9 +33,9 @@ const fetchWithAuth = async (url, options = {}) => {
       body: options.body
     });
     
-    // Añadir un timeout para la solicitud (reducido para carga rápida)
+    // Añadir un timeout para la solicitud (reducido para detección rápida de backend offline)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 segundos - más rápido
+    const timeoutId = setTimeout(() => controller.abort(), 500); // 500ms - detección rápida
     
     // Make the request with CORS options
     const response = await fetch(`${API_BASE_URL}${url}`, {
@@ -374,85 +374,35 @@ const autos = {
       // Si no hay datos locales, intentar obtener del backend
       console.log('No hay datos locales, intentando backend...');
       
-      // Función auxiliar para sincronizar datos JSON con el backend
-      const syncJsonDataWithBackend = async (jsonData) => {
-        // Solo importar si tenemos datos
-        if (!Array.isArray(jsonData) || jsonData.length === 0) return;
-        
-        console.log(`Sincronizando ${jsonData.length} autos con el backend`);
-        
-        // Intentar crear cada auto en el backend
-        for (const auto of jsonData) {
-          try {
-            await fetchWithAuth('/api/autos', {
-              method: 'POST',
-              body: JSON.stringify(auto)
-            });
-            console.log(`Auto sincronizado: ${auto.marca} ${auto.modelo}`);
-          } catch (error) {
-            console.warn(`Error al sincronizar auto ${auto.marca} ${auto.modelo}:`, error.message);
-          }
-        }
-      };
-      
-      // Intento 1: Obtener desde la API principal
+      // Intentar backend UNA SOLA VEZ (si falla, cargar JSON rápidamente)
       try {
-        console.log('Intentando obtener autos desde la API principal: /api/autos');
+        console.log('Intentando obtener autos desde la API: /api/autos');
         const response = await fetchWithAuth('/api/autos');
-        console.log('Respuesta de API principal:', response);
         
         if (response.success && Array.isArray(response.data) && response.data.length > 0) {
-          console.log(`API principal retornó ${response.data.length} autos`);
+          console.log(`API retornó ${response.data.length} autos`);
           saveLocalData('autos', response.data);
           return response;
-        } else {
-          console.log('API principal no retornó autos válidos');
         }
       } catch (error) {
-        console.warn('Error getting autos from API:', error.message);
+        console.warn('Backend no disponible, usando datos locales:', error.message);
       }
       
-      // Intento 2: Obtener desde el catálogo (ruta pública)
+      // Backend no disponible - Cargar desde archivo JSON local
       try {
-        console.log('Intentando obtener autos desde el catálogo: /api/catalogo');
-        const response = await fetchWithAuth('/api/catalogo');
-        console.log('Respuesta de catálogo:', response);
-        
-        if (response.success && Array.isArray(response.data) && response.data.length > 0) {
-          console.log(`Catálogo retornó ${response.data.length} autos`);
-          saveLocalData('autos', response.data);
-          return response;
-        } else {
-          console.log('Catálogo no retornó autos válidos');
-        }
-      } catch (error) {
-        console.warn('Error getting autos from catalog:', error.message);
-      }
-      
-      // Intento 3: Cargar desde archivo JSON local
-      try {
-        console.log('Intentando cargar datos desde archivo JSON local');
+        console.log('Cargando datos desde archivo JSON local');
         const response = await fetch('/data/autos.json');
         
         if (response.ok) {
           const jsonData = await response.json();
           if (Array.isArray(jsonData) && jsonData.length > 0) {
             console.log('Datos cargados desde archivo JSON local:', jsonData.length);
-            
-            // Intentar sincronizar con el backend si está disponible
-            try {
-              console.log('Intentando sincronizar datos JSON con el backend');
-              await syncJsonDataWithBackend(jsonData);
-            } catch (syncError) {
-              console.error('Error al sincronizar con backend:', syncError);
-            }
-            
             saveLocalData('autos', jsonData);
-            return { success: true, data: jsonData };
+            return { success: true, data: jsonData, source: 'json' };
           }
         }
       } catch (error) {
-        console.error('Error loading from local JSON:', error);
+        console.warn('Error loading from local JSON:', error);
       }
       
       // Intento 5: Crear autos de muestra si todo lo demás falla
