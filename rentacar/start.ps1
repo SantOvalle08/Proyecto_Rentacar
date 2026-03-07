@@ -66,7 +66,7 @@ if (Test-Path $frontendPath) {
     if (-not (Test-Path $frontendNodeModules)) {
         Write-Host "Instalando dependencias del frontend..." -ForegroundColor Yellow
         Push-Location $frontendPath
-        npm install
+        npm install --legacy-peer-deps
         Pop-Location
     }
     
