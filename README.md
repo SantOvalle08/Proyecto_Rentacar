@@ -22,8 +22,27 @@ rentacar/
 │   └── files/       
 │       ├── src/     # Código fuente
 │       └── public/  # Archivos estáticos
+├── wireframes/       # 📐 Wireframes de todas las páginas
 └── query/           # Archivos de base de datos
 ```
+
+## 📐 Wireframes y Diseño
+
+Los wireframes completos de todas las páginas del sistema están disponibles en la carpeta [`/wireframes`](./wireframes/README.md).
+
+**Incluye:**
+- ✅ Diagramas visuales en formato Mermaid
+- ✅ Flujos de navegación
+- ✅ Descripciones detalladas de componentes
+- ✅ Estados de cada página
+- ✅ Layouts responsivos (Desktop/Tablet/Mobile)
+
+**Páginas documentadas:**
+- Públicas: Home, Login, Registro, Catálogo, Detalle de Auto
+- Usuario: Mis Reservas, Nueva Reserva, Detalle de Reserva, Perfil
+- Admin: Dashboard, Gestión de Vehículos, Usuarios y Reservas
+
+👉 **[Ver todos los wireframes aquí](./wireframes/README.md)**
 
 ## ⚡ Inicio Rápido
 
