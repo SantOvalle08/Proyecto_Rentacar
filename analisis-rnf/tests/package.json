@@ -1,0 +1,23 @@
+{
+  "name": "rentacar-rnf-tests",
+  "version": "1.0.0",
+  "description": "Tests de Requisitos No Funcionales para RentaCar",
+  "main": "index.js",
+  "scripts": {
+    "test": "node run-all-tests.js",
+    "test:performance": "node performance/api-response-time.test.js && node performance/load-test.js && node performance/memory-leak.test.js",
+    "test:security": "node security/auth.test.js && node security/vulnerabilities.test.js && node security/password.test.js",
+    "test:reliability": "node reliability/error-handling.test.js && node reliability/data-integrity.test.js",
+    "test:compatibility": "node compatibility/rest-api.test.js",
+    "test:maintainability": "node maintainability/code-quality.test.js"
+  },
+  "keywords": ["testing", "rnf", "rentacar"],
+  "author": "Análisis de Calidad",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "autocannon": "^7.12.0",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {}
+}
