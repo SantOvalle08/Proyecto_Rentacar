@@ -45,8 +45,8 @@ if (Test-Path $backendPath) {
         Pop-Location
     }
     
-    # Iniciar backend en una nueva ventana de PowerShell
-    Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$backendPath'; Write-Host 'Backend iniciado en http://localhost:5001' -ForegroundColor Green; node start-server.js"
+    # Iniciar backend en una nueva ventana de PowerShell (forzando entorno local)
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$backendPath'; `$env:NODE_ENV='development'; `$env:PORT='5001'; Write-Host 'Backend iniciado en http://localhost:5001 (NODE_ENV=development)' -ForegroundColor Green; node start-server.js"
     Write-Host "Backend iniciado en nueva ventana" -ForegroundColor Green
 }
 else {

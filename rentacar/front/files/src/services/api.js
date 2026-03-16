@@ -1,14 +1,46 @@
 // API Service for RentaCar app
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:5001' : '');
+const DEV_API_CANDIDATES = ['http://localhost:5001', 'http://localhost:8080'];
+
+const normalizeBaseUrl = (baseUrl) => {
+  if (!baseUrl) return '';
+  return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+};
+
+const getApiBaseCandidates = () => {
+  const explicitUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (explicitUrl) {
+    return [normalizeBaseUrl(explicitUrl)];
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    return DEV_API_CANDIDATES.map(normalizeBaseUrl);
+  }
+
+  // En despliegue mismo dominio/reverse-proxy.
+  return [''];
+};
+
+const API_BASE_CANDIDATES = getApiBaseCandidates();
+let preferredApiBaseUrl = null;
+
+const getOrderedApiCandidates = () => {
+  if (!preferredApiBaseUrl || !API_BASE_CANDIDATES.includes(preferredApiBaseUrl)) {
+    return API_BASE_CANDIDATES;
+  }
+
+  return [
+    preferredApiBaseUrl,
+    ...API_BASE_CANDIDATES.filter((candidate) => candidate !== preferredApiBaseUrl)
+  ];
+};
 
 // Helper function for fetch requests
 const fetchWithAuth = async (url, options = {}) => {
   try {
-    console.log(`Realizando solicitud a: ${API_BASE_URL}${url}`, {
-      method: options.method || 'GET',
-      body: options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : undefined
-    });
+    const requestBody = options.body
+      ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body))
+      : undefined;
     
     // Get the token from localStorage
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -25,30 +57,60 @@ const fetchWithAuth = async (url, options = {}) => {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    // Log detallado para depuración
-    console.log('Request completo:', {
-      url: `${API_BASE_URL}${url}`,
-      method: options.method || 'GET',
-      headers,
-      body: options.body
-    });
-    
-    // Añadir un timeout para la solicitud.
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
-    // Make the request with CORS options
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      ...options,
-      headers,
-      mode: 'cors',
-      cache: 'no-cache',
-      credentials: 'same-origin',
-      signal: controller.signal
-    });
-    
-    // Clear timeout
-    clearTimeout(timeoutId);
+    let response;
+    let lastError;
+
+    for (const baseUrl of getOrderedApiCandidates()) {
+      const fullUrl = `${baseUrl}${url}`;
+
+      console.log(`Realizando solicitud a: ${fullUrl}`, {
+        method: options.method || 'GET',
+        body: requestBody
+      });
+
+      console.log('Request completo:', {
+        url: fullUrl,
+        method: options.method || 'GET',
+        headers,
+        body: options.body
+      });
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      try {
+        response = await fetch(fullUrl, {
+          ...options,
+          headers,
+          mode: 'cors',
+          cache: 'no-cache',
+          credentials: 'same-origin',
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+        preferredApiBaseUrl = baseUrl;
+        break;
+      } catch (candidateError) {
+        clearTimeout(timeoutId);
+        lastError = candidateError;
+
+        // Solo intentar siguiente base URL en errores de conectividad.
+        const isNetworkIssue =
+          candidateError?.name === 'AbortError' ||
+          (candidateError instanceof TypeError && /fetch|network/i.test(candidateError.message));
+
+        if (!isNetworkIssue) {
+          throw candidateError;
+        }
+
+        console.warn(`No se pudo conectar a ${fullUrl}:`, candidateError.message);
+      }
+    }
+
+    if (!response) {
+      throw lastError || new Error('No se pudo establecer conexión con la API');
+    }
     
     console.log('Respuesta recibida:', {
       status: response.status,
