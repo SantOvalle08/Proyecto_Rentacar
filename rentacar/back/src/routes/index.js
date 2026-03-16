@@ -127,6 +127,13 @@ router.get('/api/reservas', verifyToken, isAdmin, reservaController.getAllReserv
 router.get('/api/reservas/:id', verifyToken, reservaController.getReservaById);
 
 /**
+ * @route DELETE /api/reservas/:id
+ * @description Eliminar una reserva (solo admin)
+ * @access Private/Admin
+ */
+router.delete('/api/reservas/:id', verifyToken, isAdmin, reservaController.deleteReserva);
+
+/**
  * @route GET /api/usuarios/:usuarioId/reservas
  * @description Obtener reservas de un usuario
  * @access Private
@@ -146,6 +153,13 @@ router.post('/api/reservas/calcular-precio', verifyToken, reservaController.calc
  * @access Private
  */
 router.put('/api/reservas/:id/cancelar', verifyToken, reservaController.cancelarReserva);
+
+/**
+ * @route PUT /api/reservas/:id/estado
+ * @description Actualizar estado de reserva (solo admin)
+ * @access Private/Admin
+ */
+router.put('/api/reservas/:id/estado', verifyToken, isAdmin, reservaController.actualizarEstadoReserva);
 
 /**
  * @route GET /api/reservas/:id/factura

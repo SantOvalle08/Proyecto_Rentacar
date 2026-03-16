@@ -335,6 +335,7 @@ function ReservaFormulario() {
       const datosReserva = {
         id: `RES-${usuario.id}-${auto.id}-${Date.now().toString().substring(6)}`, // ID más estructurado y corto
         autoId: auto.id,
+        usuario: usuario.id,
         usuarioId: usuario.id,
         fechaInicio: fechaInicio.toISOString(),
         fechaFin: fechaFin.toISOString(),

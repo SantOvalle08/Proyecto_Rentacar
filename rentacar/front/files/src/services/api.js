@@ -655,97 +655,19 @@ const catalogo = {
 // Reservas endpoints
 const reservas = {
   getAll: async () => {
-    // OPTIMIZACIÓN: Usar localStorage primero para carga rápida
-    const localData = getLocalData('reservas');
-    if (localData && Array.isArray(localData)) {
-      console.log('Usando reservas desde localStorage:', localData.length);
-      
-      // Sincronizar con backend en segundo plano
-      setTimeout(async () => {
-        try {
-          const response = await fetchWithAuth('/api/reservas');
-          if (response.success && Array.isArray(response.data)) {
-            console.log('Actualizando reservas desde backend');
-            saveLocalData('reservas', response.data);
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new Event('rentacarDataUpdate'));
-            }
-          }
-        } catch (error) {
-          console.warn('No se pudo sincronizar reservas con backend');
-        }
-      }, 100);
-      
-      return { success: true, data: localData, source: 'localStorage' };
+    const response = await fetchWithAuth('/api/reservas');
+    if (response.success && Array.isArray(response.data)) {
+      saveLocalData('reservas', response.data);
     }
-    
-    // Si no hay datos locales, intentar obtener del backend
-    try {
-      console.log('Obteniendo reservas desde backend');
-      const response = await fetchWithAuth('/api/reservas');
-      
-      if (response.success && response.data) {
-        saveLocalData('reservas', response.data);
-        return response;
-      }
-      
-      console.warn('Backend no retornó reservas válidas');
-      return { success: true, data: [] };
-    } catch (error) {
-      console.warn('Error in reservas.getAll:', error.message);
-      // Retornar array vacío si hay error y no hay datos locales
-      return { success: true, data: [] };
-    }
+    return response;
   },
   
   getUserReservas: async (userId) => {
-    // OPTIMIZACIÓN: Intentar localStorage primero para carga rápida
-    const localData = getLocalData('reservas');
-    if (localData && Array.isArray(localData)) {
-      const userReservas = localData.filter(r => r.usuario && r.usuario.id == userId);
-      console.log(`Usando reservas desde localStorage para usuario ${userId}:`, userReservas.length);
-      
-      // Intentar sincronizar con backend en segundo plano
-      setTimeout(async () => {
-        try {
-          const response = await fetchWithAuth(`/api/reservas/usuario/${userId}`);
-          if (response.success && Array.isArray(response.data)) {
-            console.log('Actualizando reservas desde backend');
-            // Actualizar solo las reservas de este usuario en localStorage
-            const allReservas = getLocalData('reservas') || [];
-            const otherReservas = allReservas.filter(r => r.usuario && r.usuario.id != userId);
-            const updatedReservas = [...otherReservas, ...response.data];
-            saveLocalData('reservas', updatedReservas);
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new Event('rentacarDataUpdate'));
-            }
-          }
-        } catch (error) {
-          console.warn('No se pudo sincronizar reservas con backend');
-        }
-      }, 100);
-      
-      return { success: true, data: userReservas, source: 'localStorage' };
+    const response = await fetchWithAuth(`/api/usuarios/${userId}/reservas`);
+    if (response.success && Array.isArray(response.data)) {
+      saveLocalData('reservas', response.data);
     }
-    
-    // Si no hay datos locales, intentar obtener del backend
-    try {
-      console.log(`Obteniendo reservas desde backend para usuario ${userId}`);
-      const response = await fetchWithAuth(`/api/reservas/usuario/${userId}`);
-      
-      if (response.success && response.data) {
-        // Guardar en localStorage
-        saveLocalData('reservas', response.data);
-        return response;
-      }
-      
-      console.warn('Backend no retornó datos válidos');
-      return { success: true, data: [] }; // Retornar array vacío si no hay datos
-    } catch (error) {
-      console.warn(`Error obteniendo reservas del backend:`, error.message);
-      // Retornar array vacío en caso de error
-      return { success: true, data: [] };
-    }
+    return response;
   },
   
   getById: async (id) => {
@@ -805,144 +727,84 @@ const reservas = {
   },
   
   create: async (reservaData) => {
-    try {
-      // Try to create in API first
-      const response = await fetchWithAuth('/api/reservas', {
-        method: 'POST',
-        body: JSON.stringify(reservaData)
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('reservas') || [];
-        // Usar el ID generado por la API o el proporcionado en los datos de la reserva
-        const newReserva = response.data || reservaData;
-        saveLocalData('reservas', [...localData, newReserva]);
-        return { success: true, data: newReserva };
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.warn('Error in reservas.create, using localStorage:', error);
-      
-      // Fallback to localStorage - usar el ID que ya viene en los datos
+    const payload = {
+      fechaInicio: reservaData.fechaInicio,
+      fechaFin: reservaData.fechaFin,
+      usuario: reservaData.usuario || reservaData.usuarioId,
+      autoId: reservaData.autoId,
+      metodoPago: reservaData.metodoPago,
+      datosPago: reservaData.datosPago
+    };
+
+    const response = await fetchWithAuth('/api/reservas', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    if (response.success && response.data && response.data.reserva) {
       const localData = getLocalData('reservas') || [];
-      const newReserva = reservaData; // Ya incluye un ID generado en el cliente
-      saveLocalData('reservas', [...localData, newReserva]);
-      
-      return { success: true, data: newReserva };
+      saveLocalData('reservas', [...localData, response.data.reserva]);
+      return { success: true, data: response.data.reserva };
     }
+
+    return response;
   },
   
   update: async (id, reservaData) => {
-    try {
-      // Try to update in API first
-      const response = await fetchWithAuth(`/api/reservas/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(reservaData)
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('reservas');
-        if (localData) {
-          const updatedData = localData.map(reserva => 
-            reserva.id == id ? { ...reserva, ...reservaData } : reserva
-          );
-          saveLocalData('reservas', updatedData);
-        }
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in reservas.update(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
+    return reservas.actualizarEstadoAdmin(id, reservaData.estado);
+  },
+
+  actualizarEstadoAdmin: async (id, estado) => {
+    const response = await fetchWithAuth(`/api/reservas/${id}/estado`, {
+      method: 'PUT',
+      body: JSON.stringify({ estado })
+    });
+
+    if (response.success && response.data) {
       const localData = getLocalData('reservas');
-      if (localData) {
-        const updatedData = localData.map(reserva => 
-          reserva.id == id ? { ...reserva, ...reservaData } : reserva
+      if (localData && Array.isArray(localData)) {
+        const updatedData = localData.map(reserva =>
+          reserva.id == id ? { ...reserva, estado: response.data.estado } : reserva
         );
         saveLocalData('reservas', updatedData);
-        return { success: true };
       }
-      
-      // If no localStorage data, throw the original error
-      throw error;
     }
+
+    return response;
   },
   
   delete: async (id) => {
-    try {
-      // Try to delete in API first
-      const response = await fetchWithAuth(`/api/reservas/${id}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('reservas');
-        if (localData) {
-          const filteredData = localData.filter(reserva => reserva.id != id);
-          saveLocalData('reservas', filteredData);
-        }
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in reservas.delete(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
+    const response = await fetchWithAuth(`/api/reservas/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (response.success) {
       const localData = getLocalData('reservas');
       if (localData) {
         const filteredData = localData.filter(reserva => reserva.id != id);
         saveLocalData('reservas', filteredData);
-        return { success: true };
       }
-      
-      // If no localStorage data, throw the original error
-      throw error;
     }
+
+    return response;
   },
   
   cancelar: async (id) => {
-    try {
-      // Try to cancel in API first
-      const response = await fetchWithAuth(`/api/reservas/${id}/cancelar`, {
-        method: 'PUT'
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('reservas');
-        if (localData) {
-          const updatedData = localData.map(reserva => 
-            reserva.id == id ? { ...reserva, estado: 'cancelada' } : reserva
-          );
-          saveLocalData('reservas', updatedData);
-        }
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in reservas.cancelar(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
+    const response = await fetchWithAuth(`/api/reservas/${id}/cancelar`, {
+      method: 'PUT'
+    });
+
+    if (response.success) {
       const localData = getLocalData('reservas');
       if (localData) {
-        const updatedData = localData.map(reserva => 
-          reserva.id == id ? { ...reserva, estado: 'cancelada' } : reserva
+        const updatedData = localData.map(reserva =>
+          reserva.id == id ? { ...reserva, estado: 'Cancelada' } : reserva
         );
         saveLocalData('reservas', updatedData);
-        return { success: true };
       }
-      
-      // If no localStorage data, throw the original error
-      throw error;
     }
+
+    return response;
   },
   
   generarFactura: (id) => fetchWithAuth(`/api/reservas/${id}/factura`),

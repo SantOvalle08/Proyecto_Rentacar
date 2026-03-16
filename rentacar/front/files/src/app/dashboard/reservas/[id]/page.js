@@ -7,6 +7,28 @@ import Image from 'next/image';
 import apiService from '@/services/api';
 import styles from './page.module.css';
 
+const normalizeEstado = (estado = '') => {
+  const map = {
+    pendiente: 'Pendiente',
+    activa: 'Confirmada',
+    confirmada: 'Confirmada',
+    completada: 'Completada',
+    cancelada: 'Cancelada'
+  };
+  return map[String(estado).toLowerCase()] || estado;
+};
+
+const estadoLabel = (estado = '') => {
+  const normalized = normalizeEstado(estado);
+  const map = {
+    Pendiente: 'Pendiente',
+    Confirmada: 'Activa',
+    Completada: 'Completada',
+    Cancelada: 'Cancelada'
+  };
+  return map[normalized] || normalized;
+};
+
 export default function ReservaDetalles({ params }) {
   const router = useRouter();
   const { id } = params;
@@ -41,7 +63,7 @@ export default function ReservaDetalles({ params }) {
           }
           
           setReserva(reservaData);
-          setNuevoEstado(reservaData.estado || 'pendiente');
+          setNuevoEstado(normalizeEstado(reservaData.estado || 'Pendiente'));
         } else {
           throw new Error('No se pudo cargar la información de la reserva');
         }
@@ -60,25 +82,19 @@ export default function ReservaDetalles({ params }) {
   
   // Cambiar el estado de la reserva
   const handleCambiarEstado = async () => {
-    if (!reserva || !nuevoEstado || nuevoEstado === reserva.estado) {
+    if (!reserva || !nuevoEstado || normalizeEstado(nuevoEstado) === normalizeEstado(reserva.estado)) {
       return;
     }
     
     try {
       setLoading(true);
       
-      // Preparar datos actualizados
-      const datosActualizados = {
-        ...reserva,
-        estado: nuevoEstado
-      };
-      
-      // Actualizar en la API
-      const response = await apiService.reservas.update(reserva.id, datosActualizados);
+      // Actualizar estado en la API (fuente de verdad: base de datos)
+      const response = await apiService.reservas.actualizarEstadoAdmin(reserva.id, normalizeEstado(nuevoEstado));
       
       if (response.success) {
         // Actualizar localmente
-        setReserva(datosActualizados);
+        setReserva(prev => ({ ...prev, estado: normalizeEstado(nuevoEstado) }));
         alert('Estado de la reserva actualizado correctamente');
       } else {
         throw new Error('No se pudo actualizar el estado de la reserva');
@@ -162,14 +178,12 @@ export default function ReservaDetalles({ params }) {
           <div className={styles.detailItem}>
             <span className={styles.detailLabel}>Estado:</span>
             <span className={`${styles.detailValue} ${
-              reserva.estado === 'activa' ? styles.estadoActiva : 
-              reserva.estado === 'pendiente' ? styles.estadoPendiente :
-              reserva.estado === 'completada' ? styles.estadoCompletada :
+              normalizeEstado(reserva.estado) === 'Confirmada' ? styles.estadoActiva : 
+              normalizeEstado(reserva.estado) === 'Pendiente' ? styles.estadoPendiente :
+              normalizeEstado(reserva.estado) === 'Completada' ? styles.estadoCompletada :
               styles.estadoCancelada
             }`}>
-              {reserva.estado === 'activa' ? 'Activa' : 
-               reserva.estado === 'pendiente' ? 'Pendiente' :
-               reserva.estado === 'completada' ? 'Completada' : 'Cancelada'}
+              {estadoLabel(reserva.estado)}
             </span>
           </div>
           
@@ -195,15 +209,15 @@ export default function ReservaDetalles({ params }) {
                 value={nuevoEstado}
                 onChange={(e) => setNuevoEstado(e.target.value)}
               >
-                <option value="pendiente">Pendiente</option>
-                <option value="activa">Activa</option>
-                <option value="completada">Completada</option>
-                <option value="cancelada">Cancelada</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Confirmada">Activa</option>
+                <option value="Completada">Completada</option>
+                <option value="Cancelada">Cancelada</option>
               </select>
               <button 
                 className={styles.cambiarButton} 
                 onClick={handleCambiarEstado}
-                disabled={loading || nuevoEstado === reserva.estado}
+                disabled={loading || normalizeEstado(nuevoEstado) === normalizeEstado(reserva.estado)}
               >
                 Actualizar Estado
               </button>

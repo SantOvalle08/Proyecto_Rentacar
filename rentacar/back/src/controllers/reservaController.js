@@ -333,6 +333,108 @@ const reservaController = {
       });
     }
   },
+
+  /**
+   * Elimina una reserva (solo admin)
+   * @param {Object} req - Objeto de solicitud Express
+   * @param {Object} req.params - Parámetros de la URL
+   * @param {string} req.params.id - ID numérico de la reserva (idReserva)
+   * @param {Object} res - Objeto de respuesta Express
+   * @returns {Object} Respuesta JSON con el resultado
+   */
+  async deleteReserva(req, res) {
+    try {
+      const { id } = req.params;
+      const reserva = await Reserva.findOne({ idReserva: id });
+
+      if (!reserva) {
+        return res.status(404).json({
+          success: false,
+          message: 'Reserva no encontrada'
+        });
+      }
+
+      const auto = await Auto.findById(reserva.auto);
+      await Reserva.deleteOne({ _id: reserva._id });
+
+      if (auto) {
+        auto.disponible = true;
+        await auto.save();
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Reserva eliminada con éxito'
+      });
+    } catch (error) {
+      console.error('Error en deleteReserva:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  },
+
+  /**
+   * Actualiza el estado de una reserva (solo admin)
+   * @param {Object} req - Objeto de solicitud Express
+   * @param {Object} req.params - Parámetros de la URL
+   * @param {string} req.params.id - ID numérico de la reserva (idReserva)
+   * @param {Object} req.body - Cuerpo de la solicitud
+   * @param {string} req.body.estado - Nuevo estado (Pendiente, Confirmada, Cancelada, Completada)
+   * @param {Object} res - Objeto de respuesta Express
+   * @returns {Object} Respuesta JSON con la reserva actualizada
+   */
+  async actualizarEstadoReserva(req, res) {
+    try {
+      const { id } = req.params;
+      const { estado } = req.body;
+
+      const estadosValidos = ['Pendiente', 'Confirmada', 'Cancelada', 'Completada'];
+      if (!estado || !estadosValidos.includes(estado)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Estado inválido'
+        });
+      }
+
+      const reserva = await Reserva.findOne({ idReserva: id }).populate('auto');
+      if (!reserva) {
+        return res.status(404).json({
+          success: false,
+          message: 'Reserva no encontrada'
+        });
+      }
+
+      const estadoAnterior = reserva.estado;
+      reserva.estado = estado;
+      await reserva.save();
+
+      // Si se cancela o completa, el vehículo vuelve a disponible.
+      // Si se confirma o pendiente, permanece no disponible por tener reserva activa.
+      if (reserva.auto) {
+        if (estado === 'Cancelada' || estado === 'Completada') {
+          reserva.auto.disponible = true;
+          await reserva.auto.save();
+        } else if (estado === 'Pendiente' || estado === 'Confirmada') {
+          reserva.auto.disponible = false;
+          await reserva.auto.save();
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Estado actualizado de ${estadoAnterior} a ${estado}`,
+        data: reserva.mostrarDetalleReserva()
+      });
+    } catch (error) {
+      console.error('Error en actualizarEstadoReserva:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  },
   
   /**
    * Genera una factura para una reserva
