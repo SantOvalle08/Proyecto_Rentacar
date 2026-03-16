@@ -3,16 +3,28 @@
  * Migra: Usuarios, Autos, Catálogo, Reservas, Checklists
  */
 
+const path = require('path');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 const Usuario = require('./src/models/usuario');
 const Auto = require('./src/models/Auto');
 const Catalogo = require('./src/models/Catalogo');
 const Reserva = require('./src/models/Reserva');
 const Checklist = require('./src/models/Checklist');
 
+dotenv.config({
+  path: path.join(__dirname, '.env'),
+  override: true
+});
+
 // Conexiones
 const LOCAL_URI = 'mongodb://localhost:27017/rentacar';
-const ATLAS_URI = 'mongodb+srv://rentarCar:AKZ4MeddMnlc9wKD@rentarcar.fogsjwr.mongodb.net/rentacar?appName=rentarCar';
+const ATLAS_URI = process.env.MONGODB_URI;
+
+if (!ATLAS_URI) {
+  console.error('Falta MONGODB_URI en el archivo .env');
+  process.exit(1);
+}
 
 // Crear dos conexiones separadas
 let localConnection;

@@ -2,12 +2,24 @@
  * Script para verificar datos en MongoDB Atlas
  */
 
+const path = require('path');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 const Usuario = require('./src/models/usuario');
 const Auto = require('./src/models/Auto');
 const Reserva = require('./src/models/Reserva');
 
-const ATLAS_URI = 'mongodb+srv://rentarCar:AKZ4MeddMnlc9wKD@rentarcar.fogsjwr.mongodb.net/rentacar?appName=rentarCar';
+dotenv.config({
+  path: path.join(__dirname, '.env'),
+  override: true
+});
+
+const ATLAS_URI = process.env.MONGODB_URI;
+
+if (!ATLAS_URI) {
+  console.error('Falta MONGODB_URI en el archivo .env');
+  process.exit(1);
+}
 
 async function verificarDatos() {
   console.log('\n╔════════════════════════════════════════════════╗');
