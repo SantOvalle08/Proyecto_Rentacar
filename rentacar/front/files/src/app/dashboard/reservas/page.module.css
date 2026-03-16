@@ -76,8 +76,8 @@
 
 /* Action buttons */
 .facturaButton {
-  background: linear-gradient(135deg, var(--btn-primary-bg, #0066cc) 0%, #0052a3 100%);
-  color: white;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   border-radius: var(--button-border-radius);
   padding: var(--space-1) var(--space-3);
@@ -85,18 +85,19 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: var(--font-size-sm);
-  box-shadow: 0 2px 4px rgba(0, 102, 204, 0.2);
+  box-shadow: var(--shadow-sm);
   margin-right: var(--space-2);
 }
 
 .facturaButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 102, 204, 0.3);
+  box-shadow: var(--shadow-md);
+  background-color: var(--btn-primary-hover);
 }
 
 .cancelButton {
   background-color: var(--error-600);
-  color: white;
+  color: var(--error-on);
   border: none;
   border-radius: var(--button-border-radius);
   padding: var(--space-1) var(--space-3);
@@ -135,7 +136,7 @@
 
 .deleteButton {
   background-color: var(--error-600);
-  color: white;
+  color: var(--error-on);
   border: none;
   border-radius: var(--button-border-radius);
   padding: var(--space-2) var(--space-4);

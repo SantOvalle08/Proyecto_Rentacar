@@ -165,7 +165,7 @@
 
 .metodoPagoSelected {
   border-color: var(--color-primary);
-  background-color: rgba(0, 112, 243, 0.05);
+  background-color: var(--primary-color-light);
 }
 
 .metodoPagoIcon {
@@ -242,7 +242,7 @@
 .disclaimerContainer {
   margin-top: 2rem;
   padding: 1rem;
-  background-color: rgba(0, 112, 243, 0.05);
+  background-color: var(--primary-color-light);
   border-radius: 8px;
   border-left: 4px solid var(--color-primary);
 }
@@ -264,7 +264,7 @@
   flex: 3;
   padding: 1rem;
   background-color: var(--color-primary);
-  color: white;
+  color: var(--btn-primary-text);
   border: none;
   border-radius: 4px;
   font-weight: 500;
@@ -277,15 +277,15 @@
 }
 
 .confirmarButton:disabled {
-  background-color: #ccc;
+  background-color: var(--text-disabled);
   cursor: not-allowed;
 }
 
 .cancelarButton {
   flex: 1;
   padding: 1rem;
-  background-color: #6c757d;
-  color: white;
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
   border: none;
   border-radius: 4px;
   font-weight: 500;
@@ -296,23 +296,23 @@
 }
 
 .cancelarButton:hover {
-  background-color: #5a6268;
+  background-color: var(--btn-secondary-hover);
 }
 
 .error {
   padding: 1rem;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
+  background-color: var(--error-50);
+  border: 1px solid var(--error-200);
+  color: var(--error-700);
   border-radius: 8px;
   margin-bottom: 1.5rem;
 }
 
 .success {
   padding: 1rem;
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
-  color: #155724;
+  background-color: var(--success-50);
+  border: 1px solid var(--success-100);
+  color: var(--success-700);
   border-radius: 8px;
   margin-bottom: 1.5rem;
 }
@@ -379,7 +379,7 @@
 
 .popupButton {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--btn-primary-text);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 4px;

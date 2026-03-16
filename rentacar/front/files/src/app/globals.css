@@ -22,6 +22,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body {
+  color-scheme: light;
+}
+
+[data-theme='dark'] body {
+  color-scheme: dark;
+}
+
 /* Layout styles */
 .container {
   width: 100%;
@@ -83,6 +91,11 @@ button,
   border: none;
 }
 
+button {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
 /* Primary Button */
 .btn-primary {
   background-color: var(--btn-primary-bg);
@@ -102,6 +115,18 @@ button,
 
 .btn-secondary:hover, .btn-secondary:focus {
   background-color: var(--btn-secondary-hover-bg);
+}
+
+.btn-outlined,
+button.outlined {
+  background-color: transparent;
+  color: var(--btn-outlined-text);
+  border: 1px solid var(--btn-outlined-border);
+}
+
+.btn-outlined:hover,
+button.outlined:hover {
+  background-color: var(--btn-outlined-hover);
 }
 
 /* Text Button */
@@ -135,6 +160,19 @@ button:disabled,
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+input,
+select,
+textarea {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-disabled);
+}
+
 .form-control:focus {
   outline: none;
   border-color: var(--primary-color);
@@ -164,6 +202,13 @@ button:disabled,
   padding: var(--card-padding);
   margin-bottom: var(--space-6);
   border: 1px solid var(--card-border);
+}
+
+section,
+article,
+aside,
+main {
+  color: var(--text-primary);
 }
 
 /* Alert/Message components */
@@ -232,6 +277,10 @@ button:disabled,
 
 .menu a.active {
   color: var(--primary-color);
+}
+
+.menu-button span {
+  background-color: var(--text-primary);
 }
 
 .menu a.button {

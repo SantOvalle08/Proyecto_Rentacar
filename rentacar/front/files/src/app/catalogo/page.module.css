@@ -113,7 +113,7 @@
   top: 10px;
   right: 10px;
   background-color: rgba(244, 67, 54, 0.9);
-  color: white;
+  color: var(--error-on);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);
