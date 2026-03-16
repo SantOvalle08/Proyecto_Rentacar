@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -5,13 +6,25 @@ const connectDB = require('./src/config/database');
 const routes = require('./src/routes');
 
 // Load environment variables
-dotenv.config();
+dotenv.config({
+  path: path.join(__dirname, '.env'),
+  override: true
+});
 
 // Init app
 const app = express();
 
 // Variable global para el estado de la conexión
 let dbConnectionStatus = false;
+
+const scheduleReconnect = (intervalMs = 30000) => {
+  setInterval(async () => {
+    if (!dbConnectionStatus) {
+      console.log('Intentando reconectar a MongoDB en segundo plano...');
+      await connectWithRetry(1, 2000);
+    }
+  }, intervalMs);
+};
 
 // Connect to database with retry mechanism
 const connectWithRetry = async (retries = 5, delay = 5000) => {
@@ -100,10 +113,9 @@ app.use((err, req, res, next) => {
 // Start server only after attempting database connection
 const startServer = async () => {
   const connected = await connectWithRetry();
-  
+
   if (!connected) {
-    console.error('No se pudo iniciar el servidor debido a problemas de conexión con la base de datos');
-    process.exit(1);
+    console.warn('Servidor iniciado sin base de datos. Las operaciones de escritura responderán 503 hasta reconectar.');
   }
   
   const PORT = process.env.PORT || 5001;
@@ -112,6 +124,8 @@ const startServer = async () => {
     console.log(`CORS configurado para permitir solicitudes desde cualquier origen (*)`);
     console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
   });
+
+  scheduleReconnect();
 };
 
 startServer(); 

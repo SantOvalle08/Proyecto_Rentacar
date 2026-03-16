@@ -1,6 +1,6 @@
 // API Service for RentaCar app
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:5001' : '');
 
 // Helper function for fetch requests
 const fetchWithAuth = async (url, options = {}) => {
@@ -33,9 +33,9 @@ const fetchWithAuth = async (url, options = {}) => {
       body: options.body
     });
     
-    // Añadir un timeout para la solicitud (reducido para detección rápida de backend offline)
+    // Añadir un timeout para la solicitud.
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 500); // 500ms - detección rápida
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
     
     // Make the request with CORS options
     const response = await fetch(`${API_BASE_URL}${url}`, {

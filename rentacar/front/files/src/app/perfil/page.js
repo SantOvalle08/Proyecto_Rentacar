@@ -103,7 +103,7 @@ export default function Perfil() {
       }
 
       // Ensure we have the API URL and user ID
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       if (!user || !user.id) {
         throw new Error('ID de usuario no encontrado');
       }

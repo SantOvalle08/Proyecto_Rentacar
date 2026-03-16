@@ -1,52 +1,28 @@
-# Frontend Dockerfile para Google Cloud Run
-FROM node:18-alpine AS base
+# Frontend Dockerfile (AWS App Runner stable runtime)
+FROM node:20-alpine
 
-# Instalar dependencias solo cuando sea necesario
-FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Instalar dependencias
+# Dependencias
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
-# Builder de la aplicación
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Código fuente
 COPY . .
 
-# Variables de entorno para el build
+# Build args/env
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
-# ENV NEXT_PUBLIC_API_URL=https://tu-backend-url.run.app
-
-RUN npm run build
-
-# Imagen de producción
-FROM base AS runner
-WORKDIR /app
-
+ENV NODE_OPTIONS=--max-old-space-size=2048
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Copiar los archivos compilados
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
+# Compilar Next
+RUN npm run build
 
 EXPOSE 3000
 
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-CMD ["node", "server.js"]
+# Forzar bind a 0.0.0.0 para health checks de App Runner
+CMD ["npm", "run", "start", "--", "-p", "3000", "-H", "0.0.0.0"]

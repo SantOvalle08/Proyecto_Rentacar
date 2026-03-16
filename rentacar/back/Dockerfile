@@ -1,5 +1,5 @@
-# Backend Dockerfile para Google Cloud Run
-FROM node:18-alpine
+# Backend Dockerfile (AWS compatible)
+FROM node:20-alpine
 
 # Crear directorio de trabajo
 WORKDIR /app
@@ -13,7 +13,7 @@ RUN npm ci --only=production
 # Copiar el resto del código
 COPY . .
 
-# Exponer el puerto (Cloud Run usa la variable PORT)
+# Exponer el puerto (App Runner/ECS usa la variable PORT)
 ENV PORT=8080
 EXPOSE 8080
 
