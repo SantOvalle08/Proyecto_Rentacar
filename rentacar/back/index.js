@@ -5,14 +5,46 @@ const dotenv = require('dotenv');
 const connectDB = require('./src/config/database');
 const routes = require('./src/routes');
 
-// Load environment variables
+// Load environment variables from .env without overriding platform vars.
+// In AWS, runtime environment variables must take precedence.
 dotenv.config({
-  path: path.join(__dirname, '.env'),
-  override: true
+  path: path.join(__dirname, '.env')
 });
 
 // Init app
 const app = express();
+
+const SENSITIVE_LOG_KEYS = new Set([
+  'contraseña',
+  'password',
+  'token',
+  'authorization',
+  'accesstoken',
+  'refreshtoken',
+  'jwt'
+]);
+
+const sanitizeForLogs = (value) => {
+  if (Array.isArray(value)) {
+    return value.map(sanitizeForLogs);
+  }
+
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+
+  const sanitized = {};
+
+  for (const [key, val] of Object.entries(value)) {
+    if (SENSITIVE_LOG_KEYS.has(key.toLowerCase())) {
+      sanitized[key] = '***';
+    } else {
+      sanitized[key] = sanitizeForLogs(val);
+    }
+  }
+
+  return sanitized;
+};
 
 // Variable global para el estado de la conexión
 let dbConnectionStatus = false;
@@ -79,9 +111,9 @@ app.use((req, res, next) => {
 // Log all incoming requests
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  console.log('Request headers:', req.headers);
+  console.log('Request headers:', sanitizeForLogs(req.headers));
   if (req.body && Object.keys(req.body).length > 0) {
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('Request body:', JSON.stringify(sanitizeForLogs(req.body), null, 2));
   }
   next();
 });

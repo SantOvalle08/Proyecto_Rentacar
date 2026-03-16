@@ -6,7 +6,14 @@ const mongoose = require('mongoose');
  */
 const connectDB = async () => {
   try {
-    const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/rentacar';
+    const isProduction = process.env.NODE_ENV === 'production';
+    const dbUri = process.env.MONGODB_URI || (!isProduction ? 'mongodb://localhost:27017/rentacar' : null);
+
+    if (!dbUri) {
+      console.error('MONGODB_URI no está configurada en producción.');
+      console.error('Defina MONGODB_URI en las variables de entorno del servicio en AWS.');
+      return null;
+    }
     
     console.log(`Intentando conectar a MongoDB en: ${dbUri}`);
     

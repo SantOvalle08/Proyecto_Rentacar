@@ -6,6 +6,20 @@
 const sistemaRentaAutos = require('../utils/SistemaRentaAutos');
 const Usuario = require('../models/usuario');
 
+const sanitizeAuthPayload = (payload = {}) => {
+  const sanitized = { ...payload };
+
+  if (Object.prototype.hasOwnProperty.call(sanitized, 'contraseña')) {
+    sanitized.contraseña = '***';
+  }
+
+  if (Object.prototype.hasOwnProperty.call(sanitized, 'password')) {
+    sanitized.password = '***';
+  }
+
+  return sanitized;
+};
+
 /**
  * @typedef {Object} UsuarioController
  * @property {Function} register - Registra un nuevo usuario
@@ -40,7 +54,7 @@ const usuarioController = {
     try {
       console.log('============================================');
       console.log('SOLICITUD DE REGISTRO RECIBIDA');
-      console.log('Body:', req.body);
+      console.log('Body:', sanitizeAuthPayload(req.body));
       console.log('Headers:', req.headers);
       console.log('============================================');
       
@@ -56,17 +70,23 @@ const usuarioController = {
       
       // Validate required fields
       if (!nombre || !email || !contraseña) {
-        console.log('Campos requeridos faltantes:', { nombre, email, contraseña });
+        console.log('Campos requeridos faltantes:', {
+          nombre: !!nombre,
+          email: !!email,
+          contraseña: !!contraseña
+        });
         return res.status(400).json({
           success: false,
           message: 'Nombre, email y contraseña son campos requeridos'
         });
       }
+
+      const normalizedEmail = email.toLowerCase().trim();
       
       // Check if user already exists
-      const existingUser = await Usuario.findOne({ email });
+      const existingUser = await Usuario.findOne({ email: normalizedEmail });
       if (existingUser) {
-        console.log('Email ya registrado:', email);
+        console.log('Email ya registrado:', normalizedEmail);
         return res.status(400).json({
           success: false,
           message: 'El correo electrónico ya está registrado'
@@ -79,7 +99,7 @@ const usuarioController = {
       // Register user using Singleton instance
       const result = await sistemaRentaAutos.registrarUsuario({
         nombre: nombreCompleto,
-        email,
+        email: normalizedEmail,
         telefono: telefono || '',
         contraseña,
         // Add additional fields to user metadata if needed
@@ -90,7 +110,7 @@ const usuarioController = {
       });
       
       if (result) {
-        console.log('Usuario registrado con éxito:', email);
+        console.log('Usuario registrado con éxito:', normalizedEmail);
         return res.status(201).json({
           success: true,
           message: 'Usuario registrado con éxito'
@@ -125,7 +145,7 @@ const usuarioController = {
     try {
       console.log('============================================');
       console.log('SOLICITUD DE LOGIN RECIBIDA');
-      console.log('Body:', req.body);
+      console.log('Body:', sanitizeAuthPayload(req.body));
       console.log('Headers:', req.headers);
       console.log('============================================');
       
