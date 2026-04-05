@@ -10,6 +10,7 @@ const usuarioController = require('../controllers/usuarioController');
 const autoController = require('../controllers/autoController');
 const reservaController = require('../controllers/reservaController');
 const checklistController = require('../controllers/checklistController');
+const uploadController = require('../controllers/uploadController');
 const { verifyToken, isAdmin } = require('../middleware/auth');
 
 /**
@@ -196,5 +197,12 @@ router.delete('/api/autos/:autoId/checklist/rayones/:rayonId', verifyToken, chec
  * @access Private/Admin
  */
 router.delete('/api/autos/:autoId/checklist', verifyToken, isAdmin, checklistController.deleteChecklist);
+
+/**
+ * @route POST /api/upload
+ * @description Subir imagenes para vehiculos o documentos
+ * @access Private
+ */
+router.post('/api/upload', verifyToken, uploadController.uploadSingle, uploadController.uploadImage);
 
 module.exports = router; 

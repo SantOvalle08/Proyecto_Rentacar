@@ -6,7 +6,47 @@
 const sistemaRentaAutos = require('../utils/SistemaRentaAutos');
 const Reserva = require('../models/Reserva');
 const Auto = require('../models/Auto');
+const Checklist = require('../models/Checklist');
 const calculadoraFactory = require('../utils/factories/CalculadoraFactory');
+
+const ESTADOS_BLOQUEANTES_INSPECCION = ['Malo', 'Requiere atención'];
+
+const validarInspeccionVehiculo = (checklist) => {
+  const motivos = [];
+
+  if (!checklist) {
+    return {
+      cumple: false,
+      motivos: ['No existe checklist de inspeccion para el vehiculo']
+    };
+  }
+
+  if (ESTADOS_BLOQUEANTES_INSPECCION.includes(checklist.estadoGeneral)) {
+    motivos.push(`Estado general no apto: ${checklist.estadoGeneral}`);
+  }
+
+  if (typeof checklist.porcentajeGasolina === 'number' && checklist.porcentajeGasolina < 25) {
+    motivos.push('Nivel de gasolina insuficiente para salida (minimo 25%)');
+  }
+
+  const itemsInventario = Array.isArray(checklist.inventario) ? checklist.inventario : [];
+  const faltantes = itemsInventario.filter(item => !item.presente).length;
+  if (faltantes > 0) {
+    motivos.push(`Inventario incompleto (${faltantes} item(s) faltante(s))`);
+  }
+
+  const itemsDefectuosos = itemsInventario.filter(
+    item => item.presente && ['Malo', 'No funcional'].includes(item.condicion)
+  ).length;
+  if (itemsDefectuosos > 0) {
+    motivos.push(`Inventario no apto (${itemsDefectuosos} item(s) en mal estado)`);
+  }
+
+  return {
+    cumple: motivos.length === 0,
+    motivos
+  };
+};
 
 /**
  * @typedef {Object} ReservaController
@@ -81,6 +121,22 @@ const reservaController = {
         return res.status(400).json({
           success: false,
           message: 'El auto no está disponible'
+        });
+      }
+
+      // RC-029: El vehiculo debe aprobar inspeccion antes de reservarse
+      const checklist = await Checklist.findOne({ idAuto: auto.idAuto });
+      const validacionInspeccion = validarInspeccionVehiculo(checklist);
+      if (!validacionInspeccion.cumple) {
+        return res.status(409).json({
+          success: false,
+          message: 'El vehiculo no cumple la inspeccion requerida para ser reservado',
+          data: {
+            regla: 'RC-029',
+            estadoGeneral: checklist?.estadoGeneral,
+            porcentajeGasolina: checklist?.porcentajeGasolina,
+            motivos: validacionInspeccion.motivos
+          }
         });
       }
       
