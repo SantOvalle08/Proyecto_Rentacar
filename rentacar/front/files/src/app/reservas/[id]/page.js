@@ -17,9 +17,37 @@ export default function DetallesReservaCliente({ params }) {
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
   const [mostrarFactura, setMostrarFactura] = useState(false);
+
+  const getUserId = (userData) => {
+    if (!userData) return null;
+    return userData.id || userData._id || userData.usuarioId || null;
+  };
+
+  const getUserRole = (userData) => {
+    if (!userData) return null;
+    return userData.rol || userData.role || null;
+  };
+
+  const getReservaUsuarioId = (reservaData) => {
+    if (!reservaData) return null;
+
+    if (reservaData.usuarioId) return reservaData.usuarioId;
+
+    if (typeof reservaData.usuario === 'string' || typeof reservaData.usuario === 'number') {
+      return reservaData.usuario;
+    }
+
+    return reservaData.usuario?.id || reservaData.usuario?._id || null;
+  };
+
+  const isReservaOwnerOrAdmin = (reservaData, userId, userRole) => {
+    if (String(userRole || '').toLowerCase() === 'admin') return true;
+    const reservaUsuarioId = getReservaUsuarioId(reservaData);
+    return reservaUsuarioId != null && String(reservaUsuarioId) === String(userId);
+  };
   
   // Cargar datos de la reserva
-  const loadReserva = useCallback(async (reservaId, userId) => {
+  const loadReserva = useCallback(async (reservaId, userId, userRole) => {
     try {
       setLoading(true);
       setError('');
@@ -32,9 +60,7 @@ export default function DetallesReservaCliente({ params }) {
           // Verificar que la reserva pertenece al usuario actual o el usuario es admin
           const reservaData = response.data;
           
-          if (reservaData.usuarioId == userId || 
-              reservaData.usuario?.id == userId || 
-              user?.rol === 'admin') {
+          if (isReservaOwnerOrAdmin(reservaData, userId, userRole)) {
             setReserva(reservaData);
             setLoading(false);
             return;
@@ -54,9 +80,7 @@ export default function DetallesReservaCliente({ params }) {
             const allReservas = JSON.parse(localData);
             const userReserva = allReservas.find(r => r.id == reservaId);
             
-            if (userReserva && (userReserva.usuarioId == userId || 
-                userReserva.usuario?.id == userId || 
-                user?.rol === 'admin')) {
+            if (userReserva && isReservaOwnerOrAdmin(userReserva, userId, userRole)) {
               setReserva(userReserva);
               setLoading(false);
               return;
@@ -73,7 +97,7 @@ export default function DetallesReservaCliente({ params }) {
       setError(error.message || 'Error al cargar los datos de la reserva');
       setLoading(false);
     }
-  }, [user?.rol]);
+  }, []);
 
   // Verificar autenticación y cargar datos del usuario
   useEffect(() => {
@@ -89,8 +113,15 @@ export default function DetallesReservaCliente({ params }) {
         
         try {
           const parsedUser = JSON.parse(userData);
+          const currentUserId = getUserId(parsedUser);
+          const currentUserRole = getUserRole(parsedUser);
+
+          if (!currentUserId && String(currentUserRole || '').toLowerCase() !== 'admin') {
+            throw new Error('Usuario sin identificador válido');
+          }
+
           setUser(parsedUser);
-          loadReserva(id, parsedUser.id);
+          loadReserva(id, currentUserId, currentUserRole);
         } catch (error) {
           console.error('Error parsing user data:', error);
           localStorage.removeItem('user');
@@ -165,6 +196,51 @@ export default function DetallesReservaCliente({ params }) {
       hour: 'numeric',
       minute: 'numeric'
     });
+  };
+
+  const isLinkLikeValue = (value) => {
+    if (!value || typeof value !== 'string') return false;
+    return value.startsWith('data:') || value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/');
+  };
+
+  const getDocumentName = (value, fallbackLabel) => {
+    if (!value || typeof value !== 'string') return fallbackLabel;
+
+    if (value.startsWith('data:')) {
+      const mime = value.split(';')[0].replace('data:', '');
+      const extension = mime.includes('/') ? mime.split('/')[1] : 'archivo';
+      return `${fallbackLabel}.${extension}`;
+    }
+
+    try {
+      const base = value.split('?')[0].split('#')[0];
+      const name = base.substring(base.lastIndexOf('/') + 1);
+      return name || fallbackLabel;
+    } catch (_e) {
+      return fallbackLabel;
+    }
+  };
+
+  const renderDocumentValue = (value, fallbackLabel) => {
+    if (!value) {
+      return <span className={styles.documentoValue}>No disponible</span>;
+    }
+
+    if (isLinkLikeValue(value)) {
+      return (
+        <a
+          className={styles.documentoLink}
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          download={getDocumentName(value, fallbackLabel)}
+        >
+          Ver documento
+        </a>
+      );
+    }
+
+    return <span className={styles.documentoValue}>{value}</span>;
   };
   
   if (loading) {
@@ -334,21 +410,21 @@ export default function DetallesReservaCliente({ params }) {
                 {reserva.datosPago.fotoPasaporte && (
                   <div className={styles.documentoItem}>
                     <span className={styles.documentoLabel}>Pasaporte:</span>
-                    <span className={styles.documentoValue}>{reserva.datosPago.fotoPasaporte}</span>
+                    {renderDocumentValue(reserva.datosPago.fotoPasaporte, 'pasaporte')}
                   </div>
                 )}
                 
                 {reserva.datosPago.fotoLicencia && (
                   <div className={styles.documentoItem}>
                     <span className={styles.documentoLabel}>Licencia de Conducción:</span>
-                    <span className={styles.documentoValue}>{reserva.datosPago.fotoLicencia}</span>
+                    {renderDocumentValue(reserva.datosPago.fotoLicencia, 'licencia-conduccion')}
                   </div>
                 )}
                 
                 {reserva.metodoPago === 'transferencia' && reserva.datosPago.comprobante && (
                   <div className={styles.documentoItem}>
                     <span className={styles.documentoLabel}>Comprobante de Transferencia:</span>
-                    <span className={styles.documentoValue}>{reserva.datosPago.comprobante}</span>
+                    {renderDocumentValue(reserva.datosPago.comprobante, 'comprobante-transferencia')}
                   </div>
                 )}
                 

@@ -97,6 +97,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from public directory
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
+
 // Middleware para verificar conexión a la base de datos
 app.use((req, res, next) => {
   if (!dbConnectionStatus && req.method !== 'GET') {

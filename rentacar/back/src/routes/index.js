@@ -45,9 +45,11 @@ router.get('/api/autos/search', autoController.searchAutos); // Ruta sin autenti
 router.get('/api/autos/:id', autoController.getAutoById); // Ruta sin autenticación para pruebas
 // Rutas genéricas después
 router.get('/api/autos', autoController.getAllAutos); // Ruta sin autenticación para pruebas
-router.post('/api/autos', autoController.createAuto); // Ruta sin autenticación para pruebas
-router.put('/api/autos/:id', autoController.updateAuto); // Ruta sin autenticación para pruebas
-router.delete('/api/autos/:id', autoController.deleteAuto); // Ruta sin autenticación para pruebas
+
+// Rutas protegidas para crear/modificar/eliminar vehículos
+router.post('/api/autos', verifyToken, isAdmin, autoController.createAuto);
+router.put('/api/autos/:id', verifyToken, isAdmin, autoController.updateAuto);
+router.delete('/api/autos/:id', verifyToken, isAdmin, autoController.deleteAuto);
 
 // Catalog routes - también con orden específico
 router.get('/api/catalogo/search', autoController.searchAutos);

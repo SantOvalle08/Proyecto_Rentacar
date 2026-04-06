@@ -29,6 +29,9 @@ export default function VehiculosPage() {
     color: '',
     tipo: 'Sedan',
     precioBase: '',
+    combustible: '',
+    transmision: 'Automática',
+    capacidad: '',
     disponible: true,
     imagen: ''
   });
@@ -79,6 +82,9 @@ export default function VehiculosPage() {
       color: '',
       tipo: 'Sedan',
       precioBase: '',
+      combustible: '',
+      transmision: 'Automática',
+      capacidad: '',
       disponible: true,
       imagen: ''
     });
@@ -163,6 +169,13 @@ export default function VehiculosPage() {
     } else if (isNaN(formData.precioBase) || formData.precioBase <= 0) {
       errors.precioBase = 'Ingrese un precio válido';
     }
+    if (!formData.combustible) errors.combustible = 'El tipo de combustible es requerido';
+    if (!formData.transmision) errors.transmision = 'El tipo de transmisión es requerido';
+    if (!formData.capacidad) {
+      errors.capacidad = 'La capacidad es requerida';
+    } else if (isNaN(formData.capacidad) || formData.capacidad < 1) {
+      errors.capacidad = 'La capacidad debe ser más de 0 pasajeros';
+    }
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -191,6 +204,9 @@ export default function VehiculosPage() {
       color: vehiculo.color || '',
       tipo: vehiculo.tipo || vehiculo.tipoCoche || 'Sedan',
       precioBase: vehiculo.precioBase?.toString() || vehiculo.precioDia?.toString() || '',
+      combustible: vehiculo.combustible || '',
+      transmision: vehiculo.transmision || 'Automática',
+      capacidad: vehiculo.capacidad?.toString() || '',
       disponible: vehiculo.disponible === undefined ? true : vehiculo.disponible,
       imagen: vehiculo.imagen || ''
     });
@@ -215,36 +231,19 @@ export default function VehiculosPage() {
       setLoading(true);
       setError('');
       
-      try {
-        const response = await apiService.autos.delete(vehiculoToDelete.id);
-        
-        if (response.success) {
-          setVehiculos(prev => prev.filter(v => v.id !== vehiculoToDelete.id));
-          setDeleteModalOpen(false);
-          setVehiculoToDelete(null);
-          
-          notifyDataChange();
-          return;
-        }
-      } catch (error) {
-        console.error('Error deleting vehiculo:', error);
+      const response = await apiService.autos.delete(vehiculoToDelete.id);
+      
+      if (response.success) {
+        setVehiculos(prev => prev.filter(v => v.id !== vehiculoToDelete.id));
+        setDeleteModalOpen(false);
+        setVehiculoToDelete(null);
+        notifyDataChange();
+      } else {
+        throw new Error(response.error || 'Error desconocido al eliminar veh\u00edculo');
       }
-      
-      console.log('Simulando eliminación exitosa para vehículo:', vehiculoToDelete);
-      
-      const updatedVehiculos = vehiculos.filter(v => v.id !== vehiculoToDelete.id);
-      setVehiculos(updatedVehiculos);
-      
-      saveVehiculosToLocalStorage(updatedVehiculos);
-      
-      notifyDataChange();
-      
-      setDeleteModalOpen(false);
-      setVehiculoToDelete(null);
-      
     } catch (error) {
-      console.error('Error general en handleDelete:', error);
-      setError('Error al eliminar el vehículo');
+      console.error('Error deleting vehiculo:', error);
+      setError(`Error al eliminar veh\u00edculo: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -344,6 +343,9 @@ export default function VehiculosPage() {
         tipoCoche: formData.tipo, // Include both keys for compatibility
         precioBase: parseFloat(formData.precioBase),
         precioDia: parseFloat(formData.precioBase), // Include both keys for compatibility
+        combustible: formData.combustible,
+        transmision: formData.transmision,
+        capacidad: parseInt(formData.capacidad),
         disponible: Boolean(formData.disponible),
         imagen: formData.imagen || '/images/autos/default-car.jpg'
       };
@@ -667,13 +669,70 @@ export default function VehiculosPage() {
                 value={formData.tipo}
                 onChange={handleInputChange}
               >
+                <option value="Compacto">Compacto</option>
                 <option value="Sedan">Sedan</option>
                 <option value="SUV">SUV</option>
                 <option value="Hatchback">Hatchback</option>
                 <option value="Pickup">Pickup</option>
                 <option value="Deportivo">Deportivo</option>
                 <option value="Minivan">Minivan</option>
+                <option value="Camioneta">Camioneta</option>
+                <option value="Lujo">Lujo</option>
               </select>
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label htmlFor="combustible">Combustible</label>
+              <select
+                id="combustible"
+                name="combustible"
+                value={formData.combustible}
+                onChange={handleInputChange}
+                className={formErrors.combustible ? styles.inputError : ''}
+              >
+                <option value="">Selecciona un tipo...</option>
+                <option value="Gasolina">Gasolina</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Híbrido">Híbrido</option>
+                <option value="Eléctrico">Eléctrico</option>
+              </select>
+              {formErrors.combustible && (
+                <span className={styles.errorText}>{formErrors.combustible}</span>
+              )}
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label htmlFor="transmision">Transmisión</label>
+              <select
+                id="transmision"
+                name="transmision"
+                value={formData.transmision}
+                onChange={handleInputChange}
+                className={formErrors.transmision ? styles.inputError : ''}
+              >
+                <option value="Manual">Manual</option>
+                <option value="Automática">Automática</option>
+              </select>
+              {formErrors.transmision && (
+                <span className={styles.errorText}>{formErrors.transmision}</span>
+              )}
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label htmlFor="capacidad">Capacidad (pasajeros)</label>
+              <input
+                type="number"
+                id="capacidad"
+                name="capacidad"
+                value={formData.capacidad}
+                onChange={handleInputChange}
+                min="1"
+                max="20"
+                className={formErrors.capacidad ? styles.inputError : ''}
+              />
+              {formErrors.capacidad && (
+                <span className={styles.errorText}>{formErrors.capacidad}</span>
+              )}
             </div>
             
             <div className={styles.formGroup}>

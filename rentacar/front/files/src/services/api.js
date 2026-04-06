@@ -574,40 +574,12 @@ const autos = {
         saveLocalData('autos', [...localData, newAuto]);
         return { success: true, data: newAuto };
       } else {
-        console.error('La API devolvió éxito pero sin datos de vehículo');
-        throw new Error('La API no devolvió datos del vehículo creado');
+        throw new Error(response.message || 'Error al crear vehículo en el servidor');
       }
     } catch (error) {
-      console.warn('Error in autos.create, using localStorage:', error);
-      
-      // Fallback to localStorage - crear un ID numérico pequeño
-      const localData = getLocalData('autos') || [];
-      
-      // Encontrar el ID más alto en los datos locales y agregar 1
-      const highestId = localData.reduce((max, auto) => {
-        const autoId = parseInt(auto.id);
-        return isNaN(autoId) ? max : Math.max(max, autoId);
-      }, 0);
-      
-      const newId = highestId + 1;
-      
-      const newAuto = { 
-        ...autoData, 
-        id: newId, 
-        idAuto: newId,
-        // Asegurar que tenemos todos los campos necesarios con valores consistentes
-        anio: autoData.anio || autoData.año || new Date().getFullYear(),
-        año: autoData.anio || autoData.año || new Date().getFullYear(),
-        tipoCoche: autoData.tipoCoche || autoData.tipo || 'Sedan',
-        tipo: autoData.tipoCoche || autoData.tipo || 'Sedan',
-        precioDia: autoData.precioDia || autoData.precioBase || 0,
-        precioBase: autoData.precioDia || autoData.precioBase || 0
-      };
-      
-      saveLocalData('autos', [...localData, newAuto]);
-      console.log('Auto guardado en localStorage con ID:', newId);
-      
-      return { success: true, data: newAuto };
+      console.error('Error en autos.create:', error);
+      // NO FALLBACK - Propagar error para que UI lo maneje
+      return { success: false, error: error.message || 'Error al crear vehículo' };
     }
   },
   
@@ -631,22 +603,12 @@ const autos = {
         return response;
       }
       
-      throw new Error('API request failed or returned invalid data');
+      throw new Error(response.message || 'Error al actualizar veh\u00edculo');
     } catch (error) {
-      console.error(`Error in autos.update(${id}), using localStorage:`, error);
+      console.error(`Error in autos.update(${id}):`, error);
       
-      // Fallback to localStorage
-      const localData = getLocalData('autos');
-      if (localData) {
-        const updatedData = localData.map(auto => 
-          auto.id == id ? { ...auto, ...autoData } : auto
-        );
-        saveLocalData('autos', updatedData);
-        return { success: true };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+      // NO FALLBACK - Propagar error para que UI lo maneje
+      return { success: false, error: error.message || 'Error al actualizar veh\u00edculo' };
     }
   },
   
@@ -666,21 +628,13 @@ const autos = {
         }
         return response;
       }
-      
-      throw new Error('API request failed or returned invalid data');
+
+      throw new Error(response.message || 'Error al eliminar veh\u00edculo');
     } catch (error) {
-      console.error(`Error in autos.delete(${id}), using localStorage:`, error);
+      console.error(`Error in autos.delete(${id}):`, error);
       
-      // Fallback to localStorage
-      const localData = getLocalData('autos');
-      if (localData) {
-        const filteredData = localData.filter(auto => auto.id != id);
-        saveLocalData('autos', filteredData);
-        return { success: true };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+      // NO FALLBACK - Propagar error para que UI lo maneje
+      return { success: false, error: error.message || 'Error al eliminar veh\u00edculo' };
     }
   },
   

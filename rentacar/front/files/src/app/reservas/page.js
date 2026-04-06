@@ -16,6 +16,22 @@ export default function Reservas() {
   const [error, setError] = useState('');
   const [reservaFactura, setReservaFactura] = useState(null);
 
+  const getUserId = (userData) => {
+    if (!userData) return null;
+    return userData.id || userData._id || userData.usuarioId || null;
+  };
+
+  const getReservaUsuarioId = (reservaData) => {
+    if (!reservaData) return null;
+    if (reservaData.usuarioId) return reservaData.usuarioId;
+
+    if (typeof reservaData.usuario === 'string' || typeof reservaData.usuario === 'number') {
+      return reservaData.usuario;
+    }
+
+    return reservaData.usuario?.id || reservaData.usuario?._id || null;
+  };
+
   const normalizeEstado = (estado = '') => {
     const map = {
       pendiente: 'pendiente',
@@ -45,10 +61,16 @@ export default function Reservas() {
       
       try {
         const parsedUser = JSON.parse(userData);
+        const currentUserId = getUserId(parsedUser);
+
+        if (!currentUserId) {
+          throw new Error('Usuario sin identificador válido');
+        }
+
         setUser(parsedUser);
         
         // Cargar las reservas del usuario
-        loadUserReservas(parsedUser.id);
+        loadUserReservas(currentUserId);
       } catch (error) {
         console.error('Error parsing user data:', error);
         // Clear invalid data
@@ -91,7 +113,10 @@ export default function Reservas() {
         if (localData) {
           const allReservas = JSON.parse(localData);
           // Filtrar solo las reservas del usuario actual
-          const userReservas = allReservas.filter(r => r.usuarioId == userId || (r.usuario && r.usuario.id == userId));
+          const userReservas = allReservas.filter((r) => {
+            const reservaUsuarioId = getReservaUsuarioId(r);
+            return reservaUsuarioId != null && String(reservaUsuarioId) === String(userId);
+          });
           
           if (userReservas.length > 0) {
             setReservas(userReservas.map(reserva => ({
@@ -129,8 +154,9 @@ export default function Reservas() {
           )
         );
 
-        if (user?.id) {
-          await loadUserReservas(user.id);
+        const currentUserId = getUserId(user);
+        if (currentUserId) {
+          await loadUserReservas(currentUserId);
         }
       } else {
         throw new Error('No se pudo cancelar la reserva');
