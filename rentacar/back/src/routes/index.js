@@ -9,6 +9,7 @@ const router = express.Router();
 const usuarioController = require('../controllers/usuarioController');
 const autoController = require('../controllers/autoController');
 const reservaController = require('../controllers/reservaController');
+const uploadController = require('../controllers/uploadController');
 const checklistController = require('../controllers/checklistController');
 const { verifyToken, isAdmin } = require('../middleware/auth');
 
@@ -146,6 +147,13 @@ router.get('/api/usuarios/:usuarioId/reservas', verifyToken, reservaController.g
  * @access Private
  */
 router.post('/api/reservas/calcular-precio', verifyToken, reservaController.calcularPrecio);
+
+/**
+ * @route POST /api/upload
+ * @description Subir una imagen al servidor
+ * @access Private
+ */
+router.post('/api/upload', verifyToken, uploadController.uploadSingle, uploadController.uploadImage);
 
 /**
  * @route PUT /api/reservas/:id/cancelar

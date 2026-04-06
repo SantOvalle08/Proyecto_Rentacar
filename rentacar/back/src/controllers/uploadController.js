@@ -1,24 +1,4 @@
-const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
-
-const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'autos');
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (_req, file, cb) => {
-    const extension = path.extname(file.originalname || '').toLowerCase();
-    const originalName = path.basename(file.originalname || 'imagen', extension);
-    const safeName = originalName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-    cb(null, `${safeName || 'imagen'}-${Date.now()}${extension || '.jpg'}`);
-  }
-});
 
 const fileFilter = (_req, file, cb) => {
   if (file && file.mimetype && file.mimetype.startsWith('image/')) {
@@ -29,7 +9,7 @@ const fileFilter = (_req, file, cb) => {
 };
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024
@@ -47,17 +27,17 @@ const uploadImage = (req, res) => {
       });
     }
 
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.get('host');
-    const relativePath = `/uploads/autos/${req.file.filename}`;
-    const url = `${protocol}://${host}${relativePath}`;
+    const base64 = req.file.buffer.toString('base64');
+    const dataUrl = `data:${req.file.mimetype};base64,${base64}`;
 
     return res.status(201).json({
       success: true,
       message: 'Imagen subida correctamente',
-      path: url,
-      url,
-      relativePath
+      path: dataUrl,
+      url: dataUrl,
+      filename: req.file.originalname,
+      mimeType: req.file.mimetype,
+      storage: 'memory'
     });
   } catch (error) {
     console.error('Error al subir imagen:', error);

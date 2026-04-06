@@ -54,6 +54,18 @@ const reservaSchema = new mongoose.Schema({
     ref: 'Auto',
     required: true
   },
+  metodoPago: {
+    type: String,
+    default: 'efectivo'
+  },
+  datosPago: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+  diasReserva: {
+    type: Number,
+    default: 0
+  },
   precioTotal: {
     type: Number,
     required: true
@@ -74,6 +86,10 @@ reservaSchema.methods.mostrarDetalleReserva = function() {
     estado: this.estado,
     usuario: this.usuario,
     auto: this.auto,
+    metodoPago: this.metodoPago,
+    datosPago: this.datosPago,
+    diasReserva: this.diasReserva,
+    fechaCreacion: this.createdAt,
     precioTotal: this.precioTotal
   };
 };

@@ -354,12 +354,6 @@ function ReservaFormulario() {
           placa: auto.placa || 'Sin placa', // Añadir la placa y un valor predeterminado
           tipo: auto.tipo || 'Automóvil', // Añadir el tipo con un valor predeterminado
           imagen: auto.imagen
-        },
-        usuario: {
-          id: usuario.id,
-          nombre: usuario.nombre,
-          apellido: usuario.apellido,
-          email: usuario.email
         }
       };
       

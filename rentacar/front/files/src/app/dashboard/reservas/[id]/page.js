@@ -119,6 +119,39 @@ export default function ReservaDetalles({ params }) {
       minute: 'numeric'
     });
   };
+
+  const getDocumentUrl = (value) => {
+    if (!value || typeof value !== 'string') return null;
+    if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/') || value.startsWith('data:')) {
+      return value;
+    }
+    return null;
+  };
+
+  const getDocumentLabel = (value) => {
+    if (!value || typeof value !== 'string') return 'No disponible';
+    if (value.startsWith('data:')) return 'Documento adjunto';
+    return value;
+  };
+
+  const openDocument = async (value) => {
+    if (!value || typeof value !== 'string') return;
+
+    let urlToOpen = value;
+
+    if (value.startsWith('data:')) {
+      try {
+        const response = await fetch(value);
+        const blob = await response.blob();
+        urlToOpen = URL.createObjectURL(blob);
+      } catch (error) {
+        console.error('Error al preparar el documento para visualización:', error);
+        return;
+      }
+    }
+
+    window.open(urlToOpen, '_blank', 'noopener,noreferrer');
+  };
   
   if (loading) {
     return (
@@ -321,24 +354,48 @@ export default function ReservaDetalles({ params }) {
                 {reserva.datosPago.fotoPasaporte && (
                   <div className={styles.documentoItem}>
                     <span className={styles.documentoLabel}>Pasaporte:</span>
-                    <span className={styles.documentoValue}>{reserva.datosPago.fotoPasaporte}</span>
-                    <button className={styles.viewButton}>Ver documento</button>
+                    <span className={styles.documentoValue}>{getDocumentLabel(reserva.datosPago.fotoPasaporte)}</span>
+                    {getDocumentUrl(reserva.datosPago.fotoPasaporte) ? (
+                      <button
+                        type="button"
+                        className={styles.viewButton}
+                        onClick={() => openDocument(reserva.datosPago.fotoPasaporte)}
+                      >
+                        Ver documento
+                      </button>
+                    ) : null}
                   </div>
                 )}
                 
                 {reserva.datosPago.fotoLicencia && (
                   <div className={styles.documentoItem}>
                     <span className={styles.documentoLabel}>Licencia de Conducción:</span>
-                    <span className={styles.documentoValue}>{reserva.datosPago.fotoLicencia}</span>
-                    <button className={styles.viewButton}>Ver documento</button>
+                    <span className={styles.documentoValue}>{getDocumentLabel(reserva.datosPago.fotoLicencia)}</span>
+                    {getDocumentUrl(reserva.datosPago.fotoLicencia) ? (
+                      <button
+                        type="button"
+                        className={styles.viewButton}
+                        onClick={() => openDocument(reserva.datosPago.fotoLicencia)}
+                      >
+                        Ver documento
+                      </button>
+                    ) : null}
                   </div>
                 )}
                 
                 {reserva.metodoPago === 'transferencia' && reserva.datosPago.comprobante && (
                   <div className={styles.documentoItem}>
                     <span className={styles.documentoLabel}>Comprobante de Transferencia:</span>
-                    <span className={styles.documentoValue}>{reserva.datosPago.comprobante}</span>
-                    <button className={styles.viewButton}>Ver documento</button>
+                    <span className={styles.documentoValue}>{getDocumentLabel(reserva.datosPago.comprobante)}</span>
+                    {getDocumentUrl(reserva.datosPago.comprobante) ? (
+                      <button
+                        type="button"
+                        className={styles.viewButton}
+                        onClick={() => openDocument(reserva.datosPago.comprobante)}
+                      >
+                        Ver documento
+                      </button>
+                    ) : null}
                   </div>
                 )}
                 

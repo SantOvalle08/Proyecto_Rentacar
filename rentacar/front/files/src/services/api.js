@@ -918,17 +918,50 @@ const uploads = {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      
-      console.log('Subiendo imagen al servidor backend:', `${API_BASE_URL}/api/upload`);
-      
-      // Enviar la petición al servidor BACKEND (no al servidor Next.js)
-      const response = await fetch(`${API_BASE_URL}/api/upload`, {
-        method: 'POST',
-        body: formData,
-        headers: headers,
-        mode: 'cors',
-        credentials: 'same-origin'
-      });
+
+      let response;
+      let lastError;
+
+      for (const baseUrl of getOrderedApiCandidates()) {
+        const fullUrl = `${baseUrl}/api/upload`;
+        console.log('Subiendo imagen al servidor backend:', fullUrl);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        try {
+          response = await fetch(fullUrl, {
+            method: 'POST',
+            body: formData,
+            headers,
+            mode: 'cors',
+            credentials: 'same-origin',
+            cache: 'no-cache',
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+          preferredApiBaseUrl = baseUrl;
+          break;
+        } catch (candidateError) {
+          clearTimeout(timeoutId);
+          lastError = candidateError;
+
+          const isNetworkIssue =
+            candidateError?.name === 'AbortError' ||
+            (candidateError instanceof TypeError && /fetch|network/i.test(candidateError.message));
+
+          if (!isNetworkIssue) {
+            throw candidateError;
+          }
+
+          console.warn(`No se pudo conectar a ${fullUrl}:`, candidateError.message);
+        }
+      }
+
+      if (!response) {
+        throw lastError || new Error('No se pudo establecer conexión con la API');
+      }
       
       if (!response.ok) {
         let errorMessage = 'Error al subir la imagen';

@@ -39,10 +39,12 @@ const reservaController = {
    */
   async createReserva(req, res) {
     try {
-      const { fechaInicio, fechaFin, usuario, autoId, metodoPago, datosPago } = req.body;
+      const { fechaInicio, fechaFin, usuario, usuarioId, autoId, metodoPago, datosPago } = req.body;
+      const usuarioAutenticado = req.user?.id;
+      const usuarioReserva = usuarioAutenticado || usuarioId || (typeof usuario === 'string' ? usuario : usuario?._id || usuario?.id);
       
       // Validate required fields
-      if (!fechaInicio || !fechaFin || !usuario || !autoId) {
+      if (!fechaInicio || !fechaFin || !usuarioReserva || !autoId) {
         return res.status(400).json({
           success: false,
           message: 'Todos los campos son requeridos'
@@ -98,7 +100,7 @@ const reservaController = {
         const reserva = await sistemaRentaAutos.realizarReserva({
           fechaInicio,
           fechaFin,
-          usuario,
+          usuario: usuarioReserva,
           auto: auto._id,
           precioTotal,
           estado: 'Pendiente',

@@ -16,6 +16,18 @@ export default function Reservas() {
   const [error, setError] = useState('');
   const [reservaFactura, setReservaFactura] = useState(null);
 
+  const normalizeEstado = (estado = '') => {
+    const map = {
+      pendiente: 'pendiente',
+      activa: 'activa',
+      confirmada: 'activa',
+      completada: 'completada',
+      cancelada: 'cancelada'
+    };
+
+    return map[String(estado).toLowerCase()] || String(estado).toLowerCase();
+  };
+
   useEffect(() => {
     // Check if localStorage is available
     if (typeof window === 'undefined') {
@@ -62,7 +74,10 @@ export default function Reservas() {
         const response = await apiService.reservas.getUserReservas(userId);
         
         if (response.success && response.data) {
-          setReservas(response.data);
+          setReservas(response.data.map(reserva => ({
+            ...reserva,
+            estado: normalizeEstado(reserva.estado)
+          })));
           setLoading(false);
           return;
         }
@@ -79,7 +94,10 @@ export default function Reservas() {
           const userReservas = allReservas.filter(r => r.usuarioId == userId || (r.usuario && r.usuario.id == userId));
           
           if (userReservas.length > 0) {
-            setReservas(userReservas);
+            setReservas(userReservas.map(reserva => ({
+              ...reserva,
+              estado: normalizeEstado(reserva.estado)
+            })));
             setLoading(false);
             return;
           }
@@ -110,6 +128,10 @@ export default function Reservas() {
             r.id === reservaId ? { ...r, estado: 'cancelada' } : r
           )
         );
+
+        if (user?.id) {
+          await loadUserReservas(user.id);
+        }
       } else {
         throw new Error('No se pudo cancelar la reserva');
       }
@@ -199,10 +221,10 @@ export default function Reservas() {
                   
                   <div className={styles.status}>
                     <span className={styles.label}>Estado:</span>
-                    <span className={`${styles.statusBadge} ${styles[reserva.estado]}`}>
-                      {reserva.estado === 'activa' ? 'Activa' : 
-                       reserva.estado === 'completada' ? 'Completada' : 
-                       reserva.estado === 'cancelada' ? 'Cancelada' : 'Pendiente'}
+                    <span className={`${styles.statusBadge} ${styles[normalizeEstado(reserva.estado)]}`}>
+                      {normalizeEstado(reserva.estado) === 'activa' ? 'Activa' : 
+                       normalizeEstado(reserva.estado) === 'completada' ? 'Completada' : 
+                       normalizeEstado(reserva.estado) === 'cancelada' ? 'Cancelada' : 'Pendiente'}
                     </span>
                   </div>
                 </div>
@@ -212,7 +234,7 @@ export default function Reservas() {
                     Ver Detalles
                   </Link>
                   
-                  {reserva.estado !== 'cancelada' && (
+                  {normalizeEstado(reserva.estado) !== 'cancelada' && (
                     <button 
                       className={styles.facturaButton}
                       onClick={() => setReservaFactura(reserva)}
@@ -222,7 +244,7 @@ export default function Reservas() {
                     </button>
                   )}
                   
-                  {(reserva.estado === 'activa' || reserva.estado === 'pendiente') && (
+                  {(normalizeEstado(reserva.estado) === 'activa' || normalizeEstado(reserva.estado) === 'pendiente') && (
                     <button 
                       className={styles.cancelButton}
                       onClick={() => handleCancelReservation(reserva.id)}
