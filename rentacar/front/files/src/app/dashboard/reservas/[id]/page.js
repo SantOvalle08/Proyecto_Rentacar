@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import apiService from '@/services/api';
@@ -29,9 +29,10 @@ const estadoLabel = (estado = '') => {
   return map[normalized] || normalized;
 };
 
-export default function ReservaDetalles({ params }) {
+export default function ReservaDetalles() {
   const router = useRouter();
-  const { id } = params;
+  const params = useParams();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   
   const [reserva, setReserva] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -318,6 +319,18 @@ export default function ReservaDetalles({ params }) {
               <span className={styles.detailLabel}>Precio Total:</span>
               <span className={styles.detailValue}>${reserva.precioTotal}</span>
             </div>
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Anticipo:</span>
+              <span className={styles.detailValue}>${Number(reserva.montoAnticipo ?? reserva.precioTotal * 0.3).toFixed(2)}</span>
+            </div>
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Saldo Pendiente:</span>
+              <span className={styles.detailValue}>${Number(reserva.saldoPendiente ?? reserva.precioTotal * 0.7).toFixed(2)}</span>
+            </div>
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Estado del Pago:</span>
+              <span className={styles.detailValue}>{reserva.estadoPago || 'Anticipo pendiente'}</span>
+            </div>
           </div>
         </div>
         
@@ -405,6 +418,10 @@ export default function ReservaDetalles({ params }) {
               </div>
               
               <h3>Información de Pago</h3>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Pasarela:</span>
+                <span className={styles.detailValue}>{reserva.pasarelaPago || 'Pasarela ficticia'}</span>
+              </div>
               {reserva.metodoPago === 'tarjeta' && (
                 <>
                   <div className={styles.detailItem}>

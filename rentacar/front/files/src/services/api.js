@@ -41,22 +41,22 @@ const fetchWithAuth = async (url, options = {}) => {
     const requestBody = options.body
       ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body))
       : undefined;
-    
+
     // Get the token from localStorage
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    
+
     // Set default headers
     const headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       ...options.headers
     };
-    
+
     // Add auth token if it exists
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     let response;
     let lastError;
 
@@ -95,7 +95,6 @@ const fetchWithAuth = async (url, options = {}) => {
         clearTimeout(timeoutId);
         lastError = candidateError;
 
-        // Solo intentar siguiente base URL en errores de conectividad.
         const isNetworkIssue =
           candidateError?.name === 'AbortError' ||
           (candidateError instanceof TypeError && /fetch|network/i.test(candidateError.message));
@@ -109,39 +108,35 @@ const fetchWithAuth = async (url, options = {}) => {
     }
 
     if (!response) {
-      throw lastError || new Error('No se pudo establecer conexión con la API');
+      throw lastError || new Error('No se pudo establecer conexion con la API');
     }
-    
+
     console.log('Respuesta recibida:', {
       status: response.status,
       statusText: response.statusText,
       headers: Object.fromEntries([...response.headers])
     });
-    
-    // Handle 204 No Content
+
     if (response.status === 204) {
       return { success: true };
     }
-    
-    // Capture non-JSON responses
+
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
       console.log('Respuesta JSON:', data);
-      
-      // If response is not ok, throw an error
+
       if (!response.ok) {
         console.warn('Error en respuesta del servidor:', data);
-        throw new Error(data.message || 'Ocurrió un error en la solicitud');
+        throw new Error(data.message || 'Ocurrio un error en la solicitud');
       }
-      
+
       return data;
     } else {
       const text = await response.text();
       console.log('Respuesta texto (no JSON):', text.substring(0, 100));
-      
+
       if (!response.ok) {
-        // Proporcionar más contexto del error
         const errorMsg = text || `Error del servidor: ${response.status} ${response.statusText}`;
         console.warn('Error en respuesta del servidor:', {
           status: response.status,
@@ -150,41 +145,34 @@ const fetchWithAuth = async (url, options = {}) => {
         });
         throw new Error(errorMsg);
       }
-      
-      // Try to parse as JSON if possible
+
       try {
         return JSON.parse(text);
       } catch (e) {
-        // Return text response as success
         return { success: true, message: text };
       }
     }
   } catch (error) {
-    // Check if it's a timeout error
     if (error.name === 'AbortError') {
       console.warn('Timeout en la solicitud');
-      throw new Error('La solicitud ha excedido el tiempo de espera. Verifique que el servidor esté respondiendo.');
+      throw new Error('La solicitud ha excedido el tiempo de espera. Verifique que el servidor esta respondiendo.');
     }
-    
-    // Check if it's a network error
+
     if (error instanceof TypeError && error.message.includes('NetworkError')) {
       console.warn('Error de red:', error.message);
-      throw new Error('Error de conexión con el servidor. Verifique que el servidor esté en ejecución y accesible.');
+      throw new Error('Error de conexion con el servidor. Verifique que el servidor esta en ejecucion y accesible.');
     }
-    
-    // Check if it's a CORS error
+
     if (error instanceof DOMException && error.name === 'NetworkError') {
       console.warn('Error CORS:', error.message);
-      throw new Error('Error de CORS. Verifique la configuración del servidor.');
+      throw new Error('Error de CORS. Verifique la configuracion del servidor.');
     }
-    
-    // Check if it's a JSON parsing error
+
     if (error instanceof SyntaxError && error.message.includes('JSON')) {
       console.warn('Error al analizar respuesta JSON:', error.message);
       throw new Error('Error en formato de respuesta del servidor');
     }
-    
-    // Re-throw other errors
+
     console.warn('Error general en fetch:', error.message);
     throw error;
   }
@@ -200,7 +188,7 @@ const localStorageKeys = {
 // Get data from localStorage
 const getLocalData = (key) => {
   if (typeof window === 'undefined') return null;
-  
+
   try {
     const data = localStorage.getItem(localStorageKeys[key]);
     return data ? JSON.parse(data) : null;
@@ -213,7 +201,7 @@ const getLocalData = (key) => {
 // Save data to localStorage
 const saveLocalData = (key, data) => {
   if (typeof window === 'undefined') return;
-  
+
   try {
     localStorage.setItem(localStorageKeys[key], JSON.stringify(data));
   } catch (error) {
@@ -527,27 +515,14 @@ const autos = {
   
   getById: async (id) => {
     try {
-      // Try to get from API first
       const response = await fetchWithAuth(`/api/autos/${id}`);
-      
       if (response.success && response.data) {
         return response;
       }
-      
+
       throw new Error('API request failed or returned invalid data');
     } catch (error) {
-      console.error(`Error in autos.getById(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('autos');
-      if (localData) {
-        const auto = localData.find(a => a.id == id);
-        if (auto) {
-          return { success: true, data: auto };
-        }
-      }
-      
-      // If no localStorage data, throw the original error
+      console.error(`Error in autos.getById(${id}):`, error);
       throw error;
     }
   },
@@ -749,7 +724,13 @@ const reservas = {
       usuario: reservaData.usuario || reservaData.usuarioId,
       autoId: reservaData.autoId,
       metodoPago: reservaData.metodoPago,
-      datosPago: reservaData.datosPago
+      datosPago: reservaData.datosPago,
+      porcentajeAnticipo: reservaData.porcentajeAnticipo,
+      montoAnticipo: reservaData.montoAnticipo,
+      saldoPendiente: reservaData.saldoPendiente,
+      estadoPago: reservaData.estadoPago,
+      pasarelaPago: reservaData.pasarelaPago,
+      referenciaPago: reservaData.referenciaPago
     };
 
     const response = await fetchWithAuth('/api/reservas', {

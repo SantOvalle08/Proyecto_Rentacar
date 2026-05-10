@@ -19,6 +19,10 @@ const estadosReserva = ['Pendiente', 'Confirmada', 'Cancelada', 'Completada'];
  * @property {mongoose.Schema.Types.ObjectId} usuario - Referencia al usuario que realizó la reserva
  * @property {mongoose.Schema.Types.ObjectId} auto - Referencia al vehículo reservado
  * @property {number} precioTotal - Precio total de la reserva
+ * @property {number} porcentajeAnticipo - Porcentaje del anticipo aplicado para reservar
+ * @property {number} montoAnticipo - Monto abonado al reservar
+ * @property {number} saldoPendiente - Saldo restante por pagar
+ * @property {string} estadoPago - Estado del pago parcial de la reserva
  */
 
 /**
@@ -69,6 +73,26 @@ const reservaSchema = new mongoose.Schema({
   precioTotal: {
     type: Number,
     required: true
+  },
+  porcentajeAnticipo: {
+    type: Number,
+    default: 30,
+    min: 0,
+    max: 100
+  },
+  montoAnticipo: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  saldoPendiente: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  estadoPago: {
+    type: String,
+    default: 'Anticipo pendiente'
   }
 }, {
   timestamps: true
@@ -89,6 +113,10 @@ reservaSchema.methods.mostrarDetalleReserva = function() {
     metodoPago: this.metodoPago,
     datosPago: this.datosPago,
     diasReserva: this.diasReserva,
+    porcentajeAnticipo: this.porcentajeAnticipo,
+    montoAnticipo: this.montoAnticipo,
+    saldoPendiente: this.saldoPendiente,
+    estadoPago: this.estadoPago,
     fechaCreacion: this.createdAt,
     precioTotal: this.precioTotal
   };

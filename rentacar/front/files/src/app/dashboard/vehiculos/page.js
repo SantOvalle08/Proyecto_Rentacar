@@ -43,24 +43,24 @@ export default function VehiculosPage() {
   // Standalone utility functions that don't depend on other memoized functions
   const notifyDataChange = useCallback(() => {
     if (typeof window !== 'undefined') {
-      console.log('Notificando cambios en vehículos a otros componentes');
-      
+      console.log('Notificando cambios en vehiculos a otros componentes');
+
       const customEvent = new CustomEvent('rentacarDataUpdate', {
         detail: { type: 'vehiculos', timestamp: Date.now() }
       });
       window.dispatchEvent(customEvent);
-      
+
       localStorage.setItem('rentacar_data_updated', Date.now().toString());
       window.dispatchEvent(new Event('storage'));
-      
+
       localStorage.setItem('rentacar_catalogo_updated', Date.now().toString());
-      
+
       if (process.env.NODE_ENV === 'development') {
-        console.log('Eventos de actualización disparados para sincronizar componentes');
+        console.log('Eventos de actualizacion disparados para sincronizar componentes');
       }
     }
   }, []);
-  
+
   const saveVehiculosToLocalStorage = useCallback((data) => {
     try {
       if (typeof window !== 'undefined') {
@@ -83,7 +83,7 @@ export default function VehiculosPage() {
       tipo: 'Sedan',
       precioBase: '',
       combustible: '',
-      transmision: 'Automática',
+      transmision: 'Automatica',
       capacidad: '',
       disponible: true,
       imagen: ''
@@ -93,18 +93,17 @@ export default function VehiculosPage() {
 
   const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
-    
-    // Si el campo es imagen y tiene un archivo, procesarlo
+
     if (name === 'imagen' && e.target.file) {
       handleImageUpload(e.target.file, value);
       return;
     }
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
+
     if (formErrors[name]) {
       setFormErrors(prev => ({
         ...prev,
@@ -112,10 +111,8 @@ export default function VehiculosPage() {
       }));
     }
   }, [formErrors]);
-  
-  // Función para manejar la subida de imágenes
+
   const handleImageUpload = async (file, localPath) => {
-    // Si no hay archivo pero hay ruta local, solo actualizar el formulario
     if (!file) {
       setFormData(prev => ({
         ...prev,
@@ -123,15 +120,13 @@ export default function VehiculosPage() {
       }));
       return;
     }
-    
+
     try {
       setUploadingImage(true);
-      
-      // Subir la imagen al servidor
+
       const response = await apiService.uploads.uploadImage(file);
-      
+
       if (response.success) {
-        // Actualizar el formulario con la ruta devuelta por el servidor
         setFormData(prev => ({
           ...prev,
           imagen: response.path
@@ -139,7 +134,6 @@ export default function VehiculosPage() {
         console.log('Imagen subida correctamente:', response.path);
       } else {
         console.error('Error al subir la imagen:', response.message);
-        // Si la subida falla, mantener la ruta local temporalmente
         setFormData(prev => ({
           ...prev,
           imagen: localPath
@@ -154,29 +148,29 @@ export default function VehiculosPage() {
 
   const validateForm = useCallback(() => {
     const errors = {};
-    
+
     if (!formData.marca) errors.marca = 'La marca es requerida';
     if (!formData.modelo) errors.modelo = 'El modelo es requerido';
     if (!formData.anio) {
-      errors.anio = 'El año es requerido';
+      errors.anio = 'El ano es requerido';
     } else if (isNaN(formData.anio) || formData.anio < 1900 || formData.anio > new Date().getFullYear() + 1) {
-      errors.anio = 'Ingrese un año válido';
+      errors.anio = 'Ingrese un ano valido';
     }
-    if (!formData.matricula) errors.matricula = 'La matrícula es requerida';
+    if (!formData.matricula) errors.matricula = 'La matricula es requerida';
     if (!formData.color) errors.color = 'El color es requerido';
     if (!formData.precioBase) {
       errors.precioBase = 'El precio base es requerido';
     } else if (isNaN(formData.precioBase) || formData.precioBase <= 0) {
-      errors.precioBase = 'Ingrese un precio válido';
+      errors.precioBase = 'Ingrese un precio valido';
     }
     if (!formData.combustible) errors.combustible = 'El tipo de combustible es requerido';
-    if (!formData.transmision) errors.transmision = 'El tipo de transmisión es requerido';
+    if (!formData.transmision) errors.transmision = 'El tipo de transmision es requerido';
     if (!formData.capacidad) {
       errors.capacidad = 'La capacidad es requerida';
     } else if (isNaN(formData.capacidad) || formData.capacidad < 1) {
-      errors.capacidad = 'La capacidad debe ser más de 0 pasajeros';
+      errors.capacidad = 'La capacidad debe ser mas de 0 pasajeros';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   }, [formData]);
@@ -254,69 +248,26 @@ export default function VehiculosPage() {
     try {
       setLoading(true);
       setError('');
-      
-      try {
-        const response = await apiService.autos.getAll();
-        
-        if (response.success && response.data) {
-          // Normalize each vehicle to ensure consistent field names
-          const normalizedVehiculos = response.data.map(vehiculo => ({
-            ...vehiculo,
-            anio: vehiculo.anio || vehiculo.año || 0,
-            tipo: vehiculo.tipo || vehiculo.tipoCoche || 'Sedan',
-            precioBase: vehiculo.precioBase || vehiculo.precioDia || 0
-          }));
-          setVehiculos(normalizedVehiculos);
-          return;
-        }
-      } catch (error) {
-        console.error('Error loading vehiculos:', error);
+
+      const response = await apiService.autos.getAll();
+
+      if (response.success && response.data) {
+        const normalizedVehiculos = response.data.map(vehiculo => ({
+          ...vehiculo,
+          anio: vehiculo.anio || vehiculo.ano || 0,
+          tipo: vehiculo.tipo || vehiculo.tipoCoche || 'Sedan',
+          precioBase: vehiculo.precioBase || vehiculo.precioDia || 0
+        }));
+        setVehiculos(normalizedVehiculos);
+        return;
       }
-      
-      console.log('Usando datos mock para vehículos');
-      setVehiculos([
-        {
-          id: 1,
-          marca: 'Toyota',
-          modelo: 'Corolla',
-          anio: 2020,
-          matricula: 'ABC-123',
-          color: 'Blanco',
-          tipo: 'Sedan',
-          precioBase: 50,
-          disponible: true,
-          imagen: 'https://example.com/corolla.jpg'
-        },
-        {
-          id: 2,
-          marca: 'Honda',
-          modelo: 'Civic',
-          anio: 2019,
-          matricula: 'XYZ-789',
-          color: 'Azul',
-          tipo: 'Sedan',
-          precioBase: 45,
-          disponible: true,
-          imagen: 'https://example.com/civic.jpg'
-        },
-        {
-          id: 3,
-          marca: 'Ford',
-          modelo: 'Explorer',
-          anio: 2021,
-          matricula: 'DEF-456',
-          color: 'Negro',
-          tipo: 'SUV',
-          precioBase: 70,
-          disponible: false,
-          imagen: 'https://example.com/explorer.jpg'
-        }
-      ]);
-      
-      setError('');
+
+      setVehiculos([]);
+      setError('No se pudieron cargar los vehiculos.');
     } catch (error) {
       console.error('Error general en loadVehiculos:', error);
-      setError('Error al cargar los vehículos');
+      setVehiculos([]);
+      setError('Error al cargar los vehiculos');
     } finally {
       setLoading(false);
     }
@@ -389,20 +340,8 @@ export default function VehiculosPage() {
       }
       
       if (!success) {
-        console.log('API call failed, using localStorage fallback');
-        if (isCreating) {
-          const tempId = Date.now();
-          savedVehiculo = {
-            id: tempId,
-            idAuto: tempId,
-            ...vehiculoData
-          };
-        } else {
-          savedVehiculo = {
-            ...currentVehiculo,
-            ...vehiculoData
-          };
-        }
+        // No fallback: report error to the user and abort the optimistic local save.
+        throw new Error('Error de API: no fue posible guardar el vehículo.');
       }
       
       setVehiculos(prev => {

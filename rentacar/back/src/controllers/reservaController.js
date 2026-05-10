@@ -8,6 +8,23 @@ const Reserva = require('../models/Reserva');
 const Auto = require('../models/Auto');
 const calculadoraFactory = require('../utils/factories/CalculadoraFactory');
 
+const calcularPlanPago = (precioTotal, porcentajeAnticipoInput) => {
+  const porcentajeRaw = Number(porcentajeAnticipoInput);
+  const porcentajeAnticipo = Number.isFinite(porcentajeRaw)
+    ? Math.min(100, Math.max(10, porcentajeRaw))
+    : 30;
+
+  const montoAnticipo = Math.round((precioTotal * (porcentajeAnticipo / 100)) * 100) / 100;
+  const saldoPendiente = Math.round((Math.max(precioTotal - montoAnticipo, 0)) * 100) / 100;
+
+  return {
+    porcentajeAnticipo,
+    montoAnticipo,
+    saldoPendiente,
+    estadoPago: saldoPendiente > 0 ? 'Anticipo pagado' : 'Pagado'
+  };
+};
+
 /**
  * @typedef {Object} ReservaController
  * @property {Function} createReserva - Crea una nueva reserva
@@ -39,7 +56,16 @@ const reservaController = {
    */
   async createReserva(req, res) {
     try {
-      const { fechaInicio, fechaFin, usuario, usuarioId, autoId, metodoPago, datosPago } = req.body;
+      const {
+        fechaInicio,
+        fechaFin,
+        usuario,
+        usuarioId,
+        autoId,
+        metodoPago,
+        datosPago,
+        porcentajeAnticipo
+      } = req.body;
       const usuarioAutenticado = req.user?.id;
       const usuarioReserva = usuarioAutenticado || usuarioId || (typeof usuario === 'string' ? usuario : usuario?._id || usuario?.id);
       
@@ -94,6 +120,14 @@ const reservaController = {
       );
       
       const precioTotal = calculadora.calcularPrecioTotal();
+      const planPago = calcularPlanPago(precioTotal, porcentajeAnticipo);
+      const datosPagoConAnticipo = {
+        ...(datosPago || {}),
+        porcentajeAnticipo: planPago.porcentajeAnticipo,
+        montoAnticipo: planPago.montoAnticipo,
+        saldoPendiente: planPago.saldoPendiente,
+        estadoPago: planPago.estadoPago
+      };
       
       // Create reservation using SistemaRentaAutos
       try {
@@ -103,9 +137,13 @@ const reservaController = {
           usuario: usuarioReserva,
           auto: auto._id,
           precioTotal,
+          porcentajeAnticipo: planPago.porcentajeAnticipo,
+          montoAnticipo: planPago.montoAnticipo,
+          saldoPendiente: planPago.saldoPendiente,
+          estadoPago: planPago.estadoPago,
           estado: 'Pendiente',
           metodoPago,
-          datosPago
+          datosPago: datosPagoConAnticipo
         });
         
         if (!reserva) {
@@ -117,7 +155,8 @@ const reservaController = {
           message: 'Reserva creada con éxito',
           data: {
             reserva: reserva.mostrarDetalleReserva(),
-            precioTotal
+            precioTotal,
+            planPago
           }
         });
       } catch (error) {
@@ -237,6 +276,14 @@ const reservaController = {
     try {
       const { usuarioId } = req.params;
       
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que el usuario solicitado sea el mismo o admin
+      if (String(req.user.id) !== String(usuarioId) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para ver reservas de otro usuario'
+        });
+      }
+      
       const reservas = await Reserva.find({ usuario: usuarioId })
         .populate('usuario', '-contraseña')
         .populate('auto');
@@ -277,6 +324,14 @@ const reservaController = {
         });
       }
       
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que la reserva pertenezca al usuario o sea admin
+      if (String(req.user.id) !== String(reserva.usuario._id) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para ver esta reserva'
+        });
+      }
+      
       res.status(200).json({
         success: true,
         data: reserva.mostrarDetalleReserva()
@@ -302,12 +357,20 @@ const reservaController = {
     try {
       const { id } = req.params;
       
-      const reserva = await Reserva.findOne({ idReserva: id });
+      const reserva = await Reserva.findOne({ idReserva: id }).populate('usuario');
       
       if (!reserva) {
         return res.status(404).json({
           success: false,
           message: 'Reserva no encontrada'
+        });
+      }
+      
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que la reserva pertenezca al usuario o sea admin
+      if (String(req.user.id) !== String(reserva.usuario._id) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para cancelar esta reserva'
         });
       }
       
@@ -458,6 +521,14 @@ const reservaController = {
         return res.status(404).json({
           success: false,
           message: 'Reserva no encontrada'
+        });
+      }
+      
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que la reserva pertenezca al usuario o sea admin
+      if (String(req.user.id) !== String(reserva.usuario._id) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para generar factura de esta reserva'
         });
       }
       

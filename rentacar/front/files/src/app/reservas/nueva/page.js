@@ -101,6 +101,13 @@ function ReservaFormulario() {
           fin = new Date(fechaFinParam);
           setFechaFin(fin);
         }
+
+        // Si ambas fechas fueron provistas en la URL, validar orden lógico
+        if (inicio && fin && inicio >= fin) {
+          setError('La fecha de inicio debe ser anterior a la fecha de fin');
+          setLoading(false);
+          return;
+        }
         
         if (precioTotalParam) {
           setPrecioTotal(Number(precioTotalParam));
@@ -256,129 +263,54 @@ function ReservaFormulario() {
   // Manejar envío de la reserva
   const handleEnviarReserva = async () => {
     if (!auto || !fechaInicio || !fechaFin || !metodoPagoSeleccionado || precioTotal <= 0) {
-      return;
-    }
-    
-    if (!datosPagoCompletos()) {
-      alert('Por favor, complete todos los campos obligatorios.');
+      setError('Complete todos los campos requeridos y asegúrese que las fechas sean válidas');
       return;
     }
 
-    // Advertir si no hay documentos pero permitir continuar
-    if (!datosPago.fotoPasaporte || !datosPago.fotoLicencia) {
-      const confirmar = confirm(
-        '⚠️ No ha adjuntado todos los documentos requeridos (pasaporte y licencia).\n\n' +
-        'La reserva se creará pero deberá presentar estos documentos al momento de retirar el vehículo.\n\n' +
-        '¿Desea continuar de todas formas?'
-      );
-      if (!confirmar) {
-        return;
-      }
+    // Validación explícita de orden de fechas
+    if (fechaInicio >= fechaFin) {
+      setError('La fecha de inicio debe ser anterior a la fecha de fin');
+      return;
     }
-    
-    setEnviandoReserva(true);
-    
+
     try {
-      // Obtener el usuario actual del localStorage
-      const userData = localStorage.getItem('user');
-      const usuario = userData ? JSON.parse(userData) : null;
-      
-      if (!usuario || !usuario.id) {
-        throw new Error('Debe iniciar sesión para realizar una reserva');
-      }
+      const porcentajeAnticipo = 30;
+      const montoAnticipo = Math.round((precioTotal * (porcentajeAnticipo / 100)) * 100) / 100;
+      const saldoPendiente = Math.round((Math.max(precioTotal - montoAnticipo, 0)) * 100) / 100;
 
-      // Subir archivos de documentos si existen
-      let urlsPasaporte = [];
-      let urlsLicencia = [];
-      
-      if (archivosDocumentos.fotoPasaporte) {
-        try {
-          console.log('Subiendo foto del pasaporte...');
-          const resultPasaporte = await apiService.uploads.uploadImage(archivosDocumentos.fotoPasaporte);
-          if (resultPasaporte.success && resultPasaporte.url) {
-            urlsPasaporte = [resultPasaporte.url];
-            console.log('Pasaporte subido exitosamente:', resultPasaporte.url);
-          } else {
-            console.warn('No se pudo subir la foto del pasaporte:', resultPasaporte.message);
-          }
-        } catch (uploadError) {
-          console.warn('Error al subir pasaporte:', uploadError);
-          // Continuar sin el archivo - no bloqueamos la reserva
-        }
-      }
-      
-      if (archivosDocumentos.fotoLicencia) {
-        try {
-          console.log('Subiendo foto de la licencia...');
-          const resultLicencia = await apiService.uploads.uploadImage(archivosDocumentos.fotoLicencia);
-          if (resultLicencia.success && resultLicencia.url) {
-            urlsLicencia = [resultLicencia.url];
-            console.log('Licencia subida exitosamente:', resultLicencia.url);
-          } else {
-            console.warn('No se pudo subir la foto de la licencia:', resultLicencia.message);
-          }
-        } catch (uploadError) {
-          console.warn('Error al subir licencia:', uploadError);
-          // Continuar sin el archivo - no bloqueamos la reserva
-        }
-      }
-      
-      // Preparar datos de la reserva con las URLs de los documentos
-      // Si no se pudieron subir, usar los nombres de archivo originales
-      const datosPagoConUrls = {
-        ...datosPago,
-        fotoPasaporte: urlsPasaporte.length > 0 ? urlsPasaporte[0] : (datosPago.fotoPasaporte || 'Pendiente de subir'),
-        fotoLicencia: urlsLicencia.length > 0 ? urlsLicencia[0] : (datosPago.fotoLicencia || 'Pendiente de subir')
-      };
-      
-      // Preparar datos de la reserva
-      const datosReserva = {
-        id: `RES-${usuario.id}-${auto.id}-${Date.now().toString().substring(6)}`, // ID más estructurado y corto
-        autoId: auto.id,
-        usuario: usuario.id,
-        usuarioId: usuario.id,
-        fechaInicio: fechaInicio.toISOString(),
-        fechaFin: fechaFin.toISOString(),
-        precioTotal: precioTotal,
-        diasReserva: diasReserva,
-        metodoPago: metodoPagoSeleccionado.id,
-        datosPago: datosPagoConUrls,
-        estado: 'pendiente',
-        fechaCreacion: new Date().toISOString(),
-        // Añadir datos del auto y usuario para mostrar en la lista de reservas
+      const checkoutDraft = {
         auto: {
           id: auto.id,
           marca: auto.marca,
           modelo: auto.modelo,
           anio: auto.anio,
-          placa: auto.placa || 'Sin placa', // Añadir la placa y un valor predeterminado
-          tipo: auto.tipo || 'Automóvil', // Añadir el tipo con un valor predeterminado
+          placa: auto.placa || auto.matricula || 'Sin placa',
+          tipo: auto.tipo || 'Automóvil',
           imagen: auto.imagen
-        }
+        },
+        autoId: auto.id,
+        fechaInicio: fechaInicio.toISOString(),
+        fechaFin: fechaFin.toISOString(),
+        precioTotal,
+        diasReserva,
+        metodoPago: metodoPagoSeleccionado.id,
+        metodoPagoLabel: metodoPagoSeleccionado.nombre,
+        datosPago,
+        porcentajeAnticipo,
+        montoAnticipo,
+        saldoPendiente,
+        estadoPago: 'Anticipo pendiente',
+        origen: 'reservas/nueva'
       };
-      
-      console.log('Enviando reserva:', datosReserva);
-      
-      // Llamada real a la API
-      const response = await apiService.reservas.create(datosReserva);
-      
-      if (response.success) {
-        // Mostrar pop-up de confirmación
-        setShowConfirmationPopup(true);
-        
-        // Esperar que el usuario cierre el pop-up antes de marcar como exitosa
-        setTimeout(() => {
-          setEnviandoReserva(false);
-          setReservaExitosa(true);
-        }, 500);
-      } else {
-        setError(response.message || 'Error al procesar la reserva');
-        setEnviandoReserva(false);
+
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('rentacar_checkout_draft', JSON.stringify(checkoutDraft));
       }
+
+      router.push('/reservas/pago');
     } catch (error) {
-      console.error('Error al enviar reserva:', error);
-      setError('Error al procesar la reserva. Por favor, inténtelo de nuevo.');
-      setEnviandoReserva(false);
+      console.error('Error preparando la pasarela de pago:', error);
+      setError('No se pudo preparar la pasarela de pago. Inténtelo de nuevo.');
     }
   };
 
@@ -548,6 +480,14 @@ function ReservaFormulario() {
             <div className={styles.precioRow}>
               <span>Precio total:</span>
               <span className={styles.precioTotal}>${precioTotal.toFixed(2)}</span>
+            </div>
+            <div className={styles.precioRow}>
+              <span>Anticipo para reservar (30%):</span>
+              <span>${(precioTotal * 0.3).toFixed(2)}</span>
+            </div>
+            <div className={styles.precioRow}>
+              <span>Saldo pendiente:</span>
+              <span>${(precioTotal * 0.7).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -830,11 +770,10 @@ function ReservaFormulario() {
             !fechaFin || 
             !metodoPagoSeleccionado || 
             precioTotal <= 0 ||
-            (metodoPagoSeleccionado && metodoPagoSeleccionado.id !== 'efectivo' && !datosPagoCompletos()) ||
             enviandoReserva
           }
         >
-          {enviandoReserva ? 'Procesando...' : 'Confirmar Reserva'}
+          {enviandoReserva ? 'Preparando pasarela...' : 'Continuar al pago'}
         </button>
         
         <Link href="/catalogo" className={styles.cancelarButton}>

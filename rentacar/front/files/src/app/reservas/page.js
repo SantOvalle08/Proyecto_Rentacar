@@ -244,6 +244,23 @@ export default function Reservas() {
                     <span className={styles.label}>Precio Total:</span>
                     <span className={styles.price}>${reserva.precioTotal}</span>
                   </div>
+
+                  <div className={styles.priceInfo}>
+                    <span className={styles.label}>Anticipo:</span>
+                    <span className={styles.price}>${Number(reserva.montoAnticipo ?? reserva.precioTotal * 0.3).toFixed(2)}</span>
+                  </div>
+
+                  <div className={styles.priceInfo}>
+                    <span className={styles.label}>Saldo pendiente:</span>
+                    <span className={styles.price}>${Number(reserva.saldoPendiente ?? reserva.precioTotal * 0.7).toFixed(2)}</span>
+                  </div>
+
+                  <div className={styles.status}>
+                    <span className={styles.label}>Pago:</span>
+                    <span className={`${styles.statusBadge} ${styles.pendiente}`}>
+                      {reserva.estadoPago || 'Anticipo pendiente'}
+                    </span>
+                  </div>
                   
                   <div className={styles.status}>
                     <span className={styles.label}>Estado:</span>

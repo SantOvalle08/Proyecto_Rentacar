@@ -234,6 +234,14 @@ const usuarioController = {
     try {
       const { id } = req.params;
       
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que el usuario solicitado sea el mismo o admin
+      if (String(req.user.idUser) !== String(id) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para ver datos de otro usuario'
+        });
+      }
+      
       const user = await Usuario.findOne({ idUser: id }, { contraseña: 0 });
       
       if (!user) {
@@ -272,6 +280,14 @@ const usuarioController = {
     try {
       const { id } = req.params;
       const { nombre, email, telefono } = req.body;
+      
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que el usuario solicitado sea el mismo o admin
+      if (String(req.user.idUser) !== String(id) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para actualizar datos de otro usuario'
+        });
+      }
       
       // Find and update user
       const user = await Usuario.findOneAndUpdate(
@@ -362,6 +378,14 @@ const usuarioController = {
       
       const { id } = req.params;
       const { nombre, email, telefono } = req.body;
+      
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que el usuario sea el mismo o admin
+      if (String(req.user.id) !== String(id) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para actualizar tu perfil de otro usuario'
+        });
+      }
       
       // Validate required fields
       if (!nombre || !email) {
