@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import apiService from '@/services/api';
 import FacturaView from '@/components/FacturaView';
 import styles from './page.module.css';
 
-export default function DetallesReservaCliente({ params }) {
+export default function DetallesReservaCliente() {
   const router = useRouter();
-  const { id } = params;
+  const params = useParams();
+  const id = params?.id;
   
   const [reserva, setReserva] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -337,6 +338,58 @@ export default function DetallesReservaCliente({ params }) {
                 {loading ? 'Procesando...' : 'Cancelar Reserva'}
               </button>
             </div>
+          )}
+        </div>
+        
+        {/* Desglose de Pago y Anticipo */}
+        <div className={styles.infoSection}>
+          <h2 className={styles.sectionTitle}>Desglose de Pago</h2>
+          
+          <div className={styles.detailItem}>
+            <span className={styles.detailLabel}>Precio Total:</span>
+            <span className={styles.detailValue}>${parseFloat(reserva.precioTotal || 0).toFixed(2)}</span>
+          </div>
+          
+          {reserva.porcentajeAnticipo && (
+            <>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Porcentaje Anticipo:</span>
+                <span className={styles.detailValue}>{reserva.porcentajeAnticipo}%</span>
+              </div>
+              
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Monto Anticipo:</span>
+                <span className={styles.detailValue}>${parseFloat(reserva.montoAnticipo || 0).toFixed(2)}</span>
+              </div>
+              
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Saldo Pendiente:</span>
+                <span className={styles.detailValue}>${parseFloat(reserva.saldoPendiente || 0).toFixed(2)}</span>
+              </div>
+              
+              {reserva.estadoPago && (
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Estado de Pago:</span>
+                  <span className={styles.detailValue}>{reserva.estadoPago}</span>
+                </div>
+              )}
+              
+              {reserva.pasarelaPago && (
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Pasarela de Pago:</span>
+                  <span className={styles.detailValue}>{reserva.pasarelaPago}</span>
+                </div>
+              )}
+              
+              {reserva.referenciaPago && (
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Referencia de Pago:</span>
+                  <span className={styles.detailValue} style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>
+                    {reserva.referenciaPago}
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </div>
         
