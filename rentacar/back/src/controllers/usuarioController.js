@@ -3,6 +3,7 @@
  * @description Controlador para operaciones relacionadas con usuarios
  */
 
+const mongoose = require('mongoose');
 const sistemaRentaAutos = require('../utils/SistemaRentaAutos');
 const Usuario = require('../models/usuario');
 
@@ -18,6 +19,50 @@ const sanitizeAuthPayload = (payload = {}) => {
   }
 
   return sanitized;
+};
+
+const buildUserLookupQuery = (identifier) => {
+  const normalizedIdentifier = String(identifier ?? '').trim();
+  const queryParts = [];
+
+  if (!normalizedIdentifier) {
+    return null;
+  }
+
+  if (mongoose.Types.ObjectId.isValid(normalizedIdentifier)) {
+    queryParts.push({ _id: normalizedIdentifier });
+  }
+
+  const numericIdentifier = Number(normalizedIdentifier);
+  if (Number.isInteger(numericIdentifier) && numericIdentifier > 0) {
+    queryParts.push({ idUser: numericIdentifier });
+  }
+
+  if (queryParts.length === 0) {
+    queryParts.push({ _id: normalizedIdentifier });
+  }
+
+  return queryParts.length === 1 ? queryParts[0] : { $or: queryParts };
+};
+
+const findUsuarioByIdentifier = async (identifier) => {
+  const query = buildUserLookupQuery(identifier);
+  if (!query) return null;
+
+  return Usuario.findOne(query);
+};
+
+const canManageUser = (reqUser, identifier) => {
+  if (!reqUser) return false;
+
+  if (String(reqUser.rol || '').toLowerCase() === 'admin') {
+    return true;
+  }
+
+  const normalizedIdentifier = String(identifier ?? '').trim();
+  return [reqUser.id, reqUser.idUser]
+    .filter((value) => value != null)
+    .some((value) => String(value) === normalizedIdentifier);
 };
 
 /**
@@ -235,14 +280,14 @@ const usuarioController = {
       const { id } = req.params;
       
       // VALIDACIÓN DE AUTORIZACIÓN: Verificar que el usuario solicitado sea el mismo o admin
-      if (String(req.user.idUser) !== String(id) && req.user.rol !== 'admin') {
+      if (!canManageUser(req.user, id)) {
         return res.status(403).json({
           success: false,
           message: 'No tienes permiso para ver datos de otro usuario'
         });
       }
       
-      const user = await Usuario.findOne({ idUser: id }, { contraseña: 0 });
+      const user = await findUsuarioByIdentifier(id);
       
       if (!user) {
         return res.status(404).json({
@@ -253,7 +298,17 @@ const usuarioController = {
       
       res.status(200).json({
         success: true,
-        data: user
+        data: {
+          id: user._id,
+          idUser: user.idUser,
+          nombre: user.nombre,
+          email: user.email,
+          telefono: user.telefono,
+          tipoDocumento: user.tipoDocumento,
+          numeroDocumento: user.numeroDocumento,
+          rol: user.rol,
+          apellido: user.apellido
+        }
       });
     } catch (error) {
       console.error('Error en getUserById:', error);
@@ -279,22 +334,17 @@ const usuarioController = {
   async updateUser(req, res) {
     try {
       const { id } = req.params;
-      const { nombre, email, telefono } = req.body;
+      const { nombre, email, telefono, tipoDocumento, numeroDocumento, rol, apellido } = req.body;
       
       // VALIDACIÓN DE AUTORIZACIÓN: Verificar que el usuario solicitado sea el mismo o admin
-      if (String(req.user.idUser) !== String(id) && req.user.rol !== 'admin') {
+      if (!canManageUser(req.user, id)) {
         return res.status(403).json({
           success: false,
           message: 'No tienes permiso para actualizar datos de otro usuario'
         });
       }
       
-      // Find and update user
-      const user = await Usuario.findOneAndUpdate(
-        { idUser: id },
-        { nombre, email, telefono },
-        { new: true, runValidators: true }
-      );
+      const user = await findUsuarioByIdentifier(id);
       
       if (!user) {
         return res.status(404).json({
@@ -302,15 +352,30 @@ const usuarioController = {
           message: 'Usuario no encontrado'
         });
       }
+
+      if (nombre !== undefined) user.nombre = nombre;
+      if (email !== undefined) user.email = String(email).toLowerCase();
+      if (telefono !== undefined) user.telefono = telefono;
+      if (tipoDocumento !== undefined) user.tipoDocumento = tipoDocumento;
+      if (numeroDocumento !== undefined) user.numeroDocumento = numeroDocumento;
+      if (apellido !== undefined) user.apellido = apellido;
+      if (rol !== undefined && req.user.rol === 'admin') user.rol = rol;
+
+      await user.save();
       
       res.status(200).json({
         success: true,
         message: 'Usuario actualizado con éxito',
         data: {
+          id: user._id,
           idUser: user.idUser,
           nombre: user.nombre,
           email: user.email,
-          telefono: user.telefono
+          telefono: user.telefono,
+          tipoDocumento: user.tipoDocumento,
+          numeroDocumento: user.numeroDocumento,
+          rol: user.rol,
+          apellido: user.apellido
         }
       });
     } catch (error) {
@@ -334,7 +399,14 @@ const usuarioController = {
     try {
       const { id } = req.params;
       
-      const user = await Usuario.findOneAndDelete({ idUser: id });
+      if (!canManageUser(req.user, id)) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para eliminar este usuario'
+        });
+      }
+
+      const user = await findUsuarioByIdentifier(id);
       
       if (!user) {
         return res.status(404).json({
@@ -342,6 +414,8 @@ const usuarioController = {
           message: 'Usuario no encontrado'
         });
       }
+
+      await Usuario.deleteOne({ _id: user._id });
       
       res.status(200).json({
         success: true,
