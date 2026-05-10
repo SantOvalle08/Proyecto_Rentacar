@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+<<<<<<< HEAD
   output: "standalone",
   images: {
     remotePatterns: [
@@ -12,3 +13,17 @@ const nextConfig = {
 };
 
 export default nextConfig;
+=======
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+    unoptimized: true,
+  },
+};
+
+export default nextConfig;
+>>>>>>> origin

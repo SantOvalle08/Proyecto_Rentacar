@@ -6,6 +6,7 @@
 const sistemaRentaAutos = require('../utils/SistemaRentaAutos');
 const Reserva = require('../models/Reserva');
 const Auto = require('../models/Auto');
+<<<<<<< HEAD
 const Checklist = require('../models/Checklist');
 const calculadoraFactory = require('../utils/factories/CalculadoraFactory');
 
@@ -48,6 +49,10 @@ const validarInspeccionVehiculo = (checklist) => {
   };
 };
 
+=======
+const calculadoraFactory = require('../utils/factories/CalculadoraFactory');
+
+>>>>>>> origin
 /**
  * @typedef {Object} ReservaController
  * @property {Function} createReserva - Crea una nueva reserva
@@ -123,6 +128,7 @@ const reservaController = {
           message: 'El auto no está disponible'
         });
       }
+<<<<<<< HEAD
 
       // RC-029: El vehiculo debe aprobar inspeccion antes de reservarse
       const checklist = await Checklist.findOne({ idAuto: auto.idAuto });
@@ -139,6 +145,8 @@ const reservaController = {
           }
         });
       }
+=======
+>>>>>>> origin
       
       // Use CalculadoraFactory to calculate total price
       const calculadora = calculadoraFactory.createCalculadora(

@@ -1,7 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+<<<<<<< HEAD
 const path = require('path');
+=======
+>>>>>>> origin
 const connectDB = require('./src/config/database');
 const routes = require('./src/routes');
 
@@ -53,9 +56,12 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+<<<<<<< HEAD
 // Exponer archivos subidos de imagenes
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+=======
+>>>>>>> origin
 // Middleware para verificar conexión a la base de datos
 app.use((req, res, next) => {
   if (!dbConnectionStatus && req.method !== 'GET') {
