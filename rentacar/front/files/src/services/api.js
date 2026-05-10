@@ -63,18 +63,6 @@ const fetchWithAuth = async (url, options = {}) => {
     for (const baseUrl of getOrderedApiCandidates()) {
       const fullUrl = `${baseUrl}${url}`;
 
-      console.log(`Realizando solicitud a: ${fullUrl}`, {
-        method: options.method || 'GET',
-        body: requestBody
-      });
-
-      console.log('Request completo:', {
-        url: fullUrl,
-        method: options.method || 'GET',
-        headers,
-        body: options.body
-      });
-
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -111,12 +99,6 @@ const fetchWithAuth = async (url, options = {}) => {
       throw lastError || new Error('No se pudo establecer conexion con la API');
     }
 
-    console.log('Respuesta recibida:', {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries([...response.headers])
-    });
-
     if (response.status === 204) {
       return { success: true };
     }
@@ -124,7 +106,6 @@ const fetchWithAuth = async (url, options = {}) => {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
-      console.log('Respuesta JSON:', data);
 
       if (!response.ok) {
         console.warn('Error en respuesta del servidor:', data);
@@ -134,15 +115,10 @@ const fetchWithAuth = async (url, options = {}) => {
       return data;
     } else {
       const text = await response.text();
-      console.log('Respuesta texto (no JSON):', text.substring(0, 100));
 
       if (!response.ok) {
         const errorMsg = text || `Error del servidor: ${response.status} ${response.statusText}`;
-        console.warn('Error en respuesta del servidor:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorMsg.substring(0, 200)
-        });
+        console.warn('Error en respuesta del servidor:', response.status, errorMsg.substring(0, 200));
         throw new Error(errorMsg);
       }
 
@@ -319,24 +295,18 @@ const autos = {
       if (localData && Array.isArray(localData) && localData.length > 0) {
         console.log('Usando datos de vehículos desde localStorage (carga rápida):', localData.length);
         
-        // Intentar sincronizar con backend en segundo plano (no bloqueante)
+        // Sincronizar con backend en segundo plano (sin disparar eventos para evitar bucles)
         setTimeout(async () => {
           try {
-            console.log('Sincronizando con backend en segundo plano...');
             const response = await fetchWithAuth('/api/autos');
             if (response.success && Array.isArray(response.data) && response.data.length > 0) {
-              console.log(`Backend retornó ${response.data.length} autos - actualizando localStorage`);
               saveLocalData('autos', response.data);
-              // Disparar evento para notificar a componentes
-              if (typeof window !== 'undefined') {
-                window.dispatchEvent(new Event('rentacarDataUpdate'));
-              }
             }
           } catch (error) {
-            console.warn('No se pudo sincronizar con backend (modo offline)');
+            // offline — localStorage sigue siendo válido
           }
-        }, 100); // Esperar 100ms para no bloquear
-        
+        }, 500);
+
         return { success: true, data: localData, source: 'localStorage' };
       }
       

@@ -121,6 +121,10 @@ const reservaController = {
       
       const precioTotal = calculadora.calcularPrecioTotal();
       const planPago = calcularPlanPago(precioTotal, porcentajeAnticipo);
+
+      const diffTime = Math.abs(endDate - startDate);
+      const diasReserva = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
       const datosPagoConAnticipo = {
         ...(datosPago || {}),
         porcentajeAnticipo: planPago.porcentajeAnticipo,
@@ -128,7 +132,7 @@ const reservaController = {
         saldoPendiente: planPago.saldoPendiente,
         estadoPago: planPago.estadoPago
       };
-      
+
       // Create reservation using SistemaRentaAutos
       try {
         const reserva = await sistemaRentaAutos.realizarReserva({
@@ -137,6 +141,7 @@ const reservaController = {
           usuario: usuarioReserva,
           auto: auto._id,
           precioTotal,
+          diasReserva,
           porcentajeAnticipo: planPago.porcentajeAnticipo,
           montoAnticipo: planPago.montoAnticipo,
           saldoPendiente: planPago.saldoPendiente,
@@ -248,9 +253,9 @@ const reservaController = {
   async getAllReservas(req, res) {
     try {
       const reservas = await Reserva.find()
-        .populate('usuario', '-contraseña')
-        .populate('auto');
-      
+        .populate('usuario', 'idUser nombre email')
+        .populate('auto', 'idAuto marca modelo tipoCoche tipo color matricula precioDia imagen disponible');
+
       res.status(200).json({
         success: true,
         data: reservas.map(reserva => reserva.mostrarDetalleReserva())

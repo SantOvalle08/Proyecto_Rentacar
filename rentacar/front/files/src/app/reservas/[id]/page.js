@@ -8,11 +8,60 @@ import apiService from '@/services/api';
 import FacturaView from '@/components/FacturaView';
 import styles from './page.module.css';
 
+const CARD_TYPE_LABELS = {
+  visa: 'Visa',
+  mastercard: 'Mastercard',
+  amex: 'American Express',
+  otro: 'Otra'
+};
+
+const METHOD_LABELS = {
+  tarjeta: 'Tarjeta de Crédito/Débito',
+  mercadopago: 'Mercado Pago',
+  transferencia: 'Transferencia Bancaria',
+  efectivo: 'Efectivo al retirar'
+};
+
+// Normaliza el estado al mismo mapa que usa reservas/page.js
+const normalizeEstado = (estado = '') => {
+  const map = {
+    pendiente: 'pendiente',
+    activa: 'activa',
+    confirmada: 'activa',
+    completada: 'completada',
+    cancelada: 'cancelada'
+  };
+  return map[String(estado).toLowerCase()] || String(estado).toLowerCase();
+};
+
+const ESTADO_LABELS = {
+  pendiente: 'Pendiente',
+  activa: 'Confirmada',
+  completada: 'Completada',
+  cancelada: 'Cancelada'
+};
+
+// Construye la URL completa de una imagen de auto
+const getImageSrc = (imagen) => {
+  if (!imagen) return null;
+  if (imagen.startsWith('http') || imagen.startsWith('/')) return imagen;
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+  return `${apiBase}/images/${imagen}`;
+};
+
+// Calcula días entre dos fechas ISO
+const calcularDias = (fechaInicio, fechaFin) => {
+  if (!fechaInicio || !fechaFin) return null;
+  const diff = Math.abs(new Date(fechaFin) - new Date(fechaInicio));
+  const dias = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  return dias > 0 ? dias : null;
+};
+
 export default function DetallesReservaCliente() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
-  
+
   const [reserva, setReserva] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -31,13 +80,10 @@ export default function DetallesReservaCliente() {
 
   const getReservaUsuarioId = (reservaData) => {
     if (!reservaData) return null;
-
     if (reservaData.usuarioId) return reservaData.usuarioId;
-
     if (typeof reservaData.usuario === 'string' || typeof reservaData.usuario === 'number') {
       return reservaData.usuario;
     }
-
     return reservaData.usuario?.id || reservaData.usuario?._id || null;
   };
 
@@ -46,21 +92,17 @@ export default function DetallesReservaCliente() {
     const reservaUsuarioId = getReservaUsuarioId(reservaData);
     return reservaUsuarioId != null && String(reservaUsuarioId) === String(userId);
   };
-  
-  // Cargar datos de la reserva
+
   const loadReserva = useCallback(async (reservaId, userId, userRole) => {
     try {
       setLoading(true);
       setError('');
-      
-      // Intentar obtener la reserva de la API
+
       try {
         const response = await apiService.reservas.getById(reservaId);
-        
+
         if (response.success && response.data) {
-          // Verificar que la reserva pertenece al usuario actual o el usuario es admin
           const reservaData = response.data;
-          
           if (isReservaOwnerOrAdmin(reservaData, userId, userRole)) {
             setReserva(reservaData);
             setLoading(false);
@@ -73,14 +115,12 @@ export default function DetallesReservaCliente() {
         }
       } catch (apiError) {
         console.error('Error al obtener reserva desde API:', apiError);
-        
-        // Intentar obtener desde localStorage
+
         try {
           const localData = localStorage.getItem('rentacar_reservas');
           if (localData) {
             const allReservas = JSON.parse(localData);
             const userReserva = allReservas.find(r => r.id == reservaId);
-            
             if (userReserva && isReservaOwnerOrAdmin(userReserva, userId, userRole)) {
               setReserva(userReserva);
               setLoading(false);
@@ -90,28 +130,27 @@ export default function DetallesReservaCliente() {
         } catch (localError) {
           console.error('Error al obtener reserva desde localStorage:', localError);
         }
-        
+
         throw new Error('No se pudo encontrar la reserva solicitada');
       }
-    } catch (error) {
-      console.error('Error general al cargar reserva:', error);
-      setError(error.message || 'Error al cargar los datos de la reserva');
+    } catch (err) {
+      console.error('Error general al cargar reserva:', err);
+      setError(err.message || 'Error al cargar los datos de la reserva');
       setLoading(false);
     }
   }, []);
 
-  // Verificar autenticación y cargar datos del usuario
   useEffect(() => {
     const checkAuth = () => {
       try {
         if (typeof window === 'undefined') return;
-        
+
         const userData = localStorage.getItem('user');
         if (!userData) {
           router.push('/login');
           return;
         }
-        
+
         try {
           const parsedUser = JSON.parse(userData);
           const currentUserId = getUserId(parsedUser);
@@ -123,74 +162,65 @@ export default function DetallesReservaCliente() {
 
           setUser(parsedUser);
           loadReserva(id, currentUserId, currentUserRole);
-        } catch (error) {
-          console.error('Error parsing user data:', error);
+        } catch (err) {
+          console.error('Error parsing user data:', err);
           localStorage.removeItem('user');
           localStorage.removeItem('token');
           router.push('/login');
         }
-      } catch (error) {
-        console.error('Error checking auth:', error);
+      } catch (err) {
+        console.error('Error checking auth:', err);
         router.push('/login');
       }
     };
-    
+
     checkAuth();
   }, [id, router, loadReserva]);
-  
-  // Función para cancelar reserva
+
   const handleCancelReservation = async () => {
-    if (!reserva || ['cancelada', 'completada'].includes(reserva.estado)) {
-      return;
-    }
-    
+    const estadoNorm = normalizeEstado(reserva?.estado);
+    if (!reserva || estadoNorm === 'cancelada' || estadoNorm === 'completada') return;
+
     try {
       setLoading(true);
-      
-      // Intentar cancelar en la API
+
       try {
         const response = await apiService.reservas.cancelar(reserva.id);
-        
         if (response.success) {
-          setReserva({...reserva, estado: 'cancelada'});
-          alert('Reserva cancelada correctamente');
+          setReserva({ ...reserva, estado: 'Cancelada' });
           setLoading(false);
           return;
         }
       } catch (apiError) {
         console.error('Error al cancelar reserva en API:', apiError);
       }
-      
-      // Fallback: actualizar en localStorage
+
+      // Fallback localStorage
       try {
         const localData = localStorage.getItem('rentacar_reservas');
         if (localData) {
           const allReservas = JSON.parse(localData);
-          const updatedReservas = allReservas.map(r => 
-            r.id === reserva.id ? {...r, estado: 'cancelada'} : r
+          const updatedReservas = allReservas.map(r =>
+            r.id === reserva.id ? { ...r, estado: 'Cancelada' } : r
           );
-          
           localStorage.setItem('rentacar_reservas', JSON.stringify(updatedReservas));
-          setReserva({...reserva, estado: 'cancelada'});
-          alert('Reserva cancelada correctamente');
+          setReserva({ ...reserva, estado: 'Cancelada' });
         }
       } catch (localError) {
         console.error('Error al actualizar localStorage:', localError);
         throw new Error('No se pudo cancelar la reserva');
       }
-    } catch (error) {
-      console.error('Error general al cancelar reserva:', error);
-      setError('Error al cancelar la reserva: ' + (error.message || ''));
+    } catch (err) {
+      console.error('Error general al cancelar reserva:', err);
+      setError('Error al cancelar la reserva: ' + (err.message || ''));
     } finally {
       setLoading(false);
     }
   };
-  
-  // Función para formatear fechas
+
   const formatDate = (dateString) => {
     if (!dateString) return 'No disponible';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
+    return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -206,13 +236,11 @@ export default function DetallesReservaCliente() {
 
   const getDocumentName = (value, fallbackLabel) => {
     if (!value || typeof value !== 'string') return fallbackLabel;
-
     if (value.startsWith('data:')) {
       const mime = value.split(';')[0].replace('data:', '');
       const extension = mime.includes('/') ? mime.split('/')[1] : 'archivo';
       return `${fallbackLabel}.${extension}`;
     }
-
     try {
       const base = value.split('?')[0].split('#')[0];
       const name = base.substring(base.lastIndexOf('/') + 1);
@@ -223,10 +251,7 @@ export default function DetallesReservaCliente() {
   };
 
   const renderDocumentValue = (value, fallbackLabel) => {
-    if (!value) {
-      return <span className={styles.documentoValue}>No disponible</span>;
-    }
-
+    if (!value) return <span className={styles.documentoValue}>No disponible</span>;
     if (isLinkLikeValue(value)) {
       return (
         <a
@@ -240,10 +265,9 @@ export default function DetallesReservaCliente() {
         </a>
       );
     }
-
     return <span className={styles.documentoValue}>{value}</span>;
   };
-  
+
   if (loading) {
     return (
       <div className="container">
@@ -251,7 +275,7 @@ export default function DetallesReservaCliente() {
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className="container">
@@ -265,7 +289,7 @@ export default function DetallesReservaCliente() {
       </div>
     );
   }
-  
+
   if (!reserva) {
     return (
       <div className="container">
@@ -279,7 +303,13 @@ export default function DetallesReservaCliente() {
       </div>
     );
   }
-  
+
+  const estadoNorm = normalizeEstado(reserva.estado);
+  const estadoLabel = ESTADO_LABELS[estadoNorm] || reserva.estado || 'Desconocido';
+  const diasMostrar = reserva.diasReserva || calcularDias(reserva.fechaInicio, reserva.fechaFin);
+  const imageSrc = getImageSrc(reserva.auto?.imagen);
+  const referenciaPago = reserva.datosPago?.referenciaPago || reserva.referenciaPago;
+
   return (
     <div className="container">
       <div className={styles.pageHeader}>
@@ -288,49 +318,45 @@ export default function DetallesReservaCliente() {
           ← Volver a Mis Reservas
         </Link>
       </div>
-      
+
       <div className={styles.reservaDetallesContainer}>
-        {/* Información general de la reserva */}
+        {/* Información general */}
         <div className={styles.infoSection}>
           <h2 className={styles.sectionTitle}>Información General</h2>
-          
+
           <div className={styles.detailItem}>
             <span className={styles.detailLabel}>ID de Reserva:</span>
             <span className={styles.detailValue}>{reserva.id}</span>
           </div>
-          
+
           <div className={styles.detailItem}>
             <span className={styles.detailLabel}>Estado:</span>
             <span className={`${styles.detailValue} ${
-              reserva.estado === 'activa' ? styles.estadoActiva : 
-              reserva.estado === 'pendiente' ? styles.estadoPendiente :
-              reserva.estado === 'completada' ? styles.estadoCompletada :
+              estadoNorm === 'activa' ? styles.estadoActiva :
+              estadoNorm === 'pendiente' ? styles.estadoPendiente :
+              estadoNorm === 'completada' ? styles.estadoCompletada :
               styles.estadoCancelada
             }`}>
-              {reserva.estado === 'activa' ? 'Activa' : 
-               reserva.estado === 'pendiente' ? 'Pendiente' :
-               reserva.estado === 'completada' ? 'Completada' : 'Cancelada'}
+              {estadoLabel}
             </span>
           </div>
-          
+
           <div className={styles.detailItem}>
             <span className={styles.detailLabel}>Fecha de Creación:</span>
             <span className={styles.detailValue}>{formatDate(reserva.fechaCreacion)}</span>
           </div>
-          
+
           <div className={styles.detailItem}>
             <span className={styles.detailLabel}>Método de Pago:</span>
             <span className={styles.detailValue}>
-              {reserva.metodoPago === 'mercadopago' ? 'Mercado Pago' : 
-               reserva.metodoPago === 'tarjeta' ? 'Tarjeta de Crédito/Débito' :
-               reserva.metodoPago === 'transferencia' ? 'Transferencia Bancaria' : 'Efectivo'}
+              {METHOD_LABELS[reserva.metodoPago] || reserva.metodoPago || 'Efectivo'}
             </span>
           </div>
-          
-          {/* Botón para cancelar reserva (solo si está activa o pendiente) */}
-          {(reserva.estado === 'activa' || reserva.estado === 'pendiente') && (
+
+          {/* Botón cancelar solo si la reserva está activa o pendiente */}
+          {(estadoNorm === 'activa' || estadoNorm === 'pendiente') && (
             <div className={styles.cancelarContainer}>
-              <button 
+              <button
                 className={styles.cancelarButton}
                 onClick={handleCancelReservation}
                 disabled={loading}
@@ -340,69 +366,62 @@ export default function DetallesReservaCliente() {
             </div>
           )}
         </div>
-        
-        {/* Desglose de Pago y Anticipo */}
+
+        {/* Desglose de Pago */}
         <div className={styles.infoSection}>
           <h2 className={styles.sectionTitle}>Desglose de Pago</h2>
-          
+
           <div className={styles.detailItem}>
             <span className={styles.detailLabel}>Precio Total:</span>
             <span className={styles.detailValue}>${parseFloat(reserva.precioTotal || 0).toFixed(2)}</span>
           </div>
-          
-          {reserva.porcentajeAnticipo && (
+
+          {reserva.porcentajeAnticipo != null && (
             <>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Porcentaje Anticipo:</span>
                 <span className={styles.detailValue}>{reserva.porcentajeAnticipo}%</span>
               </div>
-              
+
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Monto Anticipo:</span>
                 <span className={styles.detailValue}>${parseFloat(reserva.montoAnticipo || 0).toFixed(2)}</span>
               </div>
-              
+
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Saldo Pendiente:</span>
                 <span className={styles.detailValue}>${parseFloat(reserva.saldoPendiente || 0).toFixed(2)}</span>
               </div>
-              
-              {reserva.estadoPago && (
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Estado de Pago:</span>
-                  <span className={styles.detailValue}>{reserva.estadoPago}</span>
-                </div>
-              )}
-              
-              {reserva.pasarelaPago && (
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Pasarela de Pago:</span>
-                  <span className={styles.detailValue}>{reserva.pasarelaPago}</span>
-                </div>
-              )}
-              
-              {reserva.referenciaPago && (
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Referencia de Pago:</span>
-                  <span className={styles.detailValue} style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>
-                    {reserva.referenciaPago}
-                  </span>
-                </div>
-              )}
             </>
           )}
+
+          {reserva.estadoPago && (
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Estado de Pago:</span>
+              <span className={styles.detailValue}>{reserva.estadoPago}</span>
+            </div>
+          )}
+
+          {referenciaPago && (
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Referencia de Pago:</span>
+              <span className={styles.detailValue} style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>
+                {referenciaPago}
+              </span>
+            </div>
+          )}
         </div>
-        
-        {/* Información del vehículo */}
+
+        {/* Vehículo */}
         <div className={styles.infoSection}>
           <h2 className={styles.sectionTitle}>Vehículo</h2>
-          
+
           {reserva.auto && (
             <div className={styles.vehiculoContainer}>
               <div className={styles.vehiculoImage}>
-                {reserva.auto.imagen ? (
-                  <Image 
-                    src={reserva.auto.imagen}
+                {imageSrc ? (
+                  <Image
+                    src={imageSrc}
                     alt={`${reserva.auto.marca} ${reserva.auto.modelo}`}
                     width={300}
                     height={200}
@@ -417,7 +436,7 @@ export default function DetallesReservaCliente() {
                   <div className={styles.noImage}>Sin imagen</div>
                 )}
               </div>
-              
+
               <div className={styles.vehiculoDetails}>
                 <h3>{reserva.auto.marca} {reserva.auto.modelo}</h3>
                 <div className={styles.detailItem}>
@@ -431,7 +450,7 @@ export default function DetallesReservaCliente() {
               </div>
             </div>
           )}
-          
+
           <div className={styles.fechasReserva}>
             <div className={styles.detailItem}>
               <span className={styles.detailLabel}>Fecha de Inicio:</span>
@@ -443,19 +462,19 @@ export default function DetallesReservaCliente() {
             </div>
             <div className={styles.detailItem}>
               <span className={styles.detailLabel}>Días de Alquiler:</span>
-              <span className={styles.detailValue}>{reserva.diasReserva || '-'}</span>
+              <span className={styles.detailValue}>{diasMostrar ?? 'No disponible'}</span>
             </div>
             <div className={styles.detailItem}>
               <span className={styles.detailLabel}>Precio Total:</span>
-              <span className={styles.detailValue}>${reserva.precioTotal}</span>
+              <span className={styles.detailValue}>${parseFloat(reserva.precioTotal || 0).toFixed(2)}</span>
             </div>
           </div>
         </div>
-        
-        {/* Documentos adjuntos */}
+
+        {/* Documentos y datos de pago */}
         <div className={styles.infoSection}>
           <h2 className={styles.sectionTitle}>Documentos Adjuntos</h2>
-          
+
           {reserva.datosPago && (
             <div className={styles.documentosContainer}>
               <h3>Documentos de Identidad y Conducción</h3>
@@ -466,91 +485,148 @@ export default function DetallesReservaCliente() {
                     {renderDocumentValue(reserva.datosPago.fotoPasaporte, 'pasaporte')}
                   </div>
                 )}
-                
+
                 {reserva.datosPago.fotoLicencia && (
                   <div className={styles.documentoItem}>
                     <span className={styles.documentoLabel}>Licencia de Conducción:</span>
                     {renderDocumentValue(reserva.datosPago.fotoLicencia, 'licencia-conduccion')}
                   </div>
                 )}
-                
-                {reserva.metodoPago === 'transferencia' && reserva.datosPago.comprobante && (
-                  <div className={styles.documentoItem}>
-                    <span className={styles.documentoLabel}>Comprobante de Transferencia:</span>
-                    {renderDocumentValue(reserva.datosPago.comprobante, 'comprobante-transferencia')}
-                  </div>
-                )}
-                
+
                 {(!reserva.datosPago.fotoPasaporte && !reserva.datosPago.fotoLicencia) && (
                   <p className={styles.noDocumentos}>No hay documentos adjuntos disponibles</p>
                 )}
               </div>
-              
+
               <h3>Información de Pago</h3>
+
               {reserva.metodoPago === 'tarjeta' && (
                 <>
-                  <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>Tipo de Tarjeta:</span>
-                    <span className={styles.detailValue}>{reserva.datosPago.tipoTarjeta || 'No disponible'}</span>
-                  </div>
-                  <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>Últimos 4 dígitos:</span>
-                    <span className={styles.detailValue}>{reserva.datosPago.ultimosDigitos || 'No disponible'}</span>
-                  </div>
+                  {(reserva.datosPago.tipoTarjeta) && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Tipo de Tarjeta:</span>
+                      <span className={styles.detailValue}>
+                        {CARD_TYPE_LABELS[reserva.datosPago.tipoTarjeta] || reserva.datosPago.tipoTarjeta}
+                      </span>
+                    </div>
+                  )}
+                  {reserva.datosPago.titularTarjeta && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Titular:</span>
+                      <span className={styles.detailValue}>{reserva.datosPago.titularTarjeta}</span>
+                    </div>
+                  )}
+                  {reserva.datosPago.ultimosDigitos && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Terminación:</span>
+                      <span className={styles.detailValue}>**** {reserva.datosPago.ultimosDigitos}</span>
+                    </div>
+                  )}
+                  {reserva.datosPago.fechaExpiracion && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Vencimiento:</span>
+                      <span className={styles.detailValue}>{reserva.datosPago.fechaExpiracion}</span>
+                    </div>
+                  )}
                 </>
               )}
-              
+
               {reserva.metodoPago === 'mercadopago' && (
                 <div className={styles.detailItem}>
                   <span className={styles.detailLabel}>Email de Mercado Pago:</span>
-                  <span className={styles.detailValue}>{reserva.datosPago.email || 'No disponible'}</span>
+                  <span className={styles.detailValue}>
+                    {reserva.datosPago.emailCuenta || reserva.datosPago.email || 'No disponible'}
+                  </span>
                 </div>
               )}
-              
+
               {reserva.metodoPago === 'transferencia' && (
                 <>
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Nombre del Titular:</span>
-                    <span className={styles.detailValue}>{reserva.datosPago.nombreTitular || 'No disponible'}</span>
+                    <span className={styles.detailValue}>
+                      {reserva.datosPago.titularCuenta || reserva.datosPago.nombreTitular || 'No disponible'}
+                    </span>
                   </div>
-                  <div className={styles.detailItem}>
-                    <span className={styles.detailLabel}>Email de Confirmación:</span>
-                    <span className={styles.detailValue}>{reserva.datosPago.emailConfirmacion || 'No disponible'}</span>
-                  </div>
+                  {reserva.datosPago.bancoOrigen && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Banco:</span>
+                      <span className={styles.detailValue}>{reserva.datosPago.bancoOrigen}</span>
+                    </div>
+                  )}
+                  {reserva.datosPago.referenciaTransferencia && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Referencia Transferencia:</span>
+                      <span className={styles.detailValue}>{reserva.datosPago.referenciaTransferencia}</span>
+                    </div>
+                  )}
+                  {reserva.datosPago.emailConfirmacion && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Email de Confirmación:</span>
+                      <span className={styles.detailValue}>{reserva.datosPago.emailConfirmacion}</span>
+                    </div>
+                  )}
+                  {reserva.metodoPago === 'transferencia' && reserva.datosPago.comprobante && (
+                    <div className={styles.documentoItem}>
+                      <span className={styles.documentoLabel}>Comprobante:</span>
+                      {renderDocumentValue(reserva.datosPago.comprobante, 'comprobante-transferencia')}
+                    </div>
+                  )}
                 </>
               )}
-              
+
               {reserva.metodoPago === 'efectivo' && (
-                <p>Pago en efectivo al retirar el vehículo.</p>
+                <>
+                  {reserva.datosPago.puntoRetiro && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Punto de Retiro:</span>
+                      <span className={styles.detailValue}>{reserva.datosPago.puntoRetiro}</span>
+                    </div>
+                  )}
+                  {reserva.datosPago.nombreContacto && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Contacto:</span>
+                      <span className={styles.detailValue}>{reserva.datosPago.nombreContacto}</span>
+                    </div>
+                  )}
+                  {reserva.datosPago.telefonoContacto && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Teléfono:</span>
+                      <span className={styles.detailValue}>{reserva.datosPago.telefonoContacto}</span>
+                    </div>
+                  )}
+                  {!reserva.datosPago.puntoRetiro && (
+                    <p>Pago en efectivo al retirar el vehículo.</p>
+                  )}
+                </>
               )}
             </div>
           )}
         </div>
 
-        {/* Botón para ver factura */}
-        {reserva.estado !== 'cancelada' && (
+        {/* Factura */}
+        {estadoNorm !== 'cancelada' && (
           <div className={styles.facturaSection}>
             <h2 className={styles.sectionTitle}>Facturación</h2>
             <p className={styles.facturaDescripcion}>
               Descargue o imprima su factura electrónica oficial
             </p>
-            <button 
-              onClick={() => setMostrarFactura(true)} 
+            <button
+              onClick={() => setMostrarFactura(true)}
               className={styles.btnFactura}
             >
-              📄 Ver Factura Electrónica
+              Ver Factura Electrónica
             </button>
           </div>
         )}
       </div>
 
-      {/* Modal de factura */}
       {mostrarFactura && (
-        <FacturaView 
-          reserva={reserva} 
-          onClose={() => setMostrarFactura(false)} 
+        <FacturaView
+          reserva={reserva}
+          onClose={() => setMostrarFactura(false)}
         />
       )}
     </div>
   );
-} 
+}

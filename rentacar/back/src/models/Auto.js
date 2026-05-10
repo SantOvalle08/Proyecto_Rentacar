@@ -131,6 +131,9 @@ const autoSchema = new mongoose.Schema({
   timestamps: true
 });
 
+autoSchema.index({ marca: 1, modelo: 1 });
+autoSchema.index({ disponible: 1 });
+
 /**
  * Retorna los detalles del vehículo en un formato estandarizado
  * @returns {Object} Detalles del vehículo

@@ -9,6 +9,7 @@ const router = express.Router();
 const usuarioController = require('../controllers/usuarioController');
 const autoController = require('../controllers/autoController');
 const reservaController = require('../controllers/reservaController');
+const dashboardController = require('../controllers/dashboardController');
 const uploadController = require('../controllers/uploadController');
 const checklistController = require('../controllers/checklistController');
 const { verifyToken, isAdmin } = require('../middleware/auth');
@@ -38,6 +39,9 @@ router.get('/api/test-cors', (req, res) => {
 
 // IMPORTANTE: Rutas públicas temporales para pruebas de la aplicación
 // Para producción, estas rutas deben ser protegidas con autenticación
+
+// Dashboard routes
+router.get('/api/dashboard/estadisticas', verifyToken, isAdmin, dashboardController.getEstadisticas);
 
 // Auto routes - Orden específico para evitar conflictos
 // Rutas específicas primero

@@ -9,27 +9,27 @@ import apiService from '@/services/api';
 
 // Métodos de pago disponibles
 const METODOS_PAGO = [
-  { 
-    id: 'mercadopago', 
-    nombre: 'Mercado Pago', 
+  {
+    id: 'mercadopago',
+    nombre: 'Mercado Pago',
     descripcion: 'Paga de forma segura con tu cuenta de Mercado Pago',
-    campos: ['email', 'fotoPasaporte', 'fotoLicencia']
+    campos: ['fotoPasaporte', 'fotoLicencia']
   },
-  { 
-    id: 'tarjeta', 
-    nombre: 'Tarjeta de Crédito/Débito', 
+  {
+    id: 'tarjeta',
+    nombre: 'Tarjeta de Crédito/Débito',
     descripcion: 'Visa, Mastercard, American Express, etc.',
-    campos: ['tipoTarjeta', 'ultimosDigitos', 'fotoPasaporte', 'fotoLicencia']  // Campos simplificados para mayor seguridad
+    campos: ['fotoPasaporte', 'fotoLicencia']
   },
-  { 
-    id: 'transferencia', 
-    nombre: 'Transferencia Bancaria', 
+  {
+    id: 'transferencia',
+    nombre: 'Transferencia Bancaria',
     descripcion: 'Realiza una transferencia a nuestra cuenta bancaria',
-    campos: ['nombreTitular', 'emailConfirmacion', 'comprobante', 'fotoPasaporte', 'fotoLicencia']
+    campos: ['fotoPasaporte', 'fotoLicencia']
   },
-  { 
-    id: 'efectivo', 
-    nombre: 'Efectivo al retirar', 
+  {
+    id: 'efectivo',
+    nombre: 'Efectivo al retirar',
     descripcion: 'Pago en efectivo al momento de retirar el vehículo',
     campos: ['fotoPasaporte', 'fotoLicencia']
   }
@@ -615,139 +615,12 @@ function ReservaFormulario() {
               </div>
             </div>
             
-            {metodoPagoSeleccionado.id !== 'efectivo' && (
-              <>
-                {metodoPagoSeleccionado.id === 'tarjeta' && (
-                  <>
-                    <div className={styles.infoGroup}>
-                      <p className={styles.disclaimer}>
-                        Por tu seguridad, no solicitamos datos sensibles de tu tarjeta a través de este formulario. 
-                        Al confirmar la reserva, serás redirigido a nuestro procesador de pagos seguro.
-                      </p>
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel} htmlFor="tipoTarjeta">Tipo de tarjeta</label>
-                      <select
-                        id="tipoTarjeta"
-                        name="tipoTarjeta"
-                        className={styles.formInput}
-                        value={datosPago.tipoTarjeta || ''}
-                        onChange={handleDatosPagoChange}
-                        required
-                      >
-                        <option value="">Selecciona un tipo</option>
-                        <option value="visa">Visa</option>
-                        <option value="mastercard">MasterCard</option>
-                        <option value="amex">American Express</option>
-                        <option value="otro">Otro</option>
-                      </select>
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel} htmlFor="ultimosDigitos">Últimos 4 dígitos de tu tarjeta</label>
-                      <input
-                        type="text"
-                        id="ultimosDigitos"
-                        name="ultimosDigitos"
-                        placeholder="Ej. 1234"
-                        maxLength="4"
-                        pattern="[0-9]{4}"
-                        className={styles.formInput}
-                        value={datosPago.ultimosDigitos || ''}
-                        onChange={handleDatosPagoChange}
-                        required
-                      />
-                      <small className={styles.formHelp}>Solo para referencia futura</small>
-                    </div>
-                  </>
-                )}
-                
-                {metodoPagoSeleccionado.id === 'mercadopago' && (
-                  <>
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel} htmlFor="email">Email de Mercado Pago</label>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        placeholder="tu@email.com"
-                        className={styles.formInput}
-                        value={datosPago.email || ''}
-                        onChange={handleDatosPagoChange}
-                        required
-                      />
-                    </div>
-                    <div className={styles.infoGroup}>
-                      <p className={styles.disclaimer}>
-                        Al confirmar, serás redirigido a la página de Mercado Pago para completar el pago de forma segura.
-                      </p>
-                    </div>
-                  </>
-                )}
-                
-                {metodoPagoSeleccionado.id === 'transferencia' && (
-                  <>
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel} htmlFor="nombreTitular">Nombre del titular de la cuenta</label>
-                      <input
-                        type="text"
-                        id="nombreTitular"
-                        name="nombreTitular"
-                        placeholder="Nombre completo"
-                        className={styles.formInput}
-                        value={datosPago.nombreTitular || ''}
-                        onChange={handleDatosPagoChange}
-                        required
-                      />
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel} htmlFor="emailConfirmacion">Email para confirmación</label>
-                      <input
-                        type="email"
-                        id="emailConfirmacion"
-                        name="emailConfirmacion"
-                        placeholder="tu@email.com"
-                        className={styles.formInput}
-                        value={datosPago.emailConfirmacion || ''}
-                        onChange={handleDatosPagoChange}
-                        required
-                      />
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel} htmlFor="comprobante">Comprobante de transferencia</label>
-                      <input
-                        type="file"
-                        id="comprobante"
-                        name="comprobante"
-                        accept="image/jpeg,image/png,application/pdf"
-                        className={styles.formInput}
-                        onChange={(e) => {
-                          setDatosPago(prev => ({
-                            ...prev,
-                            comprobante: e.target.files[0]?.name || ''
-                          }));
-                        }}
-                        required
-                      />
-                      <small className={styles.formHelp}>Adjunta el comprobante en formato JPG, PNG o PDF</small>
-                    </div>
-                    
-                    <div className={styles.infoGroup}>
-                      <p className={styles.infoLabel}>Datos para la transferencia:</p>
-                      <p className={styles.infoValue}>
-                        Banco: Banco Nacional<br />
-                        Titular: RentaCar S.A.<br />
-                        IBAN: ES91 2100 0418 4502 0005 1332<br />
-                        Concepto: Reserva {auto.marca} {auto.modelo}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
+            <div className={styles.infoGroup}>
+              <p className={styles.disclaimer}>
+                Los datos de pago se ingresan en el siguiente paso a través de nuestra pasarela segura.
+                Aquí solo necesitas adjuntar tus documentos de identidad.
+              </p>
+            </div>
 
             <div className={styles.disclaimerContainer}>
               <p className={styles.disclaimer}>

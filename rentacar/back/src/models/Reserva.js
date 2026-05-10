@@ -98,6 +98,9 @@ const reservaSchema = new mongoose.Schema({
   timestamps: true
 });
 
+reservaSchema.index({ usuario: 1 });
+reservaSchema.index({ estado: 1 });
+
 /**
  * Método para mostrar los detalles de una reserva
  * @returns {Object} Objeto con los detalles de la reserva

@@ -29,7 +29,7 @@ const METHOD_FIELDS = {
   ],
   mercadopago: [
     { name: 'emailCuenta', label: 'Email de la cuenta', type: 'email', placeholder: 'tu@email.com' },
-    { name: 'codigoVerificacion', label: 'Código de verificación', type: 'text', placeholder: '6 dígitos', inputMode: 'numeric' }
+    { name: 'codigoVerificacion', label: 'Código de verificación (6 dígitos)', type: 'text', placeholder: '123456', inputMode: 'numeric' }
   ],
   transferencia: [
     { name: 'titularCuenta', label: 'Titular de la cuenta', type: 'text', placeholder: 'Nombre del titular' },
@@ -43,7 +43,34 @@ const METHOD_FIELDS = {
   ]
 };
 
-const STEP_LABELS = ['Resumen', 'Verificación', 'Confirmación'];
+const STEP_LABELS = ['Datos de pago', 'Verificación', 'Confirmación'];
+
+const CARD_TYPES = {
+  visa: { label: 'Visa', pattern: /^4/, cvvLen: 3, maxLen: 16 },
+  mastercard: { label: 'Mastercard', pattern: /^(5[1-5]|2[2-7])/, cvvLen: 3, maxLen: 16 },
+  amex: { label: 'American Express', pattern: /^3[47]/, cvvLen: 4, maxLen: 15 },
+  otro: { label: 'Tarjeta', pattern: null, cvvLen: 3, maxLen: 19 }
+};
+
+function detectCardType(number) {
+  const digits = number.replace(/\D/g, '');
+  if (CARD_TYPES.visa.pattern.test(digits)) return 'visa';
+  if (CARD_TYPES.mastercard.pattern.test(digits)) return 'mastercard';
+  if (CARD_TYPES.amex.pattern.test(digits)) return 'amex';
+  return 'otro';
+}
+
+function formatCardNumber(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 19);
+  // Amex: 4-6-5; todas las demás: grupos de 4
+  const cardType = detectCardType(digits);
+  if (cardType === 'amex') {
+    return digits.replace(/^(\d{4})(\d{0,6})(\d{0,5}).*/, (_, a, b, c) =>
+      [a, b, c].filter(Boolean).join(' ')
+    );
+  }
+  return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+}
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -53,19 +80,15 @@ function luhnCheck(value) {
   const digits = value.replace(/\D/g, '');
   let sum = 0;
   let shouldDouble = false;
-
-  for (let index = digits.length - 1; index >= 0; index -= 1) {
-    let digit = Number(digits[index]);
+  for (let i = digits.length - 1; i >= 0; i -= 1) {
+    let digit = Number(digits[i]);
     if (shouldDouble) {
       digit *= 2;
-      if (digit > 9) {
-        digit -= 9;
-      }
+      if (digit > 9) digit -= 9;
     }
     sum += digit;
     shouldDouble = !shouldDouble;
   }
-
   return digits.length >= 12 && sum % 10 === 0;
 }
 
@@ -96,12 +119,11 @@ export default function PagoReservaPage() {
     telefonoContacto: ''
   });
   const [fieldErrors, setFieldErrors] = useState({});
+  const [detectedCardType, setDetectedCardType] = useState('otro');
 
   useEffect(() => {
     try {
-      if (typeof window === 'undefined') {
-        return;
-      }
+      if (typeof window === 'undefined') return;
 
       const rawDraft = sessionStorage.getItem('rentacar_checkout_draft');
       if (!rawDraft) {
@@ -118,21 +140,6 @@ export default function PagoReservaPage() {
       }
 
       setDraft(parsedDraft);
-      setFormData(prev => ({
-        ...prev,
-        titularTarjeta: parsedDraft.datosPago?.titularTarjeta || parsedDraft.datosPago?.nombreTitular || '',
-        numeroTarjeta: parsedDraft.datosPago?.numeroTarjeta || '',
-        fechaExpiracion: parsedDraft.datosPago?.fechaExpiracion || '',
-        cvv: parsedDraft.datosPago?.cvv || '',
-        emailCuenta: parsedDraft.datosPago?.emailCuenta || parsedDraft.datosPago?.email || '',
-        codigoVerificacion: parsedDraft.datosPago?.codigoVerificacion || '',
-        titularCuenta: parsedDraft.datosPago?.titularCuenta || parsedDraft.datosPago?.nombreTitular || '',
-        bancoOrigen: parsedDraft.datosPago?.bancoOrigen || '',
-        referenciaTransferencia: parsedDraft.datosPago?.referenciaTransferencia || parsedDraft.datosPago?.referencia || '',
-        puntoRetiro: parsedDraft.datosPago?.puntoRetiro || '',
-        nombreContacto: parsedDraft.datosPago?.nombreContacto || parsedDraft.datosPago?.nombreTitular || '',
-        telefonoContacto: parsedDraft.datosPago?.telefonoContacto || ''
-      }));
       setLoading(false);
     } catch (draftError) {
       console.error('Error al cargar el borrador de pago:', draftError);
@@ -147,18 +154,37 @@ export default function PagoReservaPage() {
   const stepFields = METHOD_FIELDS[paymentMethod] || [];
   const anticipo = draft?.montoAnticipo ?? Math.round((Number(draft?.precioTotal || 0) * 0.3) * 100) / 100;
   const saldoPendiente = draft?.saldoPendiente ?? Math.round((Number(draft?.precioTotal || 0) - anticipo) * 100) / 100;
+  const cardInfo = CARD_TYPES[detectedCardType] || CARD_TYPES.otro;
 
   const updateField = (name, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    let processedValue = value;
+
+    if (name === 'numeroTarjeta') {
+      processedValue = formatCardNumber(value);
+      setDetectedCardType(detectCardType(value));
+    }
+
+    if (name === 'fechaExpiracion') {
+      const digits = value.replace(/\D/g, '').slice(0, 4);
+      if (digits.length >= 3) {
+        processedValue = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+      } else {
+        processedValue = digits;
+      }
+    }
+
+    if (name === 'cvv') {
+      processedValue = value.replace(/\D/g, '').slice(0, cardInfo.cvvLen);
+    }
+
+    if (name === 'codigoVerificacion') {
+      processedValue = value.replace(/\D/g, '').slice(0, 6);
+    }
+
+    setFormData(prev => ({ ...prev, [name]: processedValue }));
 
     if (fieldErrors[name]) {
-      setFieldErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setFieldErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
@@ -168,9 +194,10 @@ export default function PagoReservaPage() {
     if (paymentMethod === 'tarjeta') {
       if (!formData.titularTarjeta.trim()) errors.titularTarjeta = 'El titular es requerido';
       const digits = formData.numeroTarjeta.replace(/\s/g, '');
+      const expectedMax = CARD_TYPES[detectCardType(digits)]?.maxLen || 19;
       if (!digits) {
         errors.numeroTarjeta = 'El número de tarjeta es requerido';
-      } else if (!/^\d{12,19}$/.test(digits) || !luhnCheck(digits)) {
+      } else if (digits.length < 12 || digits.length > expectedMax || !luhnCheck(digits)) {
         errors.numeroTarjeta = 'El número de tarjeta no es válido';
       }
       if (!/^\d{2}\/\d{2}$/.test(formData.fechaExpiracion)) {
@@ -182,15 +209,18 @@ export default function PagoReservaPage() {
         const now = new Date();
         const expiration = new Date(year, month - 1, 1);
         if (month < 1 || month > 12 || Number.isNaN(expiration.getTime()) || expiration < new Date(now.getFullYear(), now.getMonth(), 1)) {
-          errors.fechaExpiracion = 'La tarjeta está vencida';
+          errors.fechaExpiracion = 'La tarjeta está vencida o la fecha no es válida';
         }
       }
-      if (!/^\d{3,4}$/.test(formData.cvv)) errors.cvv = 'El CVV debe tener 3 o 4 dígitos';
+      const cvvLen = CARD_TYPES[detectedCardType]?.cvvLen || 3;
+      if (!new RegExp(`^\\d{${cvvLen}}$`).test(formData.cvv)) {
+        errors.cvv = `El CVV debe tener ${cvvLen} dígitos`;
+      }
     }
 
     if (paymentMethod === 'mercadopago') {
       if (!isValidEmail(formData.emailCuenta)) errors.emailCuenta = 'Ingresa un email válido';
-      if (!/^\d{6}$/.test(formData.codigoVerificacion)) errors.codigoVerificacion = 'El código debe tener 6 dígitos';
+      if (!/^\d{6}$/.test(formData.codigoVerificacion)) errors.codigoVerificacion = 'El código debe tener exactamente 6 dígitos';
     }
 
     if (paymentMethod === 'transferencia') {
@@ -213,12 +243,16 @@ export default function PagoReservaPage() {
     const base = draft?.datosPago || {};
 
     if (paymentMethod === 'tarjeta') {
+      const digits = formData.numeroTarjeta.replace(/\s/g, '');
+      const tipoTarjeta = detectCardType(digits);
+      const ultimosDigitos = digits.slice(-4);
       return {
         ...base,
         titularTarjeta: formData.titularTarjeta.trim(),
-        numeroTarjeta: formData.numeroTarjeta.replace(/\s/g, ''),
+        numeroTarjeta: `****${ultimosDigitos}`,
+        ultimosDigitos,
+        tipoTarjeta,
         fechaExpiracion: formData.fechaExpiracion.trim(),
-        cvv: formData.cvv.trim(),
         metodoVerificado: 'tarjeta_simulada'
       };
     }
@@ -252,9 +286,7 @@ export default function PagoReservaPage() {
   };
 
   const handleContinue = () => {
-    if (!validateStepOne()) {
-      return;
-    }
+    if (!validateStepOne()) return;
     setStep(2);
   };
 
@@ -278,7 +310,7 @@ export default function PagoReservaPage() {
     let usuario;
     try {
       usuario = JSON.parse(userRaw);
-    } catch (parseError) {
+    } catch {
       setError('La sesión del usuario no es válida.');
       return;
     }
@@ -322,10 +354,7 @@ export default function PagoReservaPage() {
 
       sessionStorage.removeItem('rentacar_checkout_draft');
       sessionStorage.setItem('rentacar_last_reserva', JSON.stringify(response.data));
-      setSuccess({
-        reserva: response.data,
-        referenciaPago
-      });
+      setSuccess({ reserva: response.data, referenciaPago });
     } catch (submitError) {
       console.error('Error al confirmar el pago:', submitError);
       setError(submitError.message || 'La pasarela no pudo validar los datos.');
@@ -357,9 +386,7 @@ export default function PagoReservaPage() {
     );
   }
 
-  if (!draft) {
-    return null;
-  }
+  if (!draft) return null;
 
   if (success) {
     return (
@@ -484,7 +511,16 @@ export default function PagoReservaPage() {
             {step === 1 && (
               <div className={styles.stepBody}>
                 <h2>Datos de pago</h2>
-                <p className={styles.stepIntro}>Completa la información solicitada según el método elegido.</p>
+                <p className={styles.stepIntro}>
+                  Completa la información solicitada según el método elegido.
+                </p>
+
+                {paymentMethod === 'tarjeta' && detectedCardType !== 'otro' && (
+                  <div className={styles.cardTypeChip}>
+                    {CARD_TYPES[detectedCardType]?.label}
+                  </div>
+                )}
+
                 <div className={styles.fieldsGrid}>
                   {stepFields.map(field => (
                     <label key={field.name} className={styles.fieldGroup}>
@@ -496,6 +532,7 @@ export default function PagoReservaPage() {
                         value={formData[field.name]}
                         onChange={(event) => updateField(field.name, event.target.value)}
                         className={fieldErrors[field.name] ? styles.inputError : ''}
+                        autoComplete={field.name === 'cvv' ? 'off' : undefined}
                       />
                       {fieldErrors[field.name] && <small>{fieldErrors[field.name]}</small>}
                     </label>
@@ -518,6 +555,9 @@ export default function PagoReservaPage() {
                   <div>✓ Anticipo calculado: {formatMoney(anticipo)}</div>
                   <div>✓ Saldo pendiente: {formatMoney(saldoPendiente)}</div>
                   <div>✓ Método: {methodLabel}</div>
+                  {paymentMethod === 'tarjeta' && (
+                    <div>✓ Tarjeta: {CARD_TYPES[detectedCardType]?.label} **** {formData.numeroTarjeta.replace(/\s/g, '').slice(-4)}</div>
+                  )}
                   <div>✓ Reserva temporal: {draft.auto?.marca} {draft.auto?.modelo}</div>
                 </div>
                 <div className={styles.actionsRow}>
@@ -532,9 +572,7 @@ export default function PagoReservaPage() {
         </section>
 
         {error && (
-          <div className={styles.inlineError}>
-            {error}
-          </div>
+          <div className={styles.inlineError}>{error}</div>
         )}
       </div>
     </div>

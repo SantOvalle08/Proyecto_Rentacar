@@ -59,43 +59,14 @@ export default function Dashboard() {
   
   const loadStats = async () => {
     try {
-      // Cargar datos desde localStorage o API
-      const loadDataCount = async (service, storageKey) => {
-        try {
-          const response = await service.getAll();
-          if (response.success && response.data) {
-            return response.data.length;
-          }
-          return 0;
-        } catch (error) {
-          console.error(`Error loading ${storageKey} count:`, error);
-          
-          // Si falla la API, intentar obtener de localStorage
-          try {
-            const localData = localStorage.getItem(`rentacar_${storageKey}`);
-            if (localData) {
-              const parsedData = JSON.parse(localData);
-              return Array.isArray(parsedData) ? parsedData.length : 0;
-            }
-          } catch (e) {
-            console.error(`Error reading ${storageKey} from localStorage:`, e);
-          }
-          return 0;
-        }
-      };
-      
-      // Cargar contadores de manera paralela
-      const [vehiculosCount, usuariosCount, reservasCount] = await Promise.all([
-        loadDataCount(apiService.autos, 'autos'),
-        loadDataCount(apiService.usuarios, 'usuarios'),
-        loadDataCount(apiService.reservas, 'reservas')
-      ]);
-      
-      setStats({
-        vehiculos: vehiculosCount,
-        usuarios: usuariosCount,
-        reservas: reservasCount
-      });
+      const response = await apiService.dashboard.getEstadisticas();
+      if (response.success && response.data) {
+        setStats({
+          vehiculos: response.data.vehiculos,
+          usuarios: response.data.usuarios,
+          reservas: response.data.reservas
+        });
+      }
     } catch (error) {
       console.error('Error loading stats:', error);
     }

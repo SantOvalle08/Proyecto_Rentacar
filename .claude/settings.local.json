@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(netstat -ano)",
+      "Bash(curl -s -m 5 http://localhost:5001/)"
+    ]
+  }
+}
