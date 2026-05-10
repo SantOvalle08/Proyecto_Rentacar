@@ -1,0 +1,214 @@
+.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color, #e5e7eb);
+  border-top-color: var(--btn-primary-bg, #0066cc);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error {
+  background-color: var(--error-50, #fef2f2);
+  border: 1px solid var(--error-100, #fecaca);
+  color: var(--error-700, #b91c1c);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: var(--font-size-2xl, 1.5rem);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--text-primary, #111827);
+  margin: 0;
+}
+
+.backLink {
+  color: var(--btn-primary-bg, #0066cc);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 2rem;
+  background: var(--bg-secondary, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+.imageWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.image {
+  width: 100%;
+  max-width: 340px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--bg-tertiary, #f9fafb);
+}
+
+.badgeAvailable {
+  display: inline-block;
+  background-color: var(--success-100, #dcfce7);
+  color: var(--success-700, #15803d);
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badgeUnavailable {
+  display: inline-block;
+  background-color: var(--error-100, #fee2e2);
+  color: var(--error-700, #b91c1c);
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 0;
+}
+
+.field dt {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.2rem;
+}
+
+.field dd {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+  margin: 0;
+}
+
+.price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--btn-primary-bg, #0066cc);
+}
+
+.id {
+  font-size: 0.78rem;
+  font-family: monospace;
+  color: var(--text-secondary, #6b7280);
+  word-break: break-all;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.btnEdit {
+  padding: 0.5rem 1.25rem;
+  background: var(--btn-primary-bg, #0066cc);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btnEdit:hover {
+  background: var(--btn-primary-hover, #0052a3);
+}
+
+.btnBack {
+  padding: 0.5rem 1.25rem;
+  background: transparent;
+  color: var(--text-primary, #111827);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.btnBack:hover {
+  background: var(--bg-tertiary, #f9fafb);
+}
+
+@media (max-width: 768px) {
+  .card {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .image {
+    max-width: 100%;
+    height: 200px;
+  }
+}

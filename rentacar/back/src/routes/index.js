@@ -10,6 +10,7 @@ const usuarioController = require('../controllers/usuarioController');
 const autoController = require('../controllers/autoController');
 const reservaController = require('../controllers/reservaController');
 const checklistController = require('../controllers/checklistController');
+const entregaController = require('../controllers/entregaController');
 const { verifyToken, isAdmin } = require('../middleware/auth');
 
 /**
@@ -153,6 +154,17 @@ router.put('/api/reservas/:id/cancelar', verifyToken, reservaController.cancelar
  * @access Private
  */
 router.get('/api/reservas/:id/factura', verifyToken, reservaController.generarFactura);
+
+// Entrega / check-out & check-in routes
+router.get('/api/alquileres', verifyToken, isAdmin, entregaController.getAlquiladosActivos);
+router.get('/api/alquileres/pendientes-checkout', verifyToken, isAdmin, entregaController.getPendientesCheckout);
+
+router.post('/api/reservas/:id/checkout', verifyToken, isAdmin, entregaController.checkout);
+router.get('/api/reservas/:id/checkout', verifyToken, entregaController.getCheckout);
+router.post('/api/reservas/:id/checkin', verifyToken, isAdmin, entregaController.checkin);
+router.get('/api/reservas/:id/checkin', verifyToken, entregaController.getCheckin);
+router.post('/api/reservas/:id/incidencias', verifyToken, entregaController.reportarIncidencia);
+router.get('/api/reservas/:id/incidencias', verifyToken, entregaController.getIncidencias);
 
 // Checklist routes
 /**

@@ -115,7 +115,8 @@ const reservaController = {
           message: 'Reserva creada con éxito',
           data: {
             reserva: reserva.mostrarDetalleReserva(),
-            precioTotal
+            precioTotal,
+            descuento: calculadora.descuento
           }
         });
       } catch (error) {
@@ -317,6 +318,7 @@ const reservaController = {
       const auto = await Auto.findById(reserva.auto);
       if (auto) {
         auto.disponible = true;
+        auto.estadoVehiculo = 'disponible';
         await auto.save();
       }
       

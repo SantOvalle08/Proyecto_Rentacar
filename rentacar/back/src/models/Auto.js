@@ -29,8 +29,8 @@ const mongoose = require('mongoose');
  * @property {Date} updatedAt - Fecha de última actualización
  */
 
-// Enum para tipoCoche
 const tiposCoche = ['Compacto', 'Sedan', 'SUV', 'Deportivo', 'Camioneta', 'Lujo'];
+const estadosVehiculo = ['disponible', 'reservado', 'alquilado', 'mantenimiento'];
 
 /**
  * Esquema de Auto para MongoDB
@@ -83,6 +83,11 @@ const autoSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  estadoVehiculo: {
+    type: String,
+    enum: estadosVehiculo,
+    default: 'disponible'
+  },
   precioDia: {
     type: Number,
     required: true
@@ -117,6 +122,7 @@ autoSchema.methods.mostrarDetalles = function() {
     color: this.color,
     matricula: this.matricula,
     disponible: this.disponible,
+    estadoVehiculo: this.estadoVehiculo,
     precioDia: this.precioDia,
     precioBase: this.precioDia,
     imagen: this.imagen

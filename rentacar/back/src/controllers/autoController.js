@@ -192,7 +192,18 @@ const autoController = {
   async getAutoById(req, res) {
     try {
       const { id } = req.params;
-      const auto = await Auto.findById(id);
+      let auto = null;
+
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        auto = await Auto.findById(id);
+      }
+
+      if (!auto) {
+        const numericId = parseInt(id);
+        if (!isNaN(numericId)) {
+          auto = await Auto.findOne({ idAuto: numericId });
+        }
+      }
 
       if (!auto) {
         return res.status(404).json({
@@ -257,7 +268,15 @@ const autoController = {
         disponible
       } = req.body;
 
-      const auto = await Auto.findById(id);
+      let auto = mongoose.Types.ObjectId.isValid(id)
+        ? await Auto.findById(id)
+        : null;
+
+      if (!auto) {
+        const numericId = parseInt(id);
+        if (!isNaN(numericId)) auto = await Auto.findOne({ idAuto: numericId });
+      }
+
       if (!auto) {
         return res.status(404).json({
           success: false,
@@ -328,7 +347,15 @@ const autoController = {
   async deleteAuto(req, res) {
     try {
       const { id } = req.params;
-      const auto = await Auto.findById(id);
+
+      let auto = mongoose.Types.ObjectId.isValid(id)
+        ? await Auto.findById(id)
+        : null;
+
+      if (!auto) {
+        const numericId = parseInt(id);
+        if (!isNaN(numericId)) auto = await Auto.findOne({ idAuto: numericId });
+      }
 
       if (!auto) {
         return res.status(404).json({
