@@ -1330,7 +1330,8 @@ const apiService = {
   catalogo,
   uploads,
   checklists,
-  entregas
+  entregas,
+  dashboard
 };
 
 export default apiService;
