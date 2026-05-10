@@ -7,7 +7,7 @@ contactPoints:
       - uid: discord-rentacar-receiver
         type: discord
         settings:
-          url: "https://discord.com/api/webhooks/1503156761518018630/pxtGsrOf8_M35XoynuVg-vp0ucYBd7hC1qbmu4QHaTaDTUK2DJR41uZ7mi7lYiLlen5l"
+          url: "${DISCORD_WEBHOOK_URL}"
           message: |
             {{ range .Alerts }}
             **[{{ .Status | toUpper }}] {{ .Labels.severity | toUpper }} — {{ .Annotations.summary }}**
