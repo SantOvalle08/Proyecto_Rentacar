@@ -12,7 +12,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     vehiculos: 0,
     usuarios: 0,
-    reservas: 0
+    reservas: 0,
+    alquiladosActivos: 0
   });
 
   useEffect(() => {
@@ -90,11 +91,18 @@ export default function Dashboard() {
         loadDataCount(apiService.usuarios, 'usuarios'),
         loadDataCount(apiService.reservas, 'reservas')
       ]);
-      
+
+      let alquiladosCount = 0;
+      try {
+        const alqRes = await apiService.entregas.getAlquiladosActivos();
+        if (alqRes.success) alquiladosCount = (alqRes.data || []).length;
+      } catch (_) {}
+
       setStats({
         vehiculos: vehiculosCount,
         usuarios: usuariosCount,
-        reservas: reservasCount
+        reservas: reservasCount,
+        alquiladosActivos: alquiladosCount
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -104,17 +112,18 @@ export default function Dashboard() {
   // Escuchar cambios en localStorage para actualizar contadores
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
+    let debounceTimer = null;
     const handleStorageChange = () => {
-      loadStats();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => loadStats(), 500);
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    
-    // También crear un evento personalizado para actualizar desde otras páginas
     window.addEventListener('rentacarDataUpdate', handleStorageChange);
-    
+
     return () => {
+      clearTimeout(debounceTimer);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('rentacarDataUpdate', handleStorageChange);
     };
@@ -160,9 +169,20 @@ export default function Dashboard() {
           <div className={styles.statCard}>
             <h3>Reservas</h3>
             <p className={styles.statValue}>{stats.reservas}</p>
-            <button 
+            <button
               className={styles.actionButton}
               onClick={() => router.push('/dashboard/reservas')}
+            >
+              Gestionar
+            </button>
+          </div>
+
+          <div className={styles.statCard}>
+            <h3>En alquiler</h3>
+            <p className={styles.statValue}>{stats.alquiladosActivos}</p>
+            <button
+              className={styles.actionButton}
+              onClick={() => router.push('/dashboard/entregas')}
             >
               Gestionar
             </button>

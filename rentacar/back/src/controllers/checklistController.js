@@ -5,26 +5,6 @@
 
 const Checklist = require('../models/Checklist');
 const Auto = require('../models/Auto');
-<<<<<<< HEAD
-const Reserva = require('../models/Reserva');
-
-const ESTADOS_BLOQUEANTES_INSPECCION = ['Malo', 'Requiere atención'];
-const ESTADOS_RESERVA_ACTIVA = ['Pendiente', 'Confirmada'];
-
-const sincronizarDisponibilidadAuto = async (auto, checklist) => {
-  if (!auto || !checklist) return;
-
-  const bloqueoPorInspeccion = ESTADOS_BLOQUEANTES_INSPECCION.includes(checklist.estadoGeneral);
-  const tieneReservaActiva = await Reserva.exists({
-    auto: auto._id,
-    estado: { $in: ESTADOS_RESERVA_ACTIVA }
-  });
-
-  auto.disponible = !bloqueoPorInspeccion && !tieneReservaActiva;
-  await auto.save();
-};
-=======
->>>>>>> origin
 
 /**
  * Controlador para operaciones de checklist
@@ -206,10 +186,6 @@ const checklistController = {
       }
       
       await checklist.save();
-<<<<<<< HEAD
-      await sincronizarDisponibilidadAuto(auto, checklist);
-=======
->>>>>>> origin
       
       console.log(`Checklist actualizado para auto ${autoId}`);
       
@@ -302,10 +278,6 @@ const checklistController = {
       }
       
       await checklist.save();
-<<<<<<< HEAD
-      await sincronizarDisponibilidadAuto(auto, checklist);
-=======
->>>>>>> origin
       
       res.status(200).json({
         success: true,
@@ -352,19 +324,6 @@ const checklistController = {
       }
       
       await checklist.save();
-<<<<<<< HEAD
-
-      let auto = await Auto.findOne({ idAuto: parseInt(autoId) });
-      if (!auto) {
-        try {
-          auto = await Auto.findById(autoId);
-        } catch (err) {
-          auto = null;
-        }
-      }
-      await sincronizarDisponibilidadAuto(auto, checklist);
-=======
->>>>>>> origin
       
       res.status(200).json({
         success: true,

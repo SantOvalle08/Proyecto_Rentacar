@@ -358,10 +358,6 @@ const autos = {
             if (response.success && Array.isArray(response.data) && response.data.length > 0) {
               console.log(`Backend retornó ${response.data.length} autos - actualizando localStorage`);
               saveLocalData('autos', response.data);
-              // Disparar evento para notificar a componentes
-              if (typeof window !== 'undefined') {
-                window.dispatchEvent(new Event('rentacarDataUpdate'));
-              }
             }
           } catch (error) {
             console.warn('No se pudo sincronizar con backend (modo offline)');
@@ -667,9 +663,6 @@ const reservas = {
           if (response.success && Array.isArray(response.data)) {
             console.log('Actualizando reservas desde backend');
             saveLocalData('reservas', response.data);
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new Event('rentacarDataUpdate'));
-            }
           }
         } catch (error) {
           console.warn('No se pudo sincronizar reservas con backend');
@@ -716,9 +709,6 @@ const reservas = {
             const otherReservas = allReservas.filter(r => r.usuario && r.usuario.id != userId);
             const updatedReservas = [...otherReservas, ...response.data];
             saveLocalData('reservas', updatedReservas);
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new Event('rentacarDataUpdate'));
-            }
           }
         } catch (error) {
           console.warn('No se pudo sincronizar reservas con backend');
@@ -1298,6 +1288,39 @@ const checklists = {
   }
 };
 
+// Entregas: checkout / checkin / incidencias
+const entregas = {
+  // Active rentals (Alquilado)
+  getAlquiladosActivos: () => fetchWithAuth('/api/alquileres'),
+
+  // Confirmed reservations waiting for checkout
+  getPendientesCheckout: () => fetchWithAuth('/api/alquileres/pendientes-checkout'),
+
+  // Check-out
+  checkout: (reservaId, datos) => fetchWithAuth(`/api/reservas/${reservaId}/checkout`, {
+    method: 'POST',
+    body: JSON.stringify(datos)
+  }),
+
+  getCheckout: (reservaId) => fetchWithAuth(`/api/reservas/${reservaId}/checkout`),
+
+  // Check-in
+  checkin: (reservaId, datos) => fetchWithAuth(`/api/reservas/${reservaId}/checkin`, {
+    method: 'POST',
+    body: JSON.stringify(datos)
+  }),
+
+  getCheckin: (reservaId) => fetchWithAuth(`/api/reservas/${reservaId}/checkin`),
+
+  // Incidencias
+  reportarIncidencia: (reservaId, datos) => fetchWithAuth(`/api/reservas/${reservaId}/incidencias`, {
+    method: 'POST',
+    body: JSON.stringify(datos)
+  }),
+
+  getIncidencias: (reservaId) => fetchWithAuth(`/api/reservas/${reservaId}/incidencias`)
+};
+
 // Exportar los servicios
 const apiService = {
   auth,
@@ -1306,7 +1329,8 @@ const apiService = {
   reservas,
   catalogo,
   uploads,
-  checklists
+  checklists,
+  entregas
 };
 
 export default apiService;

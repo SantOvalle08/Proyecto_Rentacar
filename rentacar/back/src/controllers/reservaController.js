@@ -6,53 +6,8 @@
 const sistemaRentaAutos = require('../utils/SistemaRentaAutos');
 const Reserva = require('../models/Reserva');
 const Auto = require('../models/Auto');
-<<<<<<< HEAD
-const Checklist = require('../models/Checklist');
 const calculadoraFactory = require('../utils/factories/CalculadoraFactory');
 
-const ESTADOS_BLOQUEANTES_INSPECCION = ['Malo', 'Requiere atención'];
-
-const validarInspeccionVehiculo = (checklist) => {
-  const motivos = [];
-
-  if (!checklist) {
-    return {
-      cumple: false,
-      motivos: ['No existe checklist de inspeccion para el vehiculo']
-    };
-  }
-
-  if (ESTADOS_BLOQUEANTES_INSPECCION.includes(checklist.estadoGeneral)) {
-    motivos.push(`Estado general no apto: ${checklist.estadoGeneral}`);
-  }
-
-  if (typeof checklist.porcentajeGasolina === 'number' && checklist.porcentajeGasolina < 25) {
-    motivos.push('Nivel de gasolina insuficiente para salida (minimo 25%)');
-  }
-
-  const itemsInventario = Array.isArray(checklist.inventario) ? checklist.inventario : [];
-  const faltantes = itemsInventario.filter(item => !item.presente).length;
-  if (faltantes > 0) {
-    motivos.push(`Inventario incompleto (${faltantes} item(s) faltante(s))`);
-  }
-
-  const itemsDefectuosos = itemsInventario.filter(
-    item => item.presente && ['Malo', 'No funcional'].includes(item.condicion)
-  ).length;
-  if (itemsDefectuosos > 0) {
-    motivos.push(`Inventario no apto (${itemsDefectuosos} item(s) en mal estado)`);
-  }
-
-  return {
-    cumple: motivos.length === 0,
-    motivos
-  };
-};
-
-=======
-const calculadoraFactory = require('../utils/factories/CalculadoraFactory');
-
->>>>>>> origin
 /**
  * @typedef {Object} ReservaController
  * @property {Function} createReserva - Crea una nueva reserva
@@ -128,25 +83,6 @@ const reservaController = {
           message: 'El auto no está disponible'
         });
       }
-<<<<<<< HEAD
-
-      // RC-029: El vehiculo debe aprobar inspeccion antes de reservarse
-      const checklist = await Checklist.findOne({ idAuto: auto.idAuto });
-      const validacionInspeccion = validarInspeccionVehiculo(checklist);
-      if (!validacionInspeccion.cumple) {
-        return res.status(409).json({
-          success: false,
-          message: 'El vehiculo no cumple la inspeccion requerida para ser reservado',
-          data: {
-            regla: 'RC-029',
-            estadoGeneral: checklist?.estadoGeneral,
-            porcentajeGasolina: checklist?.porcentajeGasolina,
-            motivos: validacionInspeccion.motivos
-          }
-        });
-      }
-=======
->>>>>>> origin
       
       // Use CalculadoraFactory to calculate total price
       const calculadora = calculadoraFactory.createCalculadora(
@@ -179,7 +115,8 @@ const reservaController = {
           message: 'Reserva creada con éxito',
           data: {
             reserva: reserva.mostrarDetalleReserva(),
-            precioTotal
+            precioTotal,
+            descuento: calculadora.descuento
           }
         });
       } catch (error) {
@@ -381,6 +318,7 @@ const reservaController = {
       const auto = await Auto.findById(reserva.auto);
       if (auto) {
         auto.disponible = true;
+        auto.estadoVehiculo = 'disponible';
         await auto.save();
       }
       
