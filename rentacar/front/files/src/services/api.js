@@ -225,168 +225,87 @@ const auth = {
 };
 
 // Usuarios endpoints
+//
+// IMPORTANTE: este módulo NO debe escribir ni leer datos de usuarios desde
+// localStorage. La única fuente de verdad es MongoDB a través del backend.
+// localStorage sólo se usa para persistir la sesión (token + user actual)
+// desde el flujo de login y desde la página de perfil tras una actualización
+// confirmada por el servidor. Cualquier "fallback" silencioso a localStorage
+// vuelve a introducir los bugs de datos viejos / desactualizados que ya
+// resolvimos en el dashboard.
 const usuarios = {
   getAll: async () => {
-    try {
-      // Try to get from API first
-      const response = await fetchWithAuth('/api/usuarios');
-      
-      if (response.success && response.data) {
-        // If successful, update localStorage
-        saveLocalData('usuarios', response.data);
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.warn('Error in usuarios.getAll, using localStorage:', error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('usuarios');
-      if (localData) {
-        return { success: true, data: localData };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
-    }
+    // Sin fallback: si la API falla, propagamos el error para que la UI
+    // pueda mostrar un mensaje real ("Error al conectar con el servidor")
+    // en lugar de pintar datos viejos.
+    return fetchWithAuth('/api/usuarios');
   },
-  
+
   getById: async (id) => {
-    try {
-      // Try to get from API first
-      const response = await fetchWithAuth(`/api/usuarios/${id}`);
-      
-      if (response.success && response.data) {
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in usuarios.getById(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('usuarios');
-      if (localData) {
-        const usuario = localData.find(u => u.id == id);
-        if (usuario) {
-          return { success: true, data: usuario };
-        }
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+    if (id === undefined || id === null || id === '') {
+      throw new Error('ID de usuario requerido');
     }
+    return fetchWithAuth(`/api/usuarios/${id}`);
   },
-  
+
   create: async (usuarioData) => {
-    try {
-      // Try to create in API first
-      const response = await fetchWithAuth('/api/usuarios', {
-        method: 'POST',
-        body: JSON.stringify(usuarioData)
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('usuarios') || [];
-        const newUsuario = response.data || { ...usuarioData, id: Date.now(), idUser: Date.now() };
-        saveLocalData('usuarios', [...localData, newUsuario]);
-        return { success: true, data: newUsuario };
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.warn('Error in usuarios.create, using localStorage:', error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('usuarios') || [];
-      const newUsuario = { ...usuarioData, id: Date.now(), idUser: Date.now() };
-      saveLocalData('usuarios', [...localData, newUsuario]);
-      
-      return { success: true, data: newUsuario };
-    }
+    // El backend expone /api/auth/register para alta de usuarios; lo dejamos
+    // como único punto de entrada. Si en el futuro se agrega POST /api/usuarios
+    // se puede ajustar aquí.
+    return fetchWithAuth('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(usuarioData)
+    });
   },
-  
+
   update: async (id, usuarioData) => {
-    try {
-      // Try to update in API first
-      const response = await fetchWithAuth(`/api/usuarios/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(usuarioData)
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('usuarios');
-        if (localData) {
-          const updatedData = localData.map(usuario => 
-            usuario.id == id ? { ...usuario, ...usuarioData } : usuario
-          );
-          saveLocalData('usuarios', updatedData);
-        }
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in usuarios.update(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('usuarios');
-      if (localData) {
-        const updatedData = localData.map(usuario => 
-          usuario.id == id ? { ...usuario, ...usuarioData } : usuario
-        );
-        saveLocalData('usuarios', updatedData);
-        return { success: true };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+    if (id === undefined || id === null || id === '') {
+      throw new Error('ID de usuario requerido para actualizar');
     }
+    return fetchWithAuth(`/api/usuarios/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(usuarioData)
+    });
   },
-  
+
   delete: async (id) => {
-    try {
-      // Try to delete in API first
-      const response = await fetchWithAuth(`/api/usuarios/${id}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('usuarios');
-        if (localData) {
-          const filteredData = localData.filter(usuario => usuario.id != id);
-          saveLocalData('usuarios', filteredData);
-        }
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in usuarios.delete(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('usuarios');
-      if (localData) {
-        const filteredData = localData.filter(usuario => usuario.id != id);
-        saveLocalData('usuarios', filteredData);
-        return { success: true };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+    if (id === undefined || id === null || id === '') {
+      throw new Error('ID de usuario requerido para eliminar');
     }
+    return fetchWithAuth(`/api/usuarios/${id}`, {
+      method: 'DELETE'
+    });
   },
-  
-  getProfile: () => fetchWithAuth('/api/usuarios/perfil'),
-  
-  updateProfile: (userData) => fetchWithAuth('/api/usuarios/perfil', {
-    method: 'PUT',
-    body: JSON.stringify(userData)
-  })
+
+  /**
+   * Re-hidrata el usuario actual desde el backend. Útil tras login o tras
+   * cualquier operación que pueda haber dejado el localStorage desfasado.
+   * @param {string|number} id - _id de Mongo o idUser numérico.
+   */
+  getProfile: (id) => {
+    if (id === undefined || id === null || id === '') {
+      throw new Error('ID de usuario requerido para obtener perfil');
+    }
+    return fetchWithAuth(`/api/usuarios/${id}`);
+  },
+
+  /**
+   * Actualiza el perfil del usuario indicado.
+   * El endpoint /:id/profile acepta tanto _id de Mongo como idUser numérico
+   * (gracias a findUsuarioByIdentifier en el backend). Devuelve siempre el
+   * usuario en su shape canónico (toAuthJSON).
+   * @param {string|number} id - _id o idUser del usuario.
+   * @param {Object} userData - Campos a actualizar (nombre, email, telefono, ...).
+   */
+  updateProfile: (id, userData) => {
+    if (id === undefined || id === null || id === '') {
+      throw new Error('ID de usuario requerido para actualizar perfil');
+    }
+    return fetchWithAuth(`/api/usuarios/${id}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(userData)
+    });
+  }
 };
 
 // Auto endpoints with localStorage fallback/syncing

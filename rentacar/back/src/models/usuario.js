@@ -88,6 +88,32 @@ usuarioSchema.methods.compararContraseña = async function(contraseñaPlana) {
 };
 
 /**
+ * Devuelve la representación canónica del usuario para la API.
+ *
+ * Esta es la ÚNICA fuente de verdad sobre la forma del objeto `usuario`
+ * que se envía al frontend. Cualquier endpoint que devuelva un usuario
+ * debe pasarlo por este método para garantizar consistencia en
+ * MongoDB <-> Backend <-> Sesión <-> Dashboard <-> Perfil.
+ *
+ * @returns {Object} Usuario serializado con identificadores y campos planos.
+ */
+usuarioSchema.methods.toAuthJSON = function () {
+  const idString = this._id ? String(this._id) : null;
+  return {
+    id: idString,
+    _id: idString,
+    idUser: this.idUser ?? null,
+    nombre: this.nombre || '',
+    apellido: this.apellido || '',
+    email: this.email || '',
+    telefono: this.telefono || '',
+    tipoDocumento: this.tipoDocumento || '',
+    numeroDocumento: this.numeroDocumento || '',
+    rol: this.rol || 'cliente'
+  };
+};
+
+/**
  * Middleware para hashear la contraseña antes de guardar
  * @param {Function} next - Función para continuar con el siguiente middleware
  */

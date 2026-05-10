@@ -270,16 +270,13 @@ class SistemaRentaAutos {
       );
       
       console.log(`Usuario ${email} autenticado con éxito`);
-      
+
+      // Importante: usar toAuthJSON para que el shape del usuario sea
+      // EXACTAMENTE el mismo que devuelven el resto de los endpoints
+      // (getUserById, updateUser, updateProfile). Así el frontend puede
+      // hidratar la sesión y el dashboard sin transformaciones ad-hoc.
       return {
-        usuario: {
-          id: usuario._id,
-          idUser: usuario.idUser,
-          nombre: usuario.nombre,
-          email: usuario.email,
-          telefono: usuario.telefono,
-          rol: usuario.rol || 'cliente'
-        },
+        usuario: usuario.toAuthJSON(),
         token
       };
     } catch (error) {
