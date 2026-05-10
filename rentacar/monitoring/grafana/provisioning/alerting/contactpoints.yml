@@ -1,0 +1,17 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: Discord RentaCar
+    receivers:
+      - uid: discord-rentacar-receiver
+        type: discord
+        settings:
+          url: "https://discord.com/api/webhooks/1503156761518018630/pxtGsrOf8_M35XoynuVg-vp0ucYBd7hC1qbmu4QHaTaDTUK2DJR41uZ7mi7lYiLlen5l"
+          message: |
+            {{ range .Alerts }}
+            **[{{ .Status | toUpper }}] {{ .Labels.severity | toUpper }} — {{ .Annotations.summary }}**
+            {{ .Annotations.description }}
+            {{ if .GeneratorURL }}[Ver en Grafana]({{ .GeneratorURL }}){{ end }}
+            {{ end }}
+        disableResolveMessage: false
