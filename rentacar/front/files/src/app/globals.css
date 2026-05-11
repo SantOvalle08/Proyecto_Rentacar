@@ -313,6 +313,22 @@ button:disabled,
 
 .mx-auto { margin-left: auto; margin-right: auto; }
 
+/* Button spinner — used in all action buttons while loading */
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: btn-spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
 /* Responsive utilities */
 @media (max-width: 768px) {
   .menu {

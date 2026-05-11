@@ -9,6 +9,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [navigatingTo, setNavigatingTo] = useState(null);
   const [stats, setStats] = useState({
     vehiculos: 0,
     usuarios: 0,
@@ -147,32 +148,38 @@ export default function Dashboard() {
           <div className={styles.statCard}>
             <h3>Vehículos</h3>
             <p className={styles.statValue}>{stats.vehiculos}</p>
-            <button 
+            <button
               className={styles.actionButton}
-              onClick={() => router.push('/dashboard/vehiculos')}
+              disabled={navigatingTo === 'vehiculos'}
+              onClick={() => { setNavigatingTo('vehiculos'); router.push('/dashboard/vehiculos'); }}
             >
+              {navigatingTo === 'vehiculos' && <span className="btn-spinner" />}
               Gestionar
             </button>
           </div>
-          
+
           <div className={styles.statCard}>
             <h3>Usuarios</h3>
             <p className={styles.statValue}>{stats.usuarios}</p>
-            <button 
+            <button
               className={styles.actionButton}
-              onClick={() => router.push('/dashboard/usuarios')}
+              disabled={navigatingTo === 'usuarios'}
+              onClick={() => { setNavigatingTo('usuarios'); router.push('/dashboard/usuarios'); }}
             >
+              {navigatingTo === 'usuarios' && <span className="btn-spinner" />}
               Gestionar
             </button>
           </div>
-          
+
           <div className={styles.statCard}>
             <h3>Reservas</h3>
             <p className={styles.statValue}>{stats.reservas}</p>
             <button
               className={styles.actionButton}
-              onClick={() => router.push('/dashboard/reservas')}
+              disabled={navigatingTo === 'reservas'}
+              onClick={() => { setNavigatingTo('reservas'); router.push('/dashboard/reservas'); }}
             >
+              {navigatingTo === 'reservas' && <span className="btn-spinner" />}
               Gestionar
             </button>
           </div>

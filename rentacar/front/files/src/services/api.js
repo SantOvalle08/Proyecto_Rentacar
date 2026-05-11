@@ -4,125 +4,105 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 // Helper function for fetch requests
 const fetchWithAuth = async (url, options = {}) => {
-  try {
-    console.log(`Realizando solicitud a: ${API_BASE_URL}${url}`, {
-      method: options.method || 'GET',
-      body: options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : undefined
-    });
-    
-    // Get the token from localStorage
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    
-    // Set default headers
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...options.headers
-    };
-    
-    // Add auth token if it exists
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    // Log detallado para depuración
-    console.log('Request completo:', {
-      url: `${API_BASE_URL}${url}`,
-      method: options.method || 'GET',
-      headers,
-      body: options.body
-    });
-    
-    // Añadir un timeout para la solicitud (reducido para detección rápida de backend offline)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    ...options.headers
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const doFetch = async () => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 500); // 500ms - detección rápida
-    
-    // Make the request with CORS options
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      ...options,
-      headers,
-      mode: 'cors',
-      cache: 'no-cache',
-      credentials: 'same-origin',
-      signal: controller.signal
-    });
-    
-    // Clear timeout
-    clearTimeout(timeoutId);
-    
-    console.log('Respuesta recibida:', {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries([...response.headers])
-    });
-    
-    // Handle 204 No Content
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+      const res = await fetch(`${API_BASE_URL}${url}`, {
+        ...options,
+        headers,
+        mode: 'cors',
+        cache: 'no-cache',
+        credentials: 'same-origin',
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      return res;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
+  };
+
+  try {
+    let response;
+    try {
+      response = await doFetch();
+    } catch (firstErr) {
+      const isNetworkIssue =
+        firstErr.name === 'AbortError' ||
+        (firstErr instanceof TypeError && /fetch|network/i.test(firstErr.message));
+
+      if (isNetworkIssue) {
+        await new Promise(r => setTimeout(r, 1500));
+        response = await doFetch();
+      } else {
+        throw firstErr;
+      }
+    }
+
     if (response.status === 204) {
       return { success: true };
     }
-    
-    // Capture non-JSON responses
+
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
-      console.log('Respuesta JSON:', data);
-      
-      // If response is not ok, throw an error
+
       if (!response.ok) {
         console.warn('Error en respuesta del servidor:', data);
         throw new Error(data.message || 'Ocurrió un error en la solicitud');
       }
-      
+
       return data;
     } else {
       const text = await response.text();
-      console.log('Respuesta texto (no JSON):', text.substring(0, 100));
-      
+
       if (!response.ok) {
-        // Proporcionar más contexto del error
         const errorMsg = text || `Error del servidor: ${response.status} ${response.statusText}`;
-        console.warn('Error en respuesta del servidor:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorMsg.substring(0, 200)
-        });
+        console.warn('Error en respuesta del servidor:', response.status, errorMsg.substring(0, 200));
         throw new Error(errorMsg);
       }
-      
-      // Try to parse as JSON if possible
+
       try {
         return JSON.parse(text);
       } catch (e) {
-        // Return text response as success
         return { success: true, message: text };
       }
     }
   } catch (error) {
-    // Check if it's a timeout error
     if (error.name === 'AbortError') {
       console.warn('Timeout en la solicitud');
       throw new Error('La solicitud ha excedido el tiempo de espera. Verifique que el servidor esté respondiendo.');
     }
-    
-    // Check if it's a network error
+
     if (error instanceof TypeError && error.message.includes('NetworkError')) {
       console.warn('Error de red:', error.message);
       throw new Error('Error de conexión con el servidor. Verifique que el servidor esté en ejecución y accesible.');
     }
-    
-    // Check if it's a CORS error
+
     if (error instanceof DOMException && error.name === 'NetworkError') {
       console.warn('Error CORS:', error.message);
       throw new Error('Error de CORS. Verifique la configuración del servidor.');
     }
-    
-    // Check if it's a JSON parsing error
+
     if (error instanceof SyntaxError && error.message.includes('JSON')) {
       console.warn('Error al analizar respuesta JSON:', error.message);
       throw new Error('Error en formato de respuesta del servidor');
     }
-    
-    // Re-throw other errors
+
     console.warn('Error general en fetch:', error.message);
     throw error;
   }

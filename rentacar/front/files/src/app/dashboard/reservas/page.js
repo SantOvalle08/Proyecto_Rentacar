@@ -19,6 +19,7 @@ export default function ReservasPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [reservaToDelete, setReservaToDelete] = useState(null);
   const [reservaFactura, setReservaFactura] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
 
   // Fetch reservas on mount
   useEffect(() => {
@@ -194,7 +195,7 @@ export default function ReservasPage() {
 
   const handleCancelReservation = async (reserva) => {
     try {
-      setLoading(true);
+      setCancellingId(reserva.id);
       setError('');
       
       try {
@@ -236,7 +237,7 @@ export default function ReservasPage() {
       console.error('Error general en handleCancelReservation:', error);
       setError('Error al cancelar la reserva');
     } finally {
-      setLoading(false);
+      setCancellingId(null);
     }
   };
   
@@ -370,8 +371,10 @@ export default function ReservasPage() {
                 onClick={() => handleCancelReservation(reserva)}
                 className={styles.cancelButton}
                 aria-label="Cancelar Reserva"
+                disabled={cancellingId === reserva.id}
               >
-                Cancelar
+                {cancellingId === reserva.id && <span className="btn-spinner" />}
+                {cancellingId === reserva.id ? 'Cancelando...' : 'Cancelar'}
               </button>
             )}
           </>
@@ -400,11 +403,12 @@ export default function ReservasPage() {
             >
               Cancelar
             </button>
-            <button 
+            <button
               className={styles.deleteButton}
               onClick={handleDelete}
               disabled={loading}
             >
+              {loading && <span className="btn-spinner" />}
               {loading ? 'Eliminando...' : 'Eliminar'}
             </button>
           </div>
