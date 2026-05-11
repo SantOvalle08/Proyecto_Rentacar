@@ -66,10 +66,18 @@
 .viewButton {
   background-color: var(--primary-color-light);
   color: var(--primary-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.viewButton:hover {
+.viewButton:hover:not(:disabled) {
   background-color: var(--primary-200);
+}
+
+.viewButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .editButton {

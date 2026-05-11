@@ -64,7 +64,7 @@ const fetchWithAuth = async (url, options = {}) => {
       const fullUrl = `${baseUrl}${url}`;
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
 
       try {
         response = await fetch(fullUrl, {
@@ -751,7 +751,7 @@ const uploads = {
         console.log('Subiendo imagen al servidor backend:', fullUrl);
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
 
         try {
           response = await fetch(fullUrl, {

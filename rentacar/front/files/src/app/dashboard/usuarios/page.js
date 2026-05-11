@@ -313,7 +313,7 @@ export default function UsuariosPage() {
           setUsuarioToDelete(usuario);
           setDeleteModalOpen(true);
         }}
-        onView={(usuario) => router.push(`/dashboard/usuarios/${usuario.id}`)}
+        onView={(usuario) => router.push(`/dashboard/usuarios/${usuario.idUser || usuario._id || usuario.id}`)}
         loading={loading}
         itemName="Usuario"
         emptyMessage="No hay usuarios registrados. ¡Añade uno nuevo!"
@@ -458,11 +458,12 @@ export default function UsuariosPage() {
             >
               Cancelar
             </button>
-            <button 
+            <button
               type="submit"
               className={styles.submitButton}
               disabled={loading}
             >
+              {loading && <span className="btn-spinner" />}
               {loading ? 'Guardando...' : currentUsuario ? 'Actualizar' : 'Añadir'}
             </button>
           </div>
@@ -487,11 +488,12 @@ export default function UsuariosPage() {
             >
               Cancelar
             </button>
-            <button 
+            <button
               className={styles.deleteButton}
               onClick={handleDelete}
               disabled={loading}
             >
+              {loading && <span className="btn-spinner" />}
               {loading ? 'Eliminando...' : 'Eliminar'}
             </button>
           </div>

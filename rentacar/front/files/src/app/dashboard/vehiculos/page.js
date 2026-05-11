@@ -728,11 +728,12 @@ export default function VehiculosPage() {
             >
               Cancelar
             </button>
-            <button 
+            <button
               type="submit"
               className={styles.submitButton}
               disabled={loading || uploadingImage}
             >
+              {loading && <span className="btn-spinner" />}
               {loading ? 'Guardando...' : currentVehiculo ? 'Actualizar' : 'Añadir'}
             </button>
           </div>
@@ -757,11 +758,12 @@ export default function VehiculosPage() {
             >
               Cancelar
             </button>
-            <button 
+            <button
               className={styles.deleteButton}
               onClick={handleDelete}
               disabled={loading}
             >
+              {loading && <span className="btn-spinner" />}
               {loading ? 'Eliminando...' : 'Eliminar'}
             </button>
           </div>

@@ -25,6 +25,7 @@ const calcularPlanPago = (precioTotal, porcentajeAnticipoInput) => {
   };
 };
 
+
 /**
  * @typedef {Object} ReservaController
  * @property {Function} createReserva - Crea una nueva reserva
@@ -161,7 +162,8 @@ const reservaController = {
           data: {
             reserva: reserva.mostrarDetalleReserva(),
             precioTotal,
-            planPago
+            planPago,
+            descuento: calculadora.descuento
           }
         });
       } catch (error) {
@@ -387,6 +389,7 @@ const reservaController = {
       const auto = await Auto.findById(reserva.auto);
       if (auto) {
         auto.disponible = true;
+        auto.estadoVehiculo = 'disponible';
         await auto.save();
       }
       

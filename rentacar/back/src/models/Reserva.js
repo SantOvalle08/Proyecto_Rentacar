@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 /**
  * @constant {Array<string>} estadosReserva - Estados posibles para una reserva
  */
-const estadosReserva = ['Pendiente', 'Confirmada', 'Cancelada', 'Completada'];
+const estadosReserva = ['Pendiente', 'Confirmada', 'Cancelada', 'Completada', 'Alquilado'];
 
 /**
  * @typedef {Object} ReservaSchema

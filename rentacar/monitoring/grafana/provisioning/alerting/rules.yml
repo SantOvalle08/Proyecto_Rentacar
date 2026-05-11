@@ -1,0 +1,183 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: RentaCar Alertas
+    folder: RentaCar
+    interval: 1m
+    rules:
+      - uid: rentacar-db-down
+        title: "Base de Datos Desconectada"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus-rentacar
+            model:
+              expr: "db_connection_status"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "-100"
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              refId: C
+              type: classic_conditions
+        noDataState: Alerting
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "MongoDB desconectada"
+          description: "La conexión a la base de datos MongoDB está caída. El API no puede procesar escrituras."
+        labels:
+          severity: critical
+
+      - uid: rentacar-high-error-rate
+        title: "Alta Tasa de Errores HTTP"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus-rentacar
+            model:
+              expr: "sum(rate(http_requests_total{status_code=~\"[45]..\"}[5m])) / sum(rate(http_requests_total[5m]))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: "-100"
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.1]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "Alta tasa de errores HTTP en RentaCar"
+          description: "Más del 10% de las solicitudes están fallando (4xx/5xx) en los últimos 5 minutos."
+        labels:
+          severity: critical
+
+      - uid: rentacar-high-latency
+        title: "Alta Latencia API"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus-rentacar
+            model:
+              expr: "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: "-100"
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: "Alta latencia en RentaCar API"
+          description: "El percentil 95 de latencia supera 1 segundo, indicando problemas de rendimiento."
+        labels:
+          severity: warning
+
+      - uid: rentacar-high-memory
+        title: "Uso Alto de Memoria Node.js"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus-rentacar
+            model:
+              expr: "nodejs_heap_size_used_bytes / 1024 / 1024"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: "-100"
+            model:
+              conditions:
+                - evaluator:
+                    params: [400]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "Uso excesivo de memoria en RentaCar"
+          description: "El heap de Node.js supera 400 MB. Posible memory leak."
+        labels:
+          severity: warning

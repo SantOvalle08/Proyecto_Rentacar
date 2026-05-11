@@ -4,6 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./src/config/database');
 const routes = require('./src/routes');
+const { metricsMiddleware, register, setDbStatus } = require('./src/middleware/metrics');
 
 // Load environment variables from .env without overriding platform vars.
 // In AWS, runtime environment variables must take precedence.
@@ -68,6 +69,7 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
       if (connection) {
         console.log('Base de datos MongoDB conectada exitosamente');
         dbConnectionStatus = true;
+        setDbStatus(true);
         return true;
       }
     } catch (error) {
@@ -82,6 +84,15 @@ const connectWithRetry = async (retries = 5, delay = 5000) => {
   console.error('No se pudo establecer conexión con la base de datos después de varios intentos');
   return false;
 };
+
+// Prometheus metrics middleware (before routes)
+app.use(metricsMiddleware);
+
+// Metrics endpoint for Prometheus scraping
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
 
 // Unified CORS configuration
 const allowedOrigins = [

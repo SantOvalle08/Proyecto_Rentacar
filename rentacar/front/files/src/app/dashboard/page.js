@@ -9,10 +9,12 @@ export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [navigatingTo, setNavigatingTo] = useState(null);
   const [stats, setStats] = useState({
     vehiculos: 0,
     usuarios: 0,
-    reservas: 0
+    reservas: 0,
+    alquiladosActivos: 0
   });
 
   useEffect(() => {
@@ -59,14 +61,64 @@ export default function Dashboard() {
   
   const loadStats = async () => {
     try {
-      const response = await apiService.dashboard.getEstadisticas();
-      if (response.success && response.data) {
-        setStats({
-          vehiculos: response.data.vehiculos,
-          usuarios: response.data.usuarios,
-          reservas: response.data.reservas
-        });
-      }
+      // Intentar endpoint de estadísticas (más eficiente)
+      try {
+        const response = await apiService.dashboard.getEstadisticas();
+        if (response.success && response.data) {
+          let alquiladosCount = 0;
+          try {
+            const alqRes = await apiService.entregas.getAlquiladosActivos();
+            if (alqRes.success) alquiladosCount = (alqRes.data || []).length;
+          } catch (_) {}
+
+          setStats({
+            vehiculos: response.data.vehiculos ?? 0,
+            usuarios: response.data.usuarios ?? 0,
+            reservas: response.data.reservas ?? 0,
+            alquiladosActivos: response.data.alquiladosActivos ?? alquiladosCount
+          });
+          return;
+        }
+      } catch (_) {}
+
+      // Fallback: cargar contadores individualmente con respaldo en localStorage
+      const loadDataCount = async (service, storageKey) => {
+        try {
+          const response = await service.getAll();
+          if (response.success && response.data) {
+            return response.data.length;
+          }
+          return 0;
+        } catch (error) {
+          try {
+            const localData = localStorage.getItem(`rentacar_${storageKey}`);
+            if (localData) {
+              const parsedData = JSON.parse(localData);
+              return Array.isArray(parsedData) ? parsedData.length : 0;
+            }
+          } catch (_) {}
+          return 0;
+        }
+      };
+
+      const [vehiculosCount, usuariosCount, reservasCount] = await Promise.all([
+        loadDataCount(apiService.autos, 'autos'),
+        loadDataCount(apiService.usuarios, 'usuarios'),
+        loadDataCount(apiService.reservas, 'reservas')
+      ]);
+
+      let alquiladosCount = 0;
+      try {
+        const alqRes = await apiService.entregas.getAlquiladosActivos();
+        if (alqRes.success) alquiladosCount = (alqRes.data || []).length;
+      } catch (_) {}
+
+      setStats({
+        vehiculos: vehiculosCount,
+        usuarios: usuariosCount,
+        reservas: reservasCount,
+        alquiladosActivos: alquiladosCount
+      });
     } catch (error) {
       console.error('Error loading stats:', error);
     }
@@ -75,17 +127,18 @@ export default function Dashboard() {
   // Escuchar cambios en localStorage para actualizar contadores
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
+    let debounceTimer = null;
     const handleStorageChange = () => {
-      loadStats();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => loadStats(), 500);
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    
-    // También crear un evento personalizado para actualizar desde otras páginas
     window.addEventListener('rentacarDataUpdate', handleStorageChange);
-    
+
     return () => {
+      clearTimeout(debounceTimer);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('rentacarDataUpdate', handleStorageChange);
     };
@@ -109,31 +162,48 @@ export default function Dashboard() {
           <div className={styles.statCard}>
             <h3>Vehículos</h3>
             <p className={styles.statValue}>{stats.vehiculos}</p>
-            <button 
+            <button
               className={styles.actionButton}
-              onClick={() => router.push('/dashboard/vehiculos')}
+              disabled={navigatingTo === 'vehiculos'}
+              onClick={() => { setNavigatingTo('vehiculos'); router.push('/dashboard/vehiculos'); }}
             >
+              {navigatingTo === 'vehiculos' && <span className="btn-spinner" />}
               Gestionar
             </button>
           </div>
-          
+
           <div className={styles.statCard}>
             <h3>Usuarios</h3>
             <p className={styles.statValue}>{stats.usuarios}</p>
-            <button 
+            <button
               className={styles.actionButton}
-              onClick={() => router.push('/dashboard/usuarios')}
+              disabled={navigatingTo === 'usuarios'}
+              onClick={() => { setNavigatingTo('usuarios'); router.push('/dashboard/usuarios'); }}
             >
+              {navigatingTo === 'usuarios' && <span className="btn-spinner" />}
               Gestionar
             </button>
           </div>
-          
+
           <div className={styles.statCard}>
             <h3>Reservas</h3>
             <p className={styles.statValue}>{stats.reservas}</p>
-            <button 
+            <button
               className={styles.actionButton}
-              onClick={() => router.push('/dashboard/reservas')}
+              disabled={navigatingTo === 'reservas'}
+              onClick={() => { setNavigatingTo('reservas'); router.push('/dashboard/reservas'); }}
+            >
+              {navigatingTo === 'reservas' && <span className="btn-spinner" />}
+              Gestionar
+            </button>
+          </div>
+
+          <div className={styles.statCard}>
+            <h3>En alquiler</h3>
+            <p className={styles.statValue}>{stats.alquiladosActivos}</p>
+            <button
+              className={styles.actionButton}
+              onClick={() => router.push('/dashboard/entregas')}
             >
               Gestionar
             </button>
