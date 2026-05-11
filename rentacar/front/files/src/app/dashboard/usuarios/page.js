@@ -433,7 +433,7 @@ export default function UsuariosPage() {
           setUsuarioToDelete(usuario);
           setDeleteModalOpen(true);
         }}
-        onView={(usuario) => router.push(`/dashboard/usuarios/${usuario.id}`)}
+        onView={(usuario) => router.push(`/dashboard/usuarios/${usuario.idUser || usuario._id || usuario.id}`)}
         loading={loading}
         itemName="Usuario"
         emptyMessage="No hay usuarios registrados. ¡Añade uno nuevo!"

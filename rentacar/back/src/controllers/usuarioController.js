@@ -212,17 +212,25 @@ const usuarioController = {
    */
   async getUserById(req, res) {
     try {
-      const { id } = req.params;
-      
-      const user = await Usuario.findOne({ idUser: id }, { contraseña: 0 });
-      
+      const rawId = req.params.id;
+      let user = null;
+
+      const numericId = parseInt(rawId, 10);
+      if (!isNaN(numericId)) {
+        user = await Usuario.findOne({ idUser: numericId }, { contraseña: 0 });
+      }
+
+      if (!user) {
+        user = await Usuario.findById(rawId, { contraseña: 0 }).catch(() => null);
+      }
+
       if (!user) {
         return res.status(404).json({
           success: false,
           message: 'Usuario no encontrado'
         });
       }
-      
+
       res.status(200).json({
         success: true,
         data: user

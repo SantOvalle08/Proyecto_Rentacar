@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import apiService from '@/services/api';
@@ -8,7 +8,7 @@ import styles from './page.module.css';
 
 export default function VehiculoDetalle({ params }) {
   const router = useRouter();
-  const { id } = params;
+  const { id } = use(params);
 
   const [vehiculo, setVehiculo] = useState(null);
   const [loading, setLoading] = useState(true);

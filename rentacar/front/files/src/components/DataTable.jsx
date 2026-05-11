@@ -39,10 +39,10 @@ import styles from './DataTable.module.css';
  * @param {function} [props.customActionButtons] - Función para botones de acción personalizados
  * @returns {JSX.Element} Tabla de datos con ordenamiento y acciones
  */
-export default function DataTable({ 
-  data, 
-  columns, 
-  onEdit, 
+export default function DataTable({
+  data,
+  columns,
+  onEdit,
   onDelete,
   onView,
   actions = true,
@@ -55,6 +55,7 @@ export default function DataTable({
     key: null,
     direction: 'ascending'
   });
+  const [viewingId, setViewingId] = useState(null);
 
   /**
    * Solicita ordenar por una columna específica
@@ -165,11 +166,19 @@ export default function DataTable({
               {actions && (
                 <td className={styles.actions}>
                   {onView && (
-                    <button 
-                      onClick={() => onView(item)} 
+                    <button
+                      onClick={() => {
+                        const itemId = item.id || item._id;
+                        setViewingId(itemId);
+                        onView(item);
+                      }}
                       className={styles.viewButton}
                       aria-label={`Ver ${itemName}`}
+                      disabled={viewingId === (item.id || item._id)}
                     >
+                      {viewingId === (item.id || item._id) && (
+                        <span className="btn-spinner" />
+                      )}
                       Ver
                     </button>
                   )}
