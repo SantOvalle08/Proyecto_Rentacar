@@ -1079,6 +1079,27 @@ const checklists = {
   }
 };
 
+// Entregas endpoints (checkout / checkin / alquileres activos)
+const entregas = {
+  getAlquiladosActivos: () => fetchWithAuth('/api/alquileres'),
+  getPendientesCheckout: () => fetchWithAuth('/api/alquileres/pendientes-checkout'),
+  checkout: (reservaId, data) => fetchWithAuth(`/api/reservas/${reservaId}/checkout`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  getCheckout: (reservaId) => fetchWithAuth(`/api/reservas/${reservaId}/checkout`),
+  checkin: (reservaId, data) => fetchWithAuth(`/api/reservas/${reservaId}/checkin`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  getCheckin: (reservaId) => fetchWithAuth(`/api/reservas/${reservaId}/checkin`),
+  reportarIncidencia: (reservaId, data) => fetchWithAuth(`/api/reservas/${reservaId}/incidencias`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  getIncidencias: (reservaId) => fetchWithAuth(`/api/reservas/${reservaId}/incidencias`)
+};
+
 // Exportar los servicios
 const apiService = {
   auth,
@@ -1087,7 +1108,9 @@ const apiService = {
   reservas,
   catalogo,
   uploads,
-  checklists
+  checklists,
+  dashboard,
+  entregas
 };
 
 export default apiService;
