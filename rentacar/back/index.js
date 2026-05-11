@@ -5,12 +5,15 @@ const dotenv = require('dotenv');
 const connectDB = require('./src/config/database');
 const routes = require('./src/routes');
 const { metricsMiddleware, register, setDbStatus } = require('./src/middleware/metrics');
+const { validateEnv } = require('./src/config/env');
 
-// Load environment variables from .env without overriding platform vars.
-// In AWS, runtime environment variables must take precedence.
-dotenv.config({
-  path: path.join(__dirname, '.env')
-});
+// Load .env first so env vars are populated before validation.
+// Platform vars (App Runner) already take precedence over .env entries.
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+// Fail fast if critical env vars are missing. This prevents the server from
+// starting in a broken state (e.g., unsigned JWTs, no database connection).
+validateEnv();
 
 // Init app
 const app = express();
@@ -94,18 +97,20 @@ app.get('/metrics', async (req, res) => {
   res.end(await register.metrics());
 });
 
-// Unified CORS configuration
+// CORS — explicitly allow only known origins.
+// FRONTEND_URL must be set in App Runner to the deployed frontend domain.
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
-];
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (curl, Postman, same-origin)
+    // Allow requests with no origin (server-to-server, Postman, curl).
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(null, true); // Allow all in development; restrict in production
+    callback(new Error(`CORS: origin '${origin}' is not allowed`));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

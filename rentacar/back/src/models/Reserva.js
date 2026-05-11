@@ -101,6 +101,13 @@ const reservaSchema = new mongoose.Schema({
 reservaSchema.index({ usuario: 1 });
 reservaSchema.index({ estado: 1 });
 
+reservaSchema.pre('validate', function(next) {
+  if (this.fechaInicio && this.fechaFin && this.fechaFin <= this.fechaInicio) {
+    return next(new Error('La fecha de fin debe ser posterior a la fecha de inicio'));
+  }
+  next();
+});
+
 /**
  * Método para mostrar los detalles de una reserva
  * @returns {Object} Objeto con los detalles de la reserva
