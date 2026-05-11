@@ -500,9 +500,11 @@ class SistemaRentaAutos {
         await reserva.save({ session });
         
         // Update auto availability
-        auto.disponible = false;
-        auto.estadoVehiculo = 'reservado';
-        await auto.save({ session });
+        await Auto.updateOne(
+          { _id: auto._id },
+          { disponible: false, estadoVehiculo: 'reservado' },
+          { session }
+        );
         
         // Commit transaction
         await session.commitTransaction();

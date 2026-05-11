@@ -320,14 +320,16 @@ const autoController = {
         disponible
       };
 
-      // Filtrar campos undefined
+      // Filtrar campos undefined y aplicar en memoria para mostrarDetalles()
+      const camposFiltrados = {};
       Object.keys(camposActualizables).forEach(key => {
         if (camposActualizables[key] !== undefined) {
           auto[key] = camposActualizables[key];
+          camposFiltrados[key] = camposActualizables[key];
         }
       });
 
-      await auto.save();
+      await Auto.updateOne({ _id: auto._id }, camposFiltrados);
 
       res.status(200).json({
         success: true,

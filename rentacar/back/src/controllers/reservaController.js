@@ -386,11 +386,11 @@ const reservaController = {
       await reserva.save();
       
       // Set car as available again
-      const auto = await Auto.findById(reserva.auto);
-      if (auto) {
-        auto.disponible = true;
-        auto.estadoVehiculo = 'disponible';
-        await auto.save();
+      if (reserva.auto) {
+        await Auto.updateOne(
+          { _id: reserva.auto },
+          { disponible: true, estadoVehiculo: 'disponible' }
+        );
       }
       
       res.status(200).json({
@@ -418,7 +418,7 @@ const reservaController = {
   async deleteReserva(req, res) {
     try {
       const { id } = req.params;
-      const reserva = await Reserva.findOne({ idReserva: id });
+      const reserva = await Reserva.findOne({ idReserva: parseInt(id, 10) });
 
       if (!reserva) {
         return res.status(404).json({
@@ -427,12 +427,14 @@ const reservaController = {
         });
       }
 
-      const auto = await Auto.findById(reserva.auto);
       await Reserva.deleteOne({ _id: reserva._id });
 
-      if (auto) {
-        auto.disponible = true;
-        await auto.save();
+      // Solo liberar el vehículo si la reserva lo tenía bloqueado
+      if (reserva.auto && !['Cancelada', 'Completada'].includes(reserva.estado)) {
+        await Auto.updateOne(
+          { _id: reserva.auto },
+          { disponible: true, estadoVehiculo: 'disponible' }
+        );
       }
 
       return res.status(200).json({
@@ -440,7 +442,7 @@ const reservaController = {
         message: 'Reserva eliminada con éxito'
       });
     } catch (error) {
-      console.error('Error en deleteReserva:', error);
+      console.error('Error en deleteReserva:', error.message);
       return res.status(500).json({
         success: false,
         message: 'Error interno del servidor'
@@ -487,13 +489,15 @@ const reservaController = {
       // Si se confirma o pendiente, permanece no disponible por tener reserva activa.
       if (reserva.auto) {
         if (estado === 'Cancelada' || estado === 'Completada') {
-          reserva.auto.disponible = true;
-          reserva.auto.estadoVehiculo = 'disponible';
-          await reserva.auto.save();
+          await Auto.updateOne(
+            { _id: reserva.auto._id || reserva.auto },
+            { disponible: true, estadoVehiculo: 'disponible' }
+          );
         } else if (estado === 'Pendiente' || estado === 'Confirmada') {
-          reserva.auto.disponible = false;
-          reserva.auto.estadoVehiculo = 'reservado';
-          await reserva.auto.save();
+          await Auto.updateOne(
+            { _id: reserva.auto._id || reserva.auto },
+            { disponible: false, estadoVehiculo: 'reservado' }
+          );
         }
       }
 
