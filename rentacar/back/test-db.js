@@ -1,8 +1,12 @@
+const path = require('path');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
 // Cargar variables de entorno
-dotenv.config();
+dotenv.config({
+  path: path.join(__dirname, '.env'),
+  override: true
+});
 
 const connectDB = async () => {
   try {
@@ -37,6 +41,12 @@ const connectDB = async () => {
   } catch (error) {
     console.error(`Error al conectar a MongoDB: ${error.message}`);
     console.error('Detalles completos del error:', error);
+
+    if (error.code === 8000 || error.codeName === 'AtlasError') {
+      console.error('Error de autenticacion con MongoDB Atlas: revise el usuario y la contraseña de MONGODB_URI.');
+      console.error('Asegurese tambien de que el usuario exista en Database Access dentro de Atlas.');
+    }
+
     return false;
   }
 };

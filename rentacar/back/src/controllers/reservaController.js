@@ -8,6 +8,24 @@ const Reserva = require('../models/Reserva');
 const Auto = require('../models/Auto');
 const calculadoraFactory = require('../utils/factories/CalculadoraFactory');
 
+const calcularPlanPago = (precioTotal, porcentajeAnticipoInput) => {
+  const porcentajeRaw = Number(porcentajeAnticipoInput);
+  const porcentajeAnticipo = Number.isFinite(porcentajeRaw)
+    ? Math.min(100, Math.max(10, porcentajeRaw))
+    : 30;
+
+  const montoAnticipo = Math.round((precioTotal * (porcentajeAnticipo / 100)) * 100) / 100;
+  const saldoPendiente = Math.round((Math.max(precioTotal - montoAnticipo, 0)) * 100) / 100;
+
+  return {
+    porcentajeAnticipo,
+    montoAnticipo,
+    saldoPendiente,
+    estadoPago: saldoPendiente > 0 ? 'Anticipo pagado' : 'Pagado'
+  };
+};
+
+
 /**
  * @typedef {Object} ReservaController
  * @property {Function} createReserva - Crea una nueva reserva
@@ -39,10 +57,21 @@ const reservaController = {
    */
   async createReserva(req, res) {
     try {
-      const { fechaInicio, fechaFin, usuario, autoId, metodoPago, datosPago } = req.body;
+      const {
+        fechaInicio,
+        fechaFin,
+        usuario,
+        usuarioId,
+        autoId,
+        metodoPago,
+        datosPago,
+        porcentajeAnticipo
+      } = req.body;
+      const usuarioAutenticado = req.user?.id;
+      const usuarioReserva = usuarioAutenticado || usuarioId || (typeof usuario === 'string' ? usuario : usuario?._id || usuario?.id);
       
       // Validate required fields
-      if (!fechaInicio || !fechaFin || !usuario || !autoId) {
+      if (!fechaInicio || !fechaFin || !usuarioReserva || !autoId) {
         return res.status(400).json({
           success: false,
           message: 'Todos los campos son requeridos'
@@ -92,18 +121,35 @@ const reservaController = {
       );
       
       const precioTotal = calculadora.calcularPrecioTotal();
-      
+      const planPago = calcularPlanPago(precioTotal, porcentajeAnticipo);
+
+      const diffTime = Math.abs(endDate - startDate);
+      const diasReserva = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      const datosPagoConAnticipo = {
+        ...(datosPago || {}),
+        porcentajeAnticipo: planPago.porcentajeAnticipo,
+        montoAnticipo: planPago.montoAnticipo,
+        saldoPendiente: planPago.saldoPendiente,
+        estadoPago: planPago.estadoPago
+      };
+
       // Create reservation using SistemaRentaAutos
       try {
         const reserva = await sistemaRentaAutos.realizarReserva({
           fechaInicio,
           fechaFin,
-          usuario,
+          usuario: usuarioReserva,
           auto: auto._id,
           precioTotal,
+          diasReserva,
+          porcentajeAnticipo: planPago.porcentajeAnticipo,
+          montoAnticipo: planPago.montoAnticipo,
+          saldoPendiente: planPago.saldoPendiente,
+          estadoPago: planPago.estadoPago,
           estado: 'Pendiente',
           metodoPago,
-          datosPago
+          datosPago: datosPagoConAnticipo
         });
         
         if (!reserva) {
@@ -116,6 +162,7 @@ const reservaController = {
           data: {
             reserva: reserva.mostrarDetalleReserva(),
             precioTotal,
+            planPago,
             descuento: calculadora.descuento
           }
         });
@@ -208,9 +255,9 @@ const reservaController = {
   async getAllReservas(req, res) {
     try {
       const reservas = await Reserva.find()
-        .populate('usuario', '-contraseña')
-        .populate('auto');
-      
+        .populate('usuario', 'idUser nombre email')
+        .populate('auto', 'idAuto marca modelo tipoCoche tipo color matricula precioDia imagen disponible');
+
       res.status(200).json({
         success: true,
         data: reservas.map(reserva => reserva.mostrarDetalleReserva())
@@ -235,6 +282,14 @@ const reservaController = {
   async getReservasByUsuario(req, res) {
     try {
       const { usuarioId } = req.params;
+      
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que el usuario solicitado sea el mismo o admin
+      if (String(req.user.id) !== String(usuarioId) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para ver reservas de otro usuario'
+        });
+      }
       
       const reservas = await Reserva.find({ usuario: usuarioId })
         .populate('usuario', '-contraseña')
@@ -276,6 +331,14 @@ const reservaController = {
         });
       }
       
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que la reserva pertenezca al usuario o sea admin
+      if (String(req.user.id) !== String(reserva.usuario._id) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para ver esta reserva'
+        });
+      }
+      
       res.status(200).json({
         success: true,
         data: reserva.mostrarDetalleReserva()
@@ -301,7 +364,7 @@ const reservaController = {
     try {
       const { id } = req.params;
       
-      const reserva = await Reserva.findOne({ idReserva: id });
+      const reserva = await Reserva.findOne({ idReserva: id }).populate('usuario');
       
       if (!reserva) {
         return res.status(404).json({
@@ -310,16 +373,24 @@ const reservaController = {
         });
       }
       
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que la reserva pertenezca al usuario o sea admin
+      if (String(req.user.id) !== String(reserva.usuario._id) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para cancelar esta reserva'
+        });
+      }
+      
       // Update reservation status
       reserva.estado = 'Cancelada';
       await reserva.save();
       
       // Set car as available again
-      const auto = await Auto.findById(reserva.auto);
-      if (auto) {
-        auto.disponible = true;
-        auto.estadoVehiculo = 'disponible';
-        await auto.save();
+      if (reserva.auto) {
+        await Auto.updateOne(
+          { _id: reserva.auto },
+          { disponible: true, estadoVehiculo: 'disponible' }
+        );
       }
       
       res.status(200).json({
@@ -330,6 +401,114 @@ const reservaController = {
     } catch (error) {
       console.error('Error en cancelarReserva:', error);
       res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  },
+
+  /**
+   * Elimina una reserva (solo admin)
+   * @param {Object} req - Objeto de solicitud Express
+   * @param {Object} req.params - Parámetros de la URL
+   * @param {string} req.params.id - ID numérico de la reserva (idReserva)
+   * @param {Object} res - Objeto de respuesta Express
+   * @returns {Object} Respuesta JSON con el resultado
+   */
+  async deleteReserva(req, res) {
+    try {
+      const { id } = req.params;
+      const reserva = await Reserva.findOne({ idReserva: parseInt(id, 10) });
+
+      if (!reserva) {
+        return res.status(404).json({
+          success: false,
+          message: 'Reserva no encontrada'
+        });
+      }
+
+      await Reserva.deleteOne({ _id: reserva._id });
+
+      // Solo liberar el vehículo si la reserva lo tenía bloqueado
+      if (reserva.auto && !['Cancelada', 'Completada'].includes(reserva.estado)) {
+        await Auto.updateOne(
+          { _id: reserva.auto },
+          { disponible: true, estadoVehiculo: 'disponible' }
+        );
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Reserva eliminada con éxito'
+      });
+    } catch (error) {
+      console.error('Error en deleteReserva:', error.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  },
+
+  /**
+   * Actualiza el estado de una reserva (solo admin)
+   * @param {Object} req - Objeto de solicitud Express
+   * @param {Object} req.params - Parámetros de la URL
+   * @param {string} req.params.id - ID numérico de la reserva (idReserva)
+   * @param {Object} req.body - Cuerpo de la solicitud
+   * @param {string} req.body.estado - Nuevo estado (Pendiente, Confirmada, Cancelada, Completada)
+   * @param {Object} res - Objeto de respuesta Express
+   * @returns {Object} Respuesta JSON con la reserva actualizada
+   */
+  async actualizarEstadoReserva(req, res) {
+    try {
+      const { id } = req.params;
+      const { estado } = req.body;
+
+      const estadosValidos = ['Pendiente', 'Confirmada', 'Cancelada', 'Completada'];
+      if (!estado || !estadosValidos.includes(estado)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Estado inválido'
+        });
+      }
+
+      const reserva = await Reserva.findOne({ idReserva: id }).populate('auto');
+      if (!reserva) {
+        return res.status(404).json({
+          success: false,
+          message: 'Reserva no encontrada'
+        });
+      }
+
+      const estadoAnterior = reserva.estado;
+      reserva.estado = estado;
+      await reserva.save();
+
+      // Si se cancela o completa, el vehículo vuelve a disponible.
+      // Si se confirma o pendiente, permanece no disponible por tener reserva activa.
+      if (reserva.auto) {
+        if (estado === 'Cancelada' || estado === 'Completada') {
+          await Auto.updateOne(
+            { _id: reserva.auto._id || reserva.auto },
+            { disponible: true, estadoVehiculo: 'disponible' }
+          );
+        } else if (estado === 'Pendiente' || estado === 'Confirmada') {
+          await Auto.updateOne(
+            { _id: reserva.auto._id || reserva.auto },
+            { disponible: false, estadoVehiculo: 'reservado' }
+          );
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Estado actualizado de ${estadoAnterior} a ${estado}`,
+        data: reserva.mostrarDetalleReserva()
+      });
+    } catch (error) {
+      console.error('Error en actualizarEstadoReserva:', error);
+      return res.status(500).json({
         success: false,
         message: 'Error interno del servidor'
       });
@@ -356,6 +535,14 @@ const reservaController = {
         return res.status(404).json({
           success: false,
           message: 'Reserva no encontrada'
+        });
+      }
+      
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que la reserva pertenezca al usuario o sea admin
+      if (String(req.user.id) !== String(reserva.usuario._id) && req.user.rol !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para generar factura de esta reserva'
         });
       }
       

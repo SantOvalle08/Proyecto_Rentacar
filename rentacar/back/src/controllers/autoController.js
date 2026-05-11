@@ -26,6 +26,32 @@ const Reserva = require('../models/Reserva');
  */
 const autoController = {
   /**
+   * Busca un auto por identificador flexible.
+   * Soporta _id de MongoDB y tambien idAuto numerico.
+   * @param {string} id - Identificador recibido en la ruta
+   * @returns {Promise<Object|null>} Auto encontrado o null
+   */
+  async findAutoByRouteId(id) {
+    if (!id) {
+      return null;
+    }
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      const byObjectId = await Auto.findById(id);
+      if (byObjectId) {
+        return byObjectId;
+      }
+    }
+
+    const numericId = Number(id);
+    if (Number.isInteger(numericId)) {
+      return Auto.findOne({ idAuto: numericId });
+    }
+
+    return null;
+  },
+
+  /**
    * Crea un nuevo vehículo en el sistema
    * @param {Object} req - Objeto de solicitud Express
    * @param {Object} req.body - Datos del vehículo
@@ -192,18 +218,7 @@ const autoController = {
   async getAutoById(req, res) {
     try {
       const { id } = req.params;
-      let auto = null;
-
-      if (mongoose.Types.ObjectId.isValid(id)) {
-        auto = await Auto.findById(id);
-      }
-
-      if (!auto) {
-        const numericId = parseInt(id);
-        if (!isNaN(numericId)) {
-          auto = await Auto.findOne({ idAuto: numericId });
-        }
-      }
+      const auto = await autoController.findAutoByRouteId(id);
 
       if (!auto) {
         return res.status(404).json({
@@ -268,15 +283,7 @@ const autoController = {
         disponible
       } = req.body;
 
-      let auto = mongoose.Types.ObjectId.isValid(id)
-        ? await Auto.findById(id)
-        : null;
-
-      if (!auto) {
-        const numericId = parseInt(id);
-        if (!isNaN(numericId)) auto = await Auto.findOne({ idAuto: numericId });
-      }
-
+      const auto = await autoController.findAutoByRouteId(id);
       if (!auto) {
         return res.status(404).json({
           success: false,
@@ -313,14 +320,16 @@ const autoController = {
         disponible
       };
 
-      // Filtrar campos undefined
+      // Filtrar campos undefined y aplicar en memoria para mostrarDetalles()
+      const camposFiltrados = {};
       Object.keys(camposActualizables).forEach(key => {
         if (camposActualizables[key] !== undefined) {
           auto[key] = camposActualizables[key];
+          camposFiltrados[key] = camposActualizables[key];
         }
       });
 
-      await auto.save();
+      await Auto.updateOne({ _id: auto._id }, camposFiltrados);
 
       res.status(200).json({
         success: true,
@@ -347,15 +356,7 @@ const autoController = {
   async deleteAuto(req, res) {
     try {
       const { id } = req.params;
-
-      let auto = mongoose.Types.ObjectId.isValid(id)
-        ? await Auto.findById(id)
-        : null;
-
-      if (!auto) {
-        const numericId = parseInt(id);
-        if (!isNaN(numericId)) auto = await Auto.findOne({ idAuto: numericId });
-      }
+      const auto = await autoController.findAutoByRouteId(id);
 
       if (!auto) {
         return res.status(404).json({

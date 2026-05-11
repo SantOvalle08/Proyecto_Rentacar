@@ -1,24 +1,12 @@
+const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const multer = require('multer');
 
-const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'autos');
-
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '../../public/images/autos');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (_req, file, cb) => {
-    const extension = path.extname(file.originalname || '').toLowerCase();
-    const originalName = path.basename(file.originalname || 'imagen', extension);
-    const safeName = originalName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-    cb(null, `${safeName || 'imagen'}-${Date.now()}${extension || '.jpg'}`);
-  }
-});
 
 const fileFilter = (_req, file, cb) => {
   if (file && file.mimetype && file.mimetype.startsWith('image/')) {
@@ -28,8 +16,20 @@ const fileFilter = (_req, file, cb) => {
   return cb(new Error('El archivo debe ser una imagen'));
 };
 
+// Configure disk storage instead of memory
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename with timestamp
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
 const upload = multer({
-  storage,
+  storage: storage,
   fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024
@@ -47,17 +47,17 @@ const uploadImage = (req, res) => {
       });
     }
 
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.get('host');
-    const relativePath = `/uploads/autos/${req.file.filename}`;
-    const url = `${protocol}://${host}${relativePath}`;
+    // Return relative path for the uploaded file
+    const relativePath = `/images/autos/${req.file.filename}`;
 
     return res.status(201).json({
       success: true,
       message: 'Imagen subida correctamente',
-      path: url,
-      url,
-      relativePath
+      path: relativePath,
+      url: relativePath,
+      filename: req.file.filename,
+      mimeType: req.file.mimetype,
+      storage: 'disk'
     });
   } catch (error) {
     console.error('Error al subir imagen:', error);

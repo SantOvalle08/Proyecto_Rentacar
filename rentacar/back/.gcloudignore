@@ -1,0 +1,8 @@
+# Archivos ignorados por gcloud
+.gcloudignore
+.git
+.gitignore
+node_modules/
+.env
+*.md
+.DS_Store

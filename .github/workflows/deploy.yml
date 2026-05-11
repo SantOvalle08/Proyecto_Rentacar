@@ -1,0 +1,204 @@
+name: Deploy — Backend + Frontend
+
+on:
+  push:
+    branches: [main]
+
+# ── Non-sensitive configuration extracted from deploy-ecr.ps1 ──────────────
+env:
+  AWS_REGION: us-east-2
+  AWS_ACCOUNT_ID: '006422308185'
+  BACKEND_ECR_REPO: rentacar/back
+  FRONTEND_ECR_REPO: rentacar/front
+  BACKEND_SERVICE_ARN: arn:aws:apprunner:us-east-2:006422308185:service/rentacar-backend/b4b01b19aa9141efba9808959dd5dd40
+  FRONTEND_SERVICE_ARN: arn:aws:apprunner:us-east-2:006422308185:service/rentacar-frontend/3dd31140bb854cdc90461d1ea9397ab3
+  BACKEND_URL: https://pappspypbd.us-east-2.awsapprunner.com
+
+jobs:
+  # ─── Gate: tests must pass before any deploy ───────────────────────────────
+  test-backend:
+    name: Backend Tests (deploy gate)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rentacar/back
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: rentacar/back/package-lock.json
+
+      - name: Cache MongoDB binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-bin-${{ runner.os }}-v20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+  # ─── Deploy backend ─────────────────────────────────────────────────────────
+  deploy-backend:
+    name: Deploy Backend to App Runner
+    needs: test-backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend image
+        id: build-backend
+        run: |
+          TAG="back-$(date +%Y%m%d-%H%M)-${GITHUB_SHA::8}"
+          IMAGE="${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.BACKEND_ECR_REPO }}:${TAG}"
+
+          docker build --no-cache -t "${IMAGE}" rentacar/back/
+          docker push "${IMAGE}"
+
+          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
+          echo "Built and pushed: ${IMAGE}"
+
+      - name: Update App Runner backend service
+        run: |
+          IMAGE="${{ steps.build-backend.outputs.image }}"
+
+          # Preserve the full current SourceConfiguration and update only ImageIdentifier.
+          # This mirrors the strategy in deploy-ecr.ps1 to avoid clobbering env vars or IAM roles.
+          CURRENT=$(aws apprunner describe-service \
+            --service-arn "${{ env.BACKEND_SERVICE_ARN }}" \
+            --region "${{ env.AWS_REGION }}" \
+            --output json)
+
+          PAYLOAD=$(echo "${CURRENT}" | jq \
+            --arg arn "${{ env.BACKEND_SERVICE_ARN }}" \
+            --arg img "${IMAGE}" \
+            '.Service | {
+              ServiceArn: $arn,
+              SourceConfiguration: (.SourceConfiguration | .ImageRepository.ImageIdentifier = $img)
+            }')
+
+          aws apprunner update-service \
+            --region "${{ env.AWS_REGION }}" \
+            --cli-input-json "${PAYLOAD}"
+
+          echo "Waiting for backend to reach RUNNING state..."
+          for i in $(seq 1 90); do
+            STATUS=$(aws apprunner describe-service \
+              --service-arn "${{ env.BACKEND_SERVICE_ARN }}" \
+              --region "${{ env.AWS_REGION }}" \
+              --query "Service.Status" --output text)
+            echo "  [${i}/90] Status: ${STATUS}"
+            if [ "${STATUS}" = "RUNNING" ]; then
+              echo "Backend deployed successfully."
+              break
+            fi
+            if [ "${i}" -eq 90 ]; then
+              echo "ERROR: Timeout waiting for backend deployment."
+              exit 1
+            fi
+            sleep 10
+          done
+
+  # ─── Deploy frontend (after backend is live) ────────────────────────────────
+  deploy-frontend:
+    name: Deploy Frontend to App Runner
+    needs: [test-backend, deploy-backend]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push frontend image
+        id: build-frontend
+        run: |
+          TAG="front-$(date +%Y%m%d-%H%M)-${GITHUB_SHA::8}"
+          IMAGE="${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.FRONTEND_ECR_REPO }}:${TAG}"
+
+          # NEXT_PUBLIC_API_URL is baked at build time (Next.js requirement).
+          docker build \
+            --no-cache \
+            --build-arg NEXT_PUBLIC_API_URL="${{ env.BACKEND_URL }}" \
+            -t "${IMAGE}" \
+            rentacar/front/files/
+
+          docker push "${IMAGE}"
+
+          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
+          echo "Built and pushed: ${IMAGE}"
+
+      - name: Update App Runner frontend service
+        run: |
+          IMAGE="${{ steps.build-frontend.outputs.image }}"
+
+          CURRENT=$(aws apprunner describe-service \
+            --service-arn "${{ env.FRONTEND_SERVICE_ARN }}" \
+            --region "${{ env.AWS_REGION }}" \
+            --output json)
+
+          PAYLOAD=$(echo "${CURRENT}" | jq \
+            --arg arn "${{ env.FRONTEND_SERVICE_ARN }}" \
+            --arg img "${IMAGE}" \
+            '.Service | {
+              ServiceArn: $arn,
+              SourceConfiguration: (.SourceConfiguration | .ImageRepository.ImageIdentifier = $img)
+            }')
+
+          aws apprunner update-service \
+            --region "${{ env.AWS_REGION }}" \
+            --cli-input-json "${PAYLOAD}"
+
+          echo "Waiting for frontend to reach RUNNING state..."
+          for i in $(seq 1 90); do
+            STATUS=$(aws apprunner describe-service \
+              --service-arn "${{ env.FRONTEND_SERVICE_ARN }}" \
+              --region "${{ env.AWS_REGION }}" \
+              --query "Service.Status" --output text)
+            echo "  [${i}/90] Status: ${STATUS}"
+            if [ "${STATUS}" = "RUNNING" ]; then
+              echo "Frontend deployed successfully."
+              break
+            fi
+            if [ "${i}" -eq 90 ]; then
+              echo "ERROR: Timeout waiting for frontend deployment."
+              exit 1
+            fi
+            sleep 10
+          done
+
+      - name: Deployment summary
+        run: |
+          echo ""
+          echo "=== Deployment complete ==="
+          echo "Backend URL:    ${{ env.BACKEND_URL }}"
+          echo "Frontend URL:   https://win4nmi2ap.us-east-2.awsapprunner.com"
+          echo "Frontend image: ${{ steps.build-frontend.outputs.image }}"

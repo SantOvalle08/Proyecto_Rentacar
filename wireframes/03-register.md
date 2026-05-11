@@ -51,7 +51,7 @@ graph TB
 ### Datos Personales
 
 | Campo | Tipo | Requerido | Validación |
-|-------|------|-----------|------------|
+| ------- | ------ | ----------- | ------------ |
 | Nombre | text | ✅ Sí | No vacío |
 | Apellido | text | ✅ Sí | No vacío |
 | Email | email | ✅ Sí | Formato email válido |
@@ -60,9 +60,9 @@ graph TB
 ### Documentación
 
 | Campo | Tipo | Requerido | Opciones |
-|-------|------|-----------|----------|
+|-------|------|-----------        |----------|
 | Tipo Documento | select | ✅ Sí | DNI (default) |
-| Número Documento | text | ✅ Sí | No vacío |
+| Número Documento | text | ✅ Sí | No vacío      |
 
 ### Seguridad
 

@@ -12,6 +12,16 @@ import styles from './page.module.css';
 import apiService from '@/services/api';
 
 /**
+ * Devuelve el identificador estable del usuario, sin importar si la sesión
+ * fue hidratada con `_id`, `id` o `idUser`. El backend acepta cualquiera
+ * de los tres a través de findUsuarioByIdentifier.
+ */
+const resolveUserId = (user) => {
+  if (!user) return null;
+  return user._id ?? user.id ?? user.idUser ?? null;
+};
+
+/**
  * Componente de página de perfil de usuario
  * @returns {JSX.Element} Componente de perfil
  */
@@ -96,59 +106,40 @@ export default function Perfil() {
     }
     
     try {
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No hay token de autenticación');
+      // Identificador estable: aceptamos _id, id o idUser. El backend
+      // resuelve cualquiera de los tres con findUsuarioByIdentifier.
+      const userId = resolveUserId(user);
+      if (!userId) {
+        throw new Error('No se pudo determinar el ID del usuario en sesión');
       }
 
-      // Ensure we have the API URL and user ID
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-      if (!user || !user.id) {
-        throw new Error('ID de usuario no encontrado');
-      }
-
-      console.log('Actualizando perfil para usuario:', user.id);
+      console.log('Actualizando perfil para usuario:', userId);
       console.log('Datos a enviar:', formData);
 
-      // Make API call to update profile
-      const response = await fetch(`${apiUrl}/api/usuarios/${user.id}/profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
+      // Usamos la capa centralizada de API en lugar de fetch directo.
+      // Esto reutiliza el manejo de auth, timeouts, candidatos de host
+      // y errores que ya existe para el resto de la aplicación.
+      const response = await apiService.usuarios.updateProfile(userId, formData);
+
+      if (!response || !response.success || !response.data) {
+        throw new Error(response?.message || 'Error al actualizar el perfil');
+      }
+
+      // El backend siempre devuelve el usuario en su shape canónico
+      // (toAuthJSON). Reemplazamos completo para no arrastrar campos
+      // viejos del objeto en sesión y avisamos al Header vía storage event.
+      const refreshedUser = response.data;
+      localStorage.setItem('user', JSON.stringify(refreshedUser));
+      setUser(refreshedUser);
+      setFormData({
+        nombre: refreshedUser.nombre || '',
+        email: refreshedUser.email || '',
+        telefono: refreshedUser.telefono || ''
       });
+      window.dispatchEvent(new Event('storage'));
 
-      // Log the response for debugging
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Respuesta del servidor no válida');
-      }
-
-      const data = await response.json();
-      console.log('Response data:', data);
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al actualizar el perfil');
-      }
-
-      if (data.success) {
-        // Update local storage with new data
-        const updatedUser = { ...user, ...data.data };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        
-        setSuccess('Perfil actualizado con éxito');
-        setIsEditing(false);
-      } else {
-        throw new Error(data.message || 'Error al actualizar el perfil');
-      }
+      setSuccess('Perfil actualizado con éxito');
+      setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
       setError(error.message || 'Error al actualizar el perfil');

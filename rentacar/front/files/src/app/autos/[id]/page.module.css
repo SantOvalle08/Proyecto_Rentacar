@@ -28,21 +28,21 @@
   max-width: 600px;
   margin: 2rem auto;
   padding: 2rem;
-  background-color: #ffebee;
-  border: 1px solid #ffcdd2;
+  background-color: var(--error-50);
+  border: 1px solid var(--error-200);
   border-radius: 8px;
   text-align: center;
 }
 
 .error h2 {
-  color: #d32f2f;
+  color: var(--error-700);
   margin-top: 0;
 }
 
 .backButton, .volverButton {
   display: inline-block;
   background-color: var(--color-primary);
-  color: white;
+  color: var(--btn-primary-text);
   padding: 0.75rem 1.5rem;
   border-radius: 4px;
   text-decoration: none;
@@ -82,7 +82,7 @@
   top: 1rem;
   right: 1rem;
   background-color: rgba(244, 67, 54, 0.9);
-  color: white;
+  color: var(--error-on);
   padding: 0.5rem 1rem;
   border-radius: 4px;
   font-weight: bold;
@@ -102,7 +102,7 @@
 }
 
 .infoDetails {
-  background-color: #f8f9fa;
+  background-color: var(--surface-secondary);
   padding: 1.5rem;
   border-radius: 8px;
 }
@@ -119,7 +119,7 @@
   justify-content: space-between;
   margin-bottom: 0.75rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .infoRow:last-child {
@@ -130,11 +130,11 @@
 
 .infoLabel {
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .infoValue {
-  color: #333;
+  color: var(--text-primary);
 }
 
 .precioBase {
@@ -144,7 +144,7 @@
 }
 
 .reservaSection {
-  background-color: #f8f9fa;
+  background-color: var(--surface-secondary);
   padding: 1.5rem;
   border-radius: 8px;
 }
@@ -175,9 +175,11 @@
 .fechaInput {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--input-border);
   border-radius: 4px;
   font-size: 1rem;
+  background-color: var(--input-bg);
+  color: var(--input-text);
 }
 
 .precioCalculadora {
@@ -189,7 +191,7 @@
 
 .calcularButton {
   background-color: var(--color-secondary);
-  color: white;
+  color: var(--btn-secondary-text);
   border: none;
   padding: 0.75rem;
   border-radius: 4px;
@@ -203,12 +205,12 @@
 }
 
 .calcularButton:disabled {
-  background-color: #ccc;
+  background-color: var(--text-disabled);
   cursor: not-allowed;
 }
 
 .precioTotal {
-  background-color: #e9ecef;
+  background-color: var(--surface-tertiary);
   padding: 1rem;
   border-radius: 4px;
   display: flex;
@@ -234,7 +236,7 @@
 .reservarButton {
   flex: 2;
   background-color: var(--color-primary);
-  color: white;
+  color: var(--btn-primary-text);
   border: none;
   padding: 0.75rem;
   border-radius: 4px;
@@ -248,14 +250,14 @@
 }
 
 .reservarButton:disabled {
-  background-color: #ccc;
+  background-color: var(--text-disabled);
   cursor: not-allowed;
 }
 
 .volverButton {
   flex: 1;
-  background-color: #6c757d;
-  color: white;
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
   border: none;
   padding: 0.75rem;
   border-radius: 4px;
@@ -267,13 +269,13 @@
 }
 
 .volverButton:hover {
-  background-color: #5a6268;
+  background-color: var(--btn-secondary-hover);
 }
 
 .noDisponibleMessage {
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
+  background-color: var(--error-50);
+  border: 1px solid var(--error-200);
+  color: var(--error-700);
   padding: 1.5rem;
   border-radius: 8px;
   text-align: center;

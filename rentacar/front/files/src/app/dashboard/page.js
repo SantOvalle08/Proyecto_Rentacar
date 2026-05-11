@@ -61,7 +61,27 @@ export default function Dashboard() {
   
   const loadStats = async () => {
     try {
-      // Cargar datos desde localStorage o API
+      // Intentar endpoint de estadísticas (más eficiente)
+      try {
+        const response = await apiService.dashboard.getEstadisticas();
+        if (response.success && response.data) {
+          let alquiladosCount = 0;
+          try {
+            const alqRes = await apiService.entregas.getAlquiladosActivos();
+            if (alqRes.success) alquiladosCount = (alqRes.data || []).length;
+          } catch (_) {}
+
+          setStats({
+            vehiculos: response.data.vehiculos ?? 0,
+            usuarios: response.data.usuarios ?? 0,
+            reservas: response.data.reservas ?? 0,
+            alquiladosActivos: response.data.alquiladosActivos ?? alquiladosCount
+          });
+          return;
+        }
+      } catch (_) {}
+
+      // Fallback: cargar contadores individualmente con respaldo en localStorage
       const loadDataCount = async (service, storageKey) => {
         try {
           const response = await service.getAll();
@@ -70,23 +90,17 @@ export default function Dashboard() {
           }
           return 0;
         } catch (error) {
-          console.error(`Error loading ${storageKey} count:`, error);
-          
-          // Si falla la API, intentar obtener de localStorage
           try {
             const localData = localStorage.getItem(`rentacar_${storageKey}`);
             if (localData) {
               const parsedData = JSON.parse(localData);
               return Array.isArray(parsedData) ? parsedData.length : 0;
             }
-          } catch (e) {
-            console.error(`Error reading ${storageKey} from localStorage:`, e);
-          }
+          } catch (_) {}
           return 0;
         }
       };
-      
-      // Cargar contadores de manera paralela
+
       const [vehiculosCount, usuariosCount, reservasCount] = await Promise.all([
         loadDataCount(apiService.autos, 'autos'),
         loadDataCount(apiService.usuarios, 'usuarios'),

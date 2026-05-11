@@ -72,58 +72,24 @@ export default function UsuariosPage() {
       setLoading(true);
       setError('');
       
-      try {
-        const response = await apiService.usuarios.getAll();
-        
-        if (response.success && response.data) {
-          setUsuarios(response.data);
-          return;
-        }
-      } catch (error) {
-        console.error('Error loading usuarios:', error);
-        // Si hay un error, continuamos al fallback (datos mock)
+      const response = await apiService.usuarios.getAll();
+      
+      if (response.success && response.data) {
+        // Normalizar los datos para asegurar que tenemos id e idUser
+        const normalizedData = response.data.map(usuario => ({
+          ...usuario,
+          id: usuario.id || usuario._id || usuario.idUser,
+          idUser: usuario.idUser || usuario.id || usuario._id
+        }));
+        setUsuarios(normalizedData);
+      } else {
+        setError('No se pudieron cargar los usuarios. Por favor, recarga la página.');
+        setUsuarios([]);
       }
-      
-      // Fallback a datos mock si la API falla
-      console.log('Usando datos mock para usuarios');
-      setUsuarios([
-        {
-          id: 1,
-          idUser: 1,
-          nombre: 'Admin User',
-          email: 'admin@rentacar.com',
-          telefono: '1234567890',
-          tipoDocumento: 'DNI',
-          numeroDocumento: '12345678',
-          rol: 'admin'
-        },
-        {
-          id: 2,
-          idUser: 2,
-          nombre: 'Cliente Ejemplo',
-          email: 'cliente@example.com',
-          telefono: '0987654321',
-          tipoDocumento: 'DNI',
-          numeroDocumento: '87654321',
-          rol: 'cliente'
-        },
-        {
-          id: 3,
-          idUser: 3,
-          nombre: 'Ana López',
-          email: 'ana@example.com',
-          telefono: '5551234567',
-          tipoDocumento: 'Pasaporte',
-          numeroDocumento: 'AB123456',
-          rol: 'cliente'
-        }
-      ]);
-      
-      // No mostramos error ya que usamos datos mock
-      setError('');
     } catch (error) {
-      console.error('Error general en loadUsuarios:', error);
-      setError('Error al cargar los usuarios');
+      console.error('Error al cargar usuarios desde API:', error);
+      setError('Error al conectar con el servidor. Por favor, verifica tu conexión.');
+      setUsuarios([]);
     } finally {
       setLoading(false);
     }
@@ -194,85 +160,43 @@ export default function UsuariosPage() {
         delete usuarioData.confirmarContraseña;
       }
       
+      let response;
       try {
-        let response;
         if (currentUsuario) {
           // Update existing usuario
           response = await apiService.usuarios.update(currentUsuario.id, usuarioData);
           
           if (response.success) {
-            // Update the usuario in the local state
-            setUsuarios(usuarios.map(u => 
-              u.id === currentUsuario.id ? { ...u, ...usuarioData } : u
-            ));
-            
-            // Close modal and reset form
+            // Reload all usuarios to get latest data
+            await loadUsuarios();
             setModalOpen(false);
             resetForm();
-            
-            // Notify other components of the change
-            notifyDataChange();
             return;
+          } else {
+            throw new Error(response.message || 'Error al actualizar usuario');
           }
         } else {
           // Create new usuario
           response = await apiService.usuarios.create(usuarioData);
           
           if (response.success) {
-            // Add the new usuario to the local state
-            const newUsuario = {
-              id: response.data?.id || usuarios.length + 1,
-              idUser: response.data?.idUser || usuarios.length + 1,
-              ...usuarioData
-            };
-            setUsuarios([...usuarios, newUsuario]);
-            
-            // Close modal and reset form
+            // Reload all usuarios to get latest data
+            await loadUsuarios();
             setModalOpen(false);
             resetForm();
-            
-            // Notify other components of the change
-            notifyDataChange();
             return;
+          } else {
+            throw new Error(response.message || 'Error al crear usuario');
           }
         }
-      } catch (error) {
-        console.error('Error saving usuario:', error);
-        // Si hay un error en la API, continuamos para aplicar el cambio localmente
+      } catch (apiError) {
+        console.error('Error en operación:', apiError);
+        setError(apiError.message || 'Error al guardar el usuario');
+        setLoading(false);
       }
-      
-      // Si llegamos aquí, es porque la API falló. Simulamos una operación exitosa
-      console.log('Simulando operación exitosa para usuario:', usuarioData);
-      
-      if (currentUsuario) {
-        // Update mock data
-        setUsuarios(usuarios.map(u => 
-          u.id === currentUsuario.id ? { ...u, ...usuarioData } : u
-        ));
-      } else {
-        // Create new mock data
-        const newUsuario = {
-          id: usuarios.length + 1,
-          idUser: usuarios.length + 1,
-          ...usuarioData
-        };
-        setUsuarios([...usuarios, newUsuario]);
-      }
-      
-      // Save to localStorage
-      saveUsuariosToLocalStorage([...usuarios]);
-      
-      // Notify other components of the change
-      notifyDataChange();
-      
-      // Close modal and reset form
-      setModalOpen(false);
-      resetForm();
-      
     } catch (error) {
       console.error('Error general en handleSubmit:', error);
-      setError('Error al guardar el usuario');
-    } finally {
+      setError('Error inesperado al guardar el usuario');
       setLoading(false);
     }
   };
@@ -299,43 +223,22 @@ export default function UsuariosPage() {
       setLoading(true);
       setError('');
       
-      try {
-        const response = await apiService.usuarios.delete(usuarioToDelete.id);
-        
-        if (response.success) {
-          // Remove the usuario from the local state
-          setUsuarios(usuarios.filter(u => u.id !== usuarioToDelete.id));
-          setDeleteModalOpen(false);
-          setUsuarioToDelete(null);
-          
-          // Notify other components of the change
-          notifyDataChange();
-          return;
-        }
-      } catch (error) {
-        console.error('Error deleting usuario:', error);
-        // Si hay un error en la API, continuamos para aplicar el cambio localmente
+      const response = await apiService.usuarios.delete(usuarioToDelete.id);
+      
+      if (response.success) {
+        // Remove the usuario from the local state
+        setUsuarios(usuarios.filter(u => u.id !== usuarioToDelete.id));
+        setDeleteModalOpen(false);
+        setUsuarioToDelete(null);
+        return;
+      } else {
+        throw new Error(response.message || 'Error al eliminar usuario');
       }
-      
-      // Si llegamos aquí, es porque la API falló. Simulamos una operación exitosa
-      console.log('Simulando eliminación exitosa para usuario:', usuarioToDelete);
-      
-      // Remove the usuario from the local state
-      const updatedUsuarios = usuarios.filter(u => u.id !== usuarioToDelete.id);
-      setUsuarios(updatedUsuarios);
-      
-      // Save to localStorage
-      saveUsuariosToLocalStorage(updatedUsuarios);
-      
-      // Notify other components of the change
-      notifyDataChange();
-      
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error);
+      setError(error.message || 'Error al eliminar el usuario. Por favor, intenta de nuevo.');
       setDeleteModalOpen(false);
       setUsuarioToDelete(null);
-      
-    } catch (error) {
-      console.error('Error general en handleDelete:', error);
-      setError('Error al eliminar el usuario');
     } finally {
       setLoading(false);
     }
@@ -363,7 +266,7 @@ export default function UsuariosPage() {
 
   // Columns for the data table
   const columns = [
-    { key: 'idUser', label: 'ID', sortable: true },
+    { key: 'id', label: 'ID', sortable: true },
     { key: 'nombre', label: 'Nombre', sortable: true },
     { key: 'email', label: 'Email', sortable: true },
     { key: 'telefono', label: 'Teléfono', sortable: true },
@@ -380,29 +283,6 @@ export default function UsuariosPage() {
       )
     }
   ];
-
-  // Función para notificar a otros componentes del cambio
-  const notifyDataChange = () => {
-    if (typeof window !== 'undefined') {
-      // Disparar evento para que otros componentes se actualicen
-      const event = new Event('rentacarDataUpdate');
-      window.dispatchEvent(event);
-      
-      // También disparar el evento storage para los componentes que escuchan ese evento
-      window.dispatchEvent(new Event('storage'));
-    }
-  };
-  
-  // Función para guardar directamente en localStorage (respaldo)
-  const saveUsuariosToLocalStorage = (data) => {
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('rentacar_usuarios', JSON.stringify(data));
-      }
-    } catch (error) {
-      console.error('Error saving usuarios to localStorage:', error);
-    }
-  };
 
   return (
     <div className="container">

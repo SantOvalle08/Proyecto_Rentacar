@@ -22,6 +22,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body {
+  color-scheme: light;
+}
+
+[data-theme='dark'] body {
+  color-scheme: dark;
+}
+
 /* Layout styles */
 .container {
   width: 100%;
@@ -83,6 +91,11 @@ button,
   border: none;
 }
 
+button {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
 /* Primary Button */
 .btn-primary {
   background-color: var(--btn-primary-bg);
@@ -102,6 +115,18 @@ button,
 
 .btn-secondary:hover, .btn-secondary:focus {
   background-color: var(--btn-secondary-hover-bg);
+}
+
+.btn-outlined,
+button.outlined {
+  background-color: transparent;
+  color: var(--btn-outlined-text);
+  border: 1px solid var(--btn-outlined-border);
+}
+
+.btn-outlined:hover,
+button.outlined:hover {
+  background-color: var(--btn-outlined-hover);
 }
 
 /* Text Button */
@@ -135,6 +160,19 @@ button:disabled,
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+input,
+select,
+textarea {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-disabled);
+}
+
 .form-control:focus {
   outline: none;
   border-color: var(--primary-color);
@@ -164,6 +202,13 @@ button:disabled,
   padding: var(--card-padding);
   margin-bottom: var(--space-6);
   border: 1px solid var(--card-border);
+}
+
+section,
+article,
+aside,
+main {
+  color: var(--text-primary);
 }
 
 /* Alert/Message components */
@@ -232,6 +277,10 @@ button:disabled,
 
 .menu a.active {
   color: var(--primary-color);
+}
+
+.menu-button span {
+  background-color: var(--text-primary);
 }
 
 .menu a.button {
@@ -343,7 +392,7 @@ button:disabled,
   .menu {
     display: none;
   }
-  
+
   .mobile-menu-open .menu {
     display: flex;
     flex-direction: column;
@@ -356,4 +405,58 @@ button:disabled,
     box-shadow: var(--shadow-md);
     border-bottom: 1px solid var(--border-light);
   }
+}
+
+/* ─── Interaction feedback ─── */
+
+/* Remove default tap highlight on mobile for all interactive elements */
+a, button, .button, select, [role="button"], [role="tab"], [role="menuitem"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent accidental text selection when clicking buttons quickly */
+button, .button, [role="button"] {
+  user-select: none;
+}
+
+/* Press / active state — subtle scale-down gives tactile "click" feeling */
+button:not(:disabled):active,
+.button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale(0.96);
+  transition: transform 80ms ease, opacity 80ms ease;
+}
+
+/* Release spring — button bounces back slightly faster than it pressed */
+button:not(:disabled),
+.button:not(:disabled) {
+  transition: all var(--transition-fast), transform 120ms ease;
+}
+
+/* Link press feedback */
+a:not(.btn-primary):not(.btn-secondary):not(.btn-outlined):not(.button):active {
+  opacity: 0.65;
+  transition: opacity 60ms ease;
+}
+
+/* Nav links — slightly more visible press */
+.menu a:active {
+  opacity: 0.55;
+}
+
+/* Select inputs need pointer cursor */
+select {
+  cursor: pointer;
+}
+
+/* Focus-visible ring — keyboard navigation stays accessible */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Suppress the default browser focus ring (we have :focus-visible above) */
+:focus:not(:focus-visible) {
+  outline: none;
 }

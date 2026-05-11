@@ -42,15 +42,15 @@
 }
 
 .error {
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
+  background-color: var(--error-50);
+  border: 1px solid var(--error-200);
+  color: var(--error-700);
 }
 
 .notFound {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  color: #343a40;
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
 }
 
 .reservaDetallesContainer {
@@ -66,9 +66,10 @@
 }
 
 .infoSection {
-  background-color: white;
+  background-color: var(--card-bg);
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border: 1px solid var(--card-border);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
 }
@@ -78,7 +79,7 @@
   color: var(--color-primary);
   margin: 0 0 1.5rem 0;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .detailItem {
@@ -86,16 +87,16 @@
   justify-content: space-between;
   margin-bottom: 0.75rem;
   padding: 0.5rem 0;
-  border-bottom: 1px dashed #f0f0f0;
+  border-bottom: 1px dashed var(--border-light);
 }
 
 .detailLabel {
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .detailValue {
-  color: #333;
+  color: var(--text-primary);
   text-align: right;
 }
 
@@ -122,14 +123,14 @@
 .cambiarEstadoContainer {
   margin-top: 1.5rem;
   padding: 1rem;
-  background-color: #f8f9fa;
+  background-color: var(--surface-secondary);
   border-radius: 8px;
 }
 
 .cambiarEstadoContainer h3 {
   margin-top: 0;
   font-size: 1.2rem;
-  color: #495057;
+  color: var(--text-primary);
 }
 
 .cambiarEstadoForm {
@@ -140,15 +141,16 @@
 .estadoSelect {
   flex: 1;
   padding: 0.5rem;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--input-border);
   border-radius: 4px;
-  background-color: white;
+  background-color: var(--input-bg);
+  color: var(--input-text);
 }
 
 .cambiarButton {
   padding: 0.5rem 1rem;
-  background-color: var(--color-primary);
-  color: white;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -156,11 +158,11 @@
 }
 
 .cambiarButton:hover {
-  background-color: var(--color-primary-dark);
+  background-color: var(--btn-primary-hover);
 }
 
 .cambiarButton:disabled {
-  background-color: #ccc;
+  background-color: var(--text-disabled);
   cursor: not-allowed;
 }
 
@@ -182,7 +184,7 @@
   height: 150px;
   border-radius: 8px;
   overflow: hidden;
-  background-color: #f0f0f0;
+  background-color: var(--surface-secondary);
 }
 
 .noImage {
@@ -190,18 +192,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: var(--text-disabled);
   font-style: italic;
 }
 
 .vehiculoDetails h3 {
   margin-top: 0;
   font-size: 1.3rem;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .fechasReserva {
-  background-color: #f8f9fa;
+  background-color: var(--surface-secondary);
   padding: 1rem;
   border-radius: 8px;
   margin-top: 1rem;
@@ -217,7 +219,7 @@
 
 .documentosContainer h3 {
   font-size: 1.2rem;
-  color: #495057;
+  color: var(--text-primary);
   margin: 1.5rem 0 1rem;
 }
 
@@ -226,7 +228,7 @@
 }
 
 .documentosList {
-  background-color: #f8f9fa;
+  background-color: var(--surface-secondary);
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
@@ -237,7 +239,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .documentoItem:last-child {
@@ -246,19 +248,19 @@
 
 .documentoLabel {
   font-weight: 500;
-  color: #555;
+  color: var(--text-primary);
 }
 
 .documentoValue {
-  color: #666;
+  color: var(--text-secondary);
   font-style: italic;
   margin: 0 1rem;
 }
 
 .viewButton {
   padding: 0.4rem 0.75rem;
-  background-color: var(--color-primary);
-  color: white;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -267,11 +269,11 @@
 }
 
 .viewButton:hover {
-  background-color: var(--color-primary-dark);
+  background-color: var(--btn-primary-hover);
 }
 
 .noDocumentos {
-  color: #6c757d;
+  color: var(--text-tertiary);
   font-style: italic;
   text-align: center;
   padding: 1rem 0;

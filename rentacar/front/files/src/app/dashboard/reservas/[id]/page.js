@@ -1,15 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import apiService from '@/services/api';
 import styles from './page.module.css';
 
-export default function ReservaDetalles({ params }) {
+const normalizeEstado = (estado = '') => {
+  const map = {
+    pendiente: 'Pendiente',
+    activa: 'Confirmada',
+    confirmada: 'Confirmada',
+    completada: 'Completada',
+    cancelada: 'Cancelada'
+  };
+  return map[String(estado).toLowerCase()] || estado;
+};
+
+const estadoLabel = (estado = '') => {
+  const normalized = normalizeEstado(estado);
+  const map = {
+    Pendiente: 'Pendiente',
+    Confirmada: 'Activa',
+    Completada: 'Completada',
+    Cancelada: 'Cancelada'
+  };
+  return map[normalized] || normalized;
+};
+
+export default function ReservaDetalles() {
   const router = useRouter();
-  const { id } = params;
+  const params = useParams();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   
   const [reserva, setReserva] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +64,7 @@ export default function ReservaDetalles({ params }) {
           }
           
           setReserva(reservaData);
-          setNuevoEstado(reservaData.estado || 'pendiente');
+          setNuevoEstado(normalizeEstado(reservaData.estado || 'Pendiente'));
         } else {
           throw new Error('No se pudo cargar la información de la reserva');
         }
@@ -60,25 +83,19 @@ export default function ReservaDetalles({ params }) {
   
   // Cambiar el estado de la reserva
   const handleCambiarEstado = async () => {
-    if (!reserva || !nuevoEstado || nuevoEstado === reserva.estado) {
+    if (!reserva || !nuevoEstado || normalizeEstado(nuevoEstado) === normalizeEstado(reserva.estado)) {
       return;
     }
     
     try {
       setLoading(true);
       
-      // Preparar datos actualizados
-      const datosActualizados = {
-        ...reserva,
-        estado: nuevoEstado
-      };
-      
-      // Actualizar en la API
-      const response = await apiService.reservas.update(reserva.id, datosActualizados);
+      // Actualizar estado en la API (fuente de verdad: base de datos)
+      const response = await apiService.reservas.actualizarEstadoAdmin(reserva.id, normalizeEstado(nuevoEstado));
       
       if (response.success) {
         // Actualizar localmente
-        setReserva(datosActualizados);
+        setReserva(prev => ({ ...prev, estado: normalizeEstado(nuevoEstado) }));
         alert('Estado de la reserva actualizado correctamente');
       } else {
         throw new Error('No se pudo actualizar el estado de la reserva');
@@ -102,6 +119,39 @@ export default function ReservaDetalles({ params }) {
       hour: 'numeric',
       minute: 'numeric'
     });
+  };
+
+  const getDocumentUrl = (value) => {
+    if (!value || typeof value !== 'string') return null;
+    if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/') || value.startsWith('data:')) {
+      return value;
+    }
+    return null;
+  };
+
+  const getDocumentLabel = (value) => {
+    if (!value || typeof value !== 'string') return 'No disponible';
+    if (value.startsWith('data:')) return 'Documento adjunto';
+    return value;
+  };
+
+  const openDocument = async (value) => {
+    if (!value || typeof value !== 'string') return;
+
+    let urlToOpen = value;
+
+    if (value.startsWith('data:')) {
+      try {
+        const response = await fetch(value);
+        const blob = await response.blob();
+        urlToOpen = URL.createObjectURL(blob);
+      } catch (error) {
+        console.error('Error al preparar el documento para visualización:', error);
+        return;
+      }
+    }
+
+    window.open(urlToOpen, '_blank', 'noopener,noreferrer');
   };
   
   if (loading) {
@@ -162,14 +212,12 @@ export default function ReservaDetalles({ params }) {
           <div className={styles.detailItem}>
             <span className={styles.detailLabel}>Estado:</span>
             <span className={`${styles.detailValue} ${
-              reserva.estado === 'activa' ? styles.estadoActiva : 
-              reserva.estado === 'pendiente' ? styles.estadoPendiente :
-              reserva.estado === 'completada' ? styles.estadoCompletada :
+              normalizeEstado(reserva.estado) === 'Confirmada' ? styles.estadoActiva : 
+              normalizeEstado(reserva.estado) === 'Pendiente' ? styles.estadoPendiente :
+              normalizeEstado(reserva.estado) === 'Completada' ? styles.estadoCompletada :
               styles.estadoCancelada
             }`}>
-              {reserva.estado === 'activa' ? 'Activa' : 
-               reserva.estado === 'pendiente' ? 'Pendiente' :
-               reserva.estado === 'completada' ? 'Completada' : 'Cancelada'}
+              {estadoLabel(reserva.estado)}
             </span>
           </div>
           
@@ -195,15 +243,15 @@ export default function ReservaDetalles({ params }) {
                 value={nuevoEstado}
                 onChange={(e) => setNuevoEstado(e.target.value)}
               >
-                <option value="pendiente">Pendiente</option>
-                <option value="activa">Activa</option>
-                <option value="completada">Completada</option>
-                <option value="cancelada">Cancelada</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Confirmada">Activa</option>
+                <option value="Completada">Completada</option>
+                <option value="Cancelada">Cancelada</option>
               </select>
               <button 
                 className={styles.cambiarButton} 
                 onClick={handleCambiarEstado}
-                disabled={loading || nuevoEstado === reserva.estado}
+                disabled={loading || normalizeEstado(nuevoEstado) === normalizeEstado(reserva.estado)}
               >
                 Actualizar Estado
               </button>
@@ -271,6 +319,18 @@ export default function ReservaDetalles({ params }) {
               <span className={styles.detailLabel}>Precio Total:</span>
               <span className={styles.detailValue}>${reserva.precioTotal}</span>
             </div>
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Anticipo:</span>
+              <span className={styles.detailValue}>${Number(reserva.montoAnticipo ?? reserva.precioTotal * 0.3).toFixed(2)}</span>
+            </div>
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Saldo Pendiente:</span>
+              <span className={styles.detailValue}>${Number(reserva.saldoPendiente ?? reserva.precioTotal * 0.7).toFixed(2)}</span>
+            </div>
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Estado del Pago:</span>
+              <span className={styles.detailValue}>{reserva.estadoPago || 'Anticipo pendiente'}</span>
+            </div>
           </div>
         </div>
         
@@ -307,24 +367,48 @@ export default function ReservaDetalles({ params }) {
                 {reserva.datosPago.fotoPasaporte && (
                   <div className={styles.documentoItem}>
                     <span className={styles.documentoLabel}>Pasaporte:</span>
-                    <span className={styles.documentoValue}>{reserva.datosPago.fotoPasaporte}</span>
-                    <button className={styles.viewButton}>Ver documento</button>
+                    <span className={styles.documentoValue}>{getDocumentLabel(reserva.datosPago.fotoPasaporte)}</span>
+                    {getDocumentUrl(reserva.datosPago.fotoPasaporte) ? (
+                      <button
+                        type="button"
+                        className={styles.viewButton}
+                        onClick={() => openDocument(reserva.datosPago.fotoPasaporte)}
+                      >
+                        Ver documento
+                      </button>
+                    ) : null}
                   </div>
                 )}
                 
                 {reserva.datosPago.fotoLicencia && (
                   <div className={styles.documentoItem}>
                     <span className={styles.documentoLabel}>Licencia de Conducción:</span>
-                    <span className={styles.documentoValue}>{reserva.datosPago.fotoLicencia}</span>
-                    <button className={styles.viewButton}>Ver documento</button>
+                    <span className={styles.documentoValue}>{getDocumentLabel(reserva.datosPago.fotoLicencia)}</span>
+                    {getDocumentUrl(reserva.datosPago.fotoLicencia) ? (
+                      <button
+                        type="button"
+                        className={styles.viewButton}
+                        onClick={() => openDocument(reserva.datosPago.fotoLicencia)}
+                      >
+                        Ver documento
+                      </button>
+                    ) : null}
                   </div>
                 )}
                 
                 {reserva.metodoPago === 'transferencia' && reserva.datosPago.comprobante && (
                   <div className={styles.documentoItem}>
                     <span className={styles.documentoLabel}>Comprobante de Transferencia:</span>
-                    <span className={styles.documentoValue}>{reserva.datosPago.comprobante}</span>
-                    <button className={styles.viewButton}>Ver documento</button>
+                    <span className={styles.documentoValue}>{getDocumentLabel(reserva.datosPago.comprobante)}</span>
+                    {getDocumentUrl(reserva.datosPago.comprobante) ? (
+                      <button
+                        type="button"
+                        className={styles.viewButton}
+                        onClick={() => openDocument(reserva.datosPago.comprobante)}
+                      >
+                        Ver documento
+                      </button>
+                    ) : null}
                   </div>
                 )}
                 
@@ -334,6 +418,10 @@ export default function ReservaDetalles({ params }) {
               </div>
               
               <h3>Información de Pago</h3>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Pasarela:</span>
+                <span className={styles.detailValue}>{reserva.pasarelaPago || 'Pasarela ficticia'}</span>
+              </div>
               {reserva.metodoPago === 'tarjeta' && (
                 <>
                   <div className={styles.detailItem}>

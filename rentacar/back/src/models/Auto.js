@@ -29,7 +29,9 @@ const mongoose = require('mongoose');
  * @property {Date} updatedAt - Fecha de última actualización
  */
 
-const tiposCoche = ['Compacto', 'Sedan', 'SUV', 'Deportivo', 'Camioneta', 'Lujo'];
+const tiposCoche = ['Compacto', 'Sedan', 'SUV', 'Deportivo', 'Camioneta', 'Lujo', 'Hatchback', 'Pickup', 'Minivan'];
+const tiposCombustible = ['Gasolina', 'Diesel', 'Híbrido', 'Eléctrico'];
+const tiposTransmision = ['Manual', 'Automática'];
 const estadosVehiculo = ['disponible', 'reservado', 'alquilado', 'mantenimiento'];
 
 /**
@@ -101,10 +103,41 @@ const autoSchema = new mongoose.Schema({
   imagen: {
     type: String,
     default: 'default-car.jpg'
+  },
+  combustible: {
+    type: String,
+    enum: tiposCombustible,
+    required: true
+  },
+  transmision: {
+    type: String,
+    enum: tiposTransmision,
+    required: true
+  },
+  capacidad: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 20
+  },
+  descripcion: {
+    type: String,
+    default: ''
+  },
+  caracteristicas: {
+    type: [String],
+    default: []
+  },
+  kilometraje: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
 });
+
+autoSchema.index({ marca: 1, modelo: 1 });
+autoSchema.index({ disponible: 1 });
 
 /**
  * Retorna los detalles del vehículo en un formato estandarizado
@@ -125,7 +158,13 @@ autoSchema.methods.mostrarDetalles = function() {
     estadoVehiculo: this.estadoVehiculo,
     precioDia: this.precioDia,
     precioBase: this.precioDia,
-    imagen: this.imagen
+    imagen: this.imagen,
+    combustible: this.combustible,
+    transmision: this.transmision,
+    capacidad: this.capacidad,
+    descripcion: this.descripcion,
+    caracteristicas: this.caracteristicas,
+    kilometraje: this.kilometraje
   };
 };
 

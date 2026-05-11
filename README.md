@@ -63,6 +63,9 @@ node init-admin.js
 npm start
 ```
 
+Nota local: si inicias el backend manualmente y en tu `.env` tienes `PORT=8080`, el frontend ahora intenta automáticamente `http://localhost:5001` y `http://localhost:8080` en desarrollo.
+Si quieres comportamiento consistente con esta guía, inicia ambos servicios con `./start.ps1`, que fuerza backend en `5001` solo para entorno local.
+
 ### Configuración del Frontend
 ```bash
 cd rentacar/front/files

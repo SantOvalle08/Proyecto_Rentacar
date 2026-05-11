@@ -9,6 +9,28 @@ import FacturaView from '@/components/FacturaView';
 import apiService from '@/services/api';
 import styles from './page.module.css';
 
+const normalizeEstado = (estado = '') => {
+  const map = {
+    pendiente: 'Pendiente',
+    activa: 'Confirmada',
+    confirmada: 'Confirmada',
+    completada: 'Completada',
+    cancelada: 'Cancelada'
+  };
+  return map[String(estado).toLowerCase()] || estado;
+};
+
+const estadoLabel = (estado = '') => {
+  const normalized = normalizeEstado(estado);
+  const map = {
+    Pendiente: 'Pendiente',
+    Confirmada: 'Activa',
+    Completada: 'Completada',
+    Cancelada: 'Cancelada'
+  };
+  return map[normalized] || normalized;
+};
+
 export default function ReservasPage() {
   const router = useRouter();
   const [reservas, setReservas] = useState([]);
@@ -63,77 +85,16 @@ export default function ReservasPage() {
     try {
       setLoading(true);
       setError('');
-      
-      try {
-        const response = await apiService.reservas.getAll();
-        
-        if (response.success && response.data) {
-          setReservas(response.data);
-          return;
-        }
-      } catch (error) {
-        console.error('Error loading reservas:', error);
-        // Si hay un error, continuamos al fallback (datos mock)
+      const response = await apiService.reservas.getAll();
+      if (!response.success || !Array.isArray(response.data)) {
+        throw new Error(response.message || 'Respuesta inválida al cargar reservas');
       }
-      
-      // Fallback a datos mock si la API falla
-      console.log('Usando datos mock para reservas');
-      setReservas([
-        {
-          id: 1,
-          usuario: {
-            nombre: 'Cliente Ejemplo',
-            email: 'cliente@example.com'
-          },
-          auto: {
-            marca: 'Toyota',
-            modelo: 'Corolla',
-            matricula: 'ABC-123'
-          },
-          fechaInicio: new Date('2023-11-10'),
-          fechaFin: new Date('2023-11-15'),
-          precioTotal: 250,
-          estado: 'activa'
-        },
-        {
-          id: 2,
-          usuario: {
-            nombre: 'Ana López',
-            email: 'ana@example.com'
-          },
-          auto: {
-            marca: 'Honda',
-            modelo: 'Civic',
-            matricula: 'XYZ-789'
-          },
-          fechaInicio: new Date('2023-11-05'),
-          fechaFin: new Date('2023-11-08'),
-          precioTotal: 135,
-          estado: 'completada'
-        },
-        {
-          id: 3,
-          usuario: {
-            nombre: 'Juan Pérez',
-            email: 'juan@example.com'
-          },
-          auto: {
-            marca: 'Ford',
-            modelo: 'Explorer',
-            matricula: 'DEF-456'
-          },
-          fechaInicio: new Date('2023-11-20'),
-          fechaFin: new Date('2023-11-25'),
-          precioTotal: 350,
-          estado: 'pendiente'
-        }
-      ]);
-      
-      // No mostramos error ya que usamos datos mock
-      setError('');
+
+      setReservas(response.data);
     } catch (error) {
       console.error('Error general en loadReservas:', error);
-      setError('Error al cargar las reservas');
+      setReservas([]);
+      setError('Error al cargar las reservas desde base de datos');
     } finally {
       setLoading(false);
     }
@@ -204,7 +165,7 @@ export default function ReservasPage() {
         if (response.success) {
           // Update the reserva in the local state
           const updatedReservas = reservas.map(r => 
-            r.id === reserva.id ? { ...r, estado: 'cancelada' } : r
+            r.id === reserva.id ? { ...r, estado: 'Cancelada' } : r
           );
           setReservas(updatedReservas);
           
@@ -223,7 +184,7 @@ export default function ReservasPage() {
       
       // Fallback: update UI anyway if server failed
       const updatedReservas = reservas.map(r => 
-        r.id === reserva.id ? { ...r, estado: 'cancelada' } : r
+        r.id === reserva.id ? { ...r, estado: 'Cancelada' } : r
       );
       setReservas(updatedReservas);
       
@@ -317,14 +278,12 @@ export default function ReservasPage() {
       sortable: true,
       format: (value) => (
         <span className={
-          value === 'activa' ? styles.tagSuccess : 
-          value === 'pendiente' ? styles.tagWarning :
-          value === 'completada' ? styles.tagInfo :
+          normalizeEstado(value) === 'Confirmada' ? styles.tagSuccess : 
+          normalizeEstado(value) === 'Pendiente' ? styles.tagWarning :
+          normalizeEstado(value) === 'Completada' ? styles.tagInfo :
           styles.tagError
         }>
-          {value === 'activa' ? 'Activa' : 
-           value === 'pendiente' ? 'Pendiente' :
-           value === 'completada' ? 'Completada' : 'Cancelada'}
+          {estadoLabel(value)}
         </span>
       )
     }
@@ -356,7 +315,7 @@ export default function ReservasPage() {
         // Custom actions for reservas
         customActionButtons={(reserva) => (
           <>
-            {reserva.estado !== 'cancelada' && (
+            {normalizeEstado(reserva.estado) !== 'Cancelada' && (
               <button
                 onClick={() => setReservaFactura(reserva)}
                 className={styles.facturaButton}
@@ -366,7 +325,7 @@ export default function ReservasPage() {
                 📄
               </button>
             )}
-            {(reserva.estado === 'activa' || reserva.estado === 'pendiente') && (
+            {(normalizeEstado(reserva.estado) === 'Confirmada' || normalizeEstado(reserva.estado) === 'Pendiente') && (
               <button
                 onClick={() => handleCancelReservation(reserva)}
                 className={styles.cancelButton}

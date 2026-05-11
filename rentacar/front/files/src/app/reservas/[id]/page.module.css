@@ -42,15 +42,15 @@
 }
 
 .error {
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
+  background-color: var(--error-50);
+  border: 1px solid var(--error-200);
+  color: var(--error-700);
 }
 
 .notFound {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  color: #343a40;
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
 }
 
 .reservaDetallesContainer {
@@ -66,9 +66,10 @@
 }
 
 .infoSection {
-  background-color: white;
+  background-color: var(--card-bg);
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border: 1px solid var(--card-border);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
 }
@@ -78,7 +79,7 @@
   color: var(--color-primary);
   margin: 0 0 1.5rem 0;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .detailItem {
@@ -86,16 +87,16 @@
   justify-content: space-between;
   margin-bottom: 0.75rem;
   padding: 0.5rem 0;
-  border-bottom: 1px dashed #f0f0f0;
+  border-bottom: 1px dashed var(--border-light);
 }
 
 .detailLabel {
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .detailValue {
-  color: #333;
+  color: var(--text-primary);
   text-align: right;
 }
 
@@ -122,15 +123,15 @@
 .cancelarContainer {
   margin-top: 1.5rem;
   padding: 1rem;
-  background-color: #f8f9fa;
+  background-color: var(--surface-secondary);
   border-radius: 8px;
   text-align: center;
 }
 
 .cancelarButton {
   padding: 0.75rem 1.5rem;
-  background-color: #dc3545;
-  color: white;
+  background-color: var(--error-500);
+  color: var(--error-on);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -139,11 +140,11 @@
 }
 
 .cancelarButton:hover {
-  background-color: #c82333;
+  background-color: var(--error-600);
 }
 
 .cancelarButton:disabled {
-  background-color: #ccc;
+  background-color: var(--text-disabled);
   cursor: not-allowed;
 }
 
@@ -165,7 +166,7 @@
   height: 150px;
   border-radius: 8px;
   overflow: hidden;
-  background-color: #f0f0f0;
+  background-color: var(--surface-secondary);
 }
 
 .noImage {
@@ -173,18 +174,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: var(--text-disabled);
   font-style: italic;
 }
 
 .vehiculoDetails h3 {
   margin-top: 0;
   font-size: 1.3rem;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .fechasReserva {
-  background-color: #f8f9fa;
+  background-color: var(--surface-secondary);
   padding: 1rem;
   border-radius: 8px;
   margin-top: 1rem;
@@ -196,7 +197,7 @@
 
 .documentosContainer h3 {
   font-size: 1.2rem;
-  color: #495057;
+  color: var(--text-primary);
   margin: 1.5rem 0 1rem;
 }
 
@@ -205,7 +206,7 @@
 }
 
 .documentosList {
-  background-color: #f8f9fa;
+  background-color: var(--surface-secondary);
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
@@ -216,7 +217,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .documentoItem:last-child {
@@ -225,18 +226,37 @@
 
 .documentoLabel {
   font-weight: 500;
-  color: #555;
+  color: var(--text-primary);
 }
 
 .documentoValue {
-  color: #666;
+  color: var(--text-secondary);
   font-style: italic;
   margin: 0 1rem;
   text-align: right;
+  max-width: 60%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.documentoLink {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  transition: all 0.2s ease;
+}
+
+.documentoLink:hover {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  text-decoration: underline;
 }
 
 .noDocumentos {
-  color: #6c757d;
+  color: var(--text-tertiary);
   font-style: italic;
   text-align: center;
   padding: 1rem 0;
@@ -245,24 +265,24 @@
 
 /* Sección de factura */
 .facturaSection {
-  background: linear-gradient(135deg, var(--surface-secondary, #f8f9fa) 0%, var(--bg-white, #ffffff) 100%);
-  border: 2px solid var(--color-primary, #0066cc);
+  background: var(--surface-secondary);
+  border: 2px solid var(--color-primary);
   border-radius: 12px;
   padding: 2rem;
   margin-top: 2rem;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .facturaDescripcion {
-  color: var(--text-secondary, #6c757d);
+  color: var(--text-secondary);
   margin: 0.5rem 0 1.5rem 0;
   font-size: 1rem;
 }
 
 .btnFactura {
-  background: linear-gradient(135deg, var(--btn-primary-bg, #0066cc) 0%, #0052a3 100%);
-  color: var(--btn-primary-text, #ffffff);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   border-radius: 8px;
   padding: 1rem 2rem;
@@ -270,13 +290,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .btnFactura:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0, 102, 204, 0.3);
-  background: linear-gradient(135deg, #0052a3 0%, #003d7a 100%);
+  box-shadow: var(--shadow-md);
+  background: var(--btn-primary-hover);
 }
 
 .btnFactura:active {
