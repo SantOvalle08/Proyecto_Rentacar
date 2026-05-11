@@ -120,6 +120,7 @@ export default function PagoReservaPage() {
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const [detectedCardType, setDetectedCardType] = useState('otro');
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     try {
@@ -285,8 +286,24 @@ export default function PagoReservaPage() {
     };
   };
 
+  const isUserLoggedIn = () => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const userRaw = localStorage.getItem('user');
+      if (!userRaw) return false;
+      const user = JSON.parse(userRaw);
+      return !!user?.id;
+    } catch {
+      return false;
+    }
+  };
+
   const handleContinue = () => {
     if (!validateStepOne()) return;
+    if (!isUserLoggedIn()) {
+      setShowLoginModal(true);
+      return;
+    }
     setStep(2);
   };
 
@@ -301,24 +318,12 @@ export default function PagoReservaPage() {
       return;
     }
 
-    const userRaw = localStorage.getItem('user');
-    if (!userRaw) {
-      setError('Debes iniciar sesión para continuar con el pago.');
+    if (!isUserLoggedIn()) {
+      setShowLoginModal(true);
       return;
     }
 
-    let usuario;
-    try {
-      usuario = JSON.parse(userRaw);
-    } catch {
-      setError('La sesión del usuario no es válida.');
-      return;
-    }
-
-    if (!usuario?.id) {
-      setError('No se encontró el usuario autenticado.');
-      return;
-    }
+    const usuario = JSON.parse(localStorage.getItem('user'));
 
     const datosPago = buildDatosPago();
     const referenciaPago = `GW-${Date.now().toString(36).toUpperCase()}`;
@@ -575,6 +580,39 @@ export default function PagoReservaPage() {
           <div className={styles.inlineError}>{error}</div>
         )}
       </div>
+
+      {showLoginModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowLoginModal(false)}>
+          <div className={styles.modalCard} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalIconWrap}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <h2 className={styles.modalTitle}>Inicia sesión para continuar</h2>
+            <p className={styles.modalDesc}>
+              Necesitas una cuenta para completar tu reserva. Los datos del vehículo y las fechas quedarán guardados para cuando vuelvas.
+            </p>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setShowLoginModal(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                onClick={() => router.push('/login?returnTo=/reservas/pago')}
+              >
+                Ir a iniciar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
