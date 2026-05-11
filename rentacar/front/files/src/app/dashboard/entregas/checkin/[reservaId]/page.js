@@ -179,6 +179,8 @@ export default function CheckinPage() {
             ? `Cargos adicionales: $${res.data.totalCargosAdicionales.toLocaleString()}`
             : 'Sin cargos adicionales.'}`
         );
+        localStorage.removeItem('rentacar_autos');
+        router.refresh();
         setTimeout(() => router.push('/dashboard/entregas'), 2500);
       } else {
         setError(res.message || 'Error al registrar el check-in.');

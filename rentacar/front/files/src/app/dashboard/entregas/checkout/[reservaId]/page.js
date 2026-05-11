@@ -127,6 +127,8 @@ export default function CheckoutPage() {
       });
       if (res.success) {
         setSuccess('Check-out registrado exitosamente. El vehículo está ahora en alquiler.');
+        localStorage.removeItem('rentacar_autos');
+        router.refresh();
         setTimeout(() => router.push('/dashboard/entregas'), 2000);
       } else {
         setError(res.message || 'Error al registrar el check-out.');

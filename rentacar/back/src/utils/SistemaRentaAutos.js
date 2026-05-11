@@ -501,6 +501,7 @@ class SistemaRentaAutos {
         
         // Update auto availability
         auto.disponible = false;
+        auto.estadoVehiculo = 'reservado';
         await auto.save({ session });
         
         // Commit transaction

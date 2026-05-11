@@ -1,7 +1,5 @@
 // API Service for RentaCar app
 
-const DEV_API_CANDIDATES = ['http://localhost:5001', 'http://localhost:8080'];
-
 const normalizeBaseUrl = (baseUrl) => {
   if (!baseUrl) return '';
   return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
@@ -12,12 +10,8 @@ const getApiBaseCandidates = () => {
   if (explicitUrl) {
     return [normalizeBaseUrl(explicitUrl)];
   }
-
-  if (process.env.NODE_ENV === 'development') {
-    return DEV_API_CANDIDATES.map(normalizeBaseUrl);
-  }
-
-  // En despliegue mismo dominio/reverse-proxy.
+  // Usar URL relativa: Next.js hace proxy de /api/* al backend (next.config.mjs rewrites).
+  // Esto evita problemas de CORS y conectividad entre puertos en el browser.
   return [''];
 };
 

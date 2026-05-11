@@ -159,7 +159,7 @@
 .field input[type="text"],
 .field input[type="number"],
 .field select,
-textarea {
+.field textarea {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-light);
   border-radius: var(--border-radius-sm);
@@ -170,7 +170,7 @@ textarea {
   box-sizing: border-box;
 }
 
-textarea {
+.field textarea {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-light);

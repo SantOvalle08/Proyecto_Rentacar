@@ -432,15 +432,20 @@ export default function VehiculosPage() {
       sortable: true,
       format: (value) => `$${value}/día`
     },
-    { 
-      key: 'disponible', 
-      label: 'Disponible', 
+    {
+      key: 'estadoVehiculo',
+      label: 'Estado',
       sortable: true,
-      format: (value) => (
-        <span className={value ? styles.tagSuccess : styles.tagError}>
-          {value ? 'Disponible' : 'No disponible'}
-        </span>
-      )
+      format: (value) => {
+        const map = {
+          disponible:    { cls: styles.tagSuccess,  label: 'Disponible' },
+          reservado:     { cls: styles.tagWarning,  label: 'Reservado' },
+          alquilado:     { cls: styles.tagInfo,     label: 'Alquilado' },
+          mantenimiento: { cls: styles.tagError,    label: 'Mantenimiento' },
+        };
+        const { cls, label } = map[value] ?? { cls: styles.tagError, label: value ?? 'Desconocido' };
+        return <span className={cls}>{label}</span>;
+      }
     }
   ];
 

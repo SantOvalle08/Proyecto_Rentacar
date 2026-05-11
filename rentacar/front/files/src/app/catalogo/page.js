@@ -105,8 +105,8 @@ export default function Catalogo() {
                 try {
                   const response = await apiService.autos.getAll();
                   if (response.success && response.data && response.data.length > 0) {
-                    console.log('Catálogo actualizado desde API en segundo plano');
                     setAutos(response.data);
+                    localStorage.setItem('rentacar_autos', JSON.stringify(response.data));
                   }
                 } catch (error) {
                   console.warn('No se pudo sincronizar con API (modo offline)');

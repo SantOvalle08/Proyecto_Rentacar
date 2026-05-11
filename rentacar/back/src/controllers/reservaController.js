@@ -488,9 +488,11 @@ const reservaController = {
       if (reserva.auto) {
         if (estado === 'Cancelada' || estado === 'Completada') {
           reserva.auto.disponible = true;
+          reserva.auto.estadoVehiculo = 'disponible';
           await reserva.auto.save();
         } else if (estado === 'Pendiente' || estado === 'Confirmada') {
           reserva.auto.disponible = false;
+          reserva.auto.estadoVehiculo = 'reservado';
           await reserva.auto.save();
         }
       }

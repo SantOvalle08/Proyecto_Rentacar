@@ -111,6 +111,15 @@
   display: inline-block;
 }
 
+.tagInfo {
+  background-color: var(--primary-100);
+  color: var(--primary-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  display: inline-block;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .pageHeader {
