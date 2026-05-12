@@ -16,6 +16,9 @@
     "testMatch": [
       "**/tests/**/*.test.js"
     ],
+    "setupFiles": [
+      "./tests/setup/env.js"
+    ],
     "testTimeout": 30000,
     "reporters": [
       "default",
