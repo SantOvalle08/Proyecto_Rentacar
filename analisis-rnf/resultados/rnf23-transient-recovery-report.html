@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RNF-23 Recuperacion ante fallos transitorios</title>
+  <style>
+    body{font-family:Segoe UI,Arial,sans-serif;background:#f4f7fb;margin:0;padding:24px}
+    .card{max-width:1100px;margin:0 auto;background:#fff;border-radius:10px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+    h1{margin:0 0 10px;color:#123}
+    .meta{color:#555;margin-bottom:20px}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    .kpi{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px}
+    .kpi h3{margin:0;color:#111;font-size:22px}
+    .kpi p{margin:4px 0 0;color:#555;font-size:13px}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid #e5e7eb;text-align:left;padding:10px}
+    th{background:#f8fafc}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>RNF-23 Recuperacion ante fallos transitorios</h1>
+    <p class="meta">Operacion: GET /api/catalogo | Falla simulada: timeout controlado en primeros intentos</p>
+
+    <div class="grid">
+      <div class="kpi"><h3>100%</h3><p>Tasa de exito</p></div>
+      <div class="kpi"><h3>100%</h3><p>Tasa de recuperacion</p></div>
+      <div class="kpi"><h3>495.36ms</h3><p>Promedio total</p></div>
+      <div class="kpi"><h3>33.75ms</h3><p>Desviacion estandar</p></div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Run</th><th>Intentos</th><th>Duracion</th><th>Estado</th><th>Recuperado</th></tr>
+      </thead>
+      <tbody><tr>
+        <td>1</td>
+        <td>3</td>
+        <td>480.8ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>2</td>
+        <td>3</td>
+        <td>460.81ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>3</td>
+        <td>3</td>
+        <td>478.88ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>4</td>
+        <td>3</td>
+        <td>476.38ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>5</td>
+        <td>3</td>
+        <td>495.15ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>6</td>
+        <td>3</td>
+        <td>461.89ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>7</td>
+        <td>3</td>
+        <td>495.33ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>8</td>
+        <td>3</td>
+        <td>479.79ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>9</td>
+        <td>3</td>
+        <td>509.82ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>10</td>
+        <td>3</td>
+        <td>542.79ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>11</td>
+        <td>3</td>
+        <td>582.44ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr><tr>
+        <td>12</td>
+        <td>3</td>
+        <td>480.19ms</td>
+        <td style="color:#1b5e20">OK</td>
+        <td style="color:#1b5e20">SI</td>
+      </tr></tbody>
+    </table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,385 @@
+{
+  "generatedAt": "2026-05-12T17:44:34.407Z",
+  "scenario": {
+    "flow": "Operacion del Sistema",
+    "operation": "GET /api/catalogo",
+    "transientFailure": "Timeout simulado en primeros 2 intentos",
+    "retryPolicy": {
+      "maxRetries": 4,
+      "baseDelayMs": 120,
+      "strategy": "exponential-backoff"
+    }
+  },
+  "summary": {
+    "totalRuns": 12,
+    "successfulRuns": 12,
+    "recoveredRuns": 12,
+    "successRate": 100,
+    "recoveryRate": 100,
+    "avgDurationMs": 495.36,
+    "stdDevDurationMs": 33.75,
+    "avgAttemptsUsed": 3
+  },
+  "runs": [
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 480.8,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.11
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.1
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 109.19
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 460.81,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.05
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.11
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 98.68
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 478.88,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.04
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.1
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 99.68
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 476.38,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.05
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.14
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 95.35
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 495.15,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.06
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.11
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 114.48
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 461.89,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.06
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.09
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 99.75
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 495.33,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.04
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.11
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 114.88
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 479.79,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.06
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.14
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 98.53
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 509.82,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.04
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.08
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 123.41
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 542.79,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.04
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.08
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 173.5
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 582.44,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.04
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.07
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 207.93
+        }
+      ],
+      "responseSize": 1914
+    },
+    {
+      "success": true,
+      "recovered": true,
+      "attemptsUsed": 3,
+      "totalDurationMs": 480.19,
+      "attemptsLog": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.06
+        },
+        {
+          "attempt": 2,
+          "status": "failed",
+          "transient": true,
+          "errorCode": "ETIMEDOUT",
+          "error": "Simulated transient timeout",
+          "durationMs": 0.08
+        },
+        {
+          "attempt": 3,
+          "status": "success",
+          "durationMs": 115.72
+        }
+      ],
+      "responseSize": 1914
+    }
+  ]
+}

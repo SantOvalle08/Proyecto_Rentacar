@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-05-12T17:39:38.610Z",
+  "summary": {
+    "totalTests": 1,
+    "passedTests": 1,
+    "passRate": 100
+  },
+  "results": [
+    {
+      "flujo": "Facturacion y Gestion de Pagos",
+      "operacion": "POST /api/reservas/calcular-precio",
+      "autoId": 3,
+      "iterations": 20,
+      "thresholdMs": 500,
+      "avgMs": 363.16,
+      "minMs": 204.28,
+      "maxMs": 721.92,
+      "stdDevMs": 136.92,
+      "p95Ms": 614.03,
+      "passed": true,
+      "timestamp": "2026-05-12T17:39:38.609Z"
+    }
+  ]
+}
