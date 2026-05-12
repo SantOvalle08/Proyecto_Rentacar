@@ -70,7 +70,7 @@ jobs:
         env:
           TESTRAIL_URL: ${{ secrets.TESTRAIL_URL }}
           TESTRAIL_USER: ${{ secrets.TESTRAIL_USER }}
-          TESTRAIL_PASSWORD: ${{ secrets.TESTRAIL_PASSWORD }}
+          TESTRAIL_PASSWORD: ${{ secrets.TESTRAIL_APIKEY }}
           JEST_RESULTS_PATH: jest-results.json
           BDD_RESULTS_PATH: cucumber-results.json
           CI_SHA: ${{ github.sha }}
