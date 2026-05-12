@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node run-all-tests.js",
     "test:performance": "node performance/api-response-time.test.js && node performance/load-test.js && node performance/memory-leak.test.js",
+    "test:disponibilidad": "node performance/disponibilidad-response-time.test.js",
     "test:security": "node security/auth.test.js && node security/vulnerabilities.test.js && node security/password.test.js",
     "test:reliability": "node reliability/error-handling.test.js && node reliability/data-integrity.test.js",
     "test:compatibility": "node compatibility/rest-api.test.js",

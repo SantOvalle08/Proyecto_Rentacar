@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Performance - Disponibilidad</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-bottom: 10px; }
+        .timestamp { color: #999; font-size: 12px; margin-bottom: 20px; }
+        .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+        .summary-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+        .summary-card.success { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .summary-card.warning { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .summary-card h3 { font-size: 28px; margin-bottom: 5px; }
+        .summary-card p { font-size: 12px; opacity: 0.9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f0f0f0; padding: 12px; text-align: left; font-weight: 600; color: #333; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #fafafa; }
+        .status-pass { color: #22c55e; font-weight: bold; }
+        .status-fail { color: #ef4444; font-weight: bold; }
+        .threshold-ok { color: #666; }
+        .threshold-exceeded { color: #ef4444; font-weight: bold; }
+        .chart { margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Reporte de Performance - Verificación de Disponibilidad</h1>
+        <p class="timestamp">Generado: 12/5/2026, 12:32:48 p. m.</p>
+        
+        <div class="summary">
+            <div class="summary-card success">
+                <h3>7/7</h3>
+                <p>Tests Aprobados</p>
+            </div>
+            <div class="summary-card success">
+                <h3>100.00%</h3>
+                <p>Tasa de Aprobación</p>
+            </div>
+            <div class="summary-card">
+                <h3>795ms</h3>
+                <p>Tiempo Promedio Total</p>
+            </div>
+            <div class="summary-card">
+                <h3>184ms</h3>
+                <p>Tiempo Máximo Registrado</p>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Endpoint</th>
+                    <th>Tipo</th>
+                    <th>Tiempo Promedio</th>
+                    <th>Rango (Min-Max)</th>
+                    <th>Umbral</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                    <tr>
+                        <td><code>GET /api/catalogo</code></td>
+                        <td>Disponibilidad Global</td>
+                        <td>183.87ms</td>
+                        <td>113-404ms</td>
+                        <td><span class="threshold-ok">200ms</span></td>
+                        <td><span class="status-pass">✓ APROBADO</span></td>
+                    </tr>
+                
+                    <tr>
+                        <td><code>GET /api/catalogo</code></td>
+                        <td>Disponibilidad con Filtros</td>
+                        <td>105.10ms</td>
+                        <td>98-112ms</td>
+                        <td><span class="threshold-ok">500ms</span></td>
+                        <td><span class="status-pass">✓ APROBADO</span></td>
+                    </tr>
+                
+                    <tr>
+                        <td><code>GET /api/catalogo</code></td>
+                        <td>Disponibilidad con Filtros</td>
+                        <td>104.50ms</td>
+                        <td>97-124ms</td>
+                        <td><span class="threshold-ok">500ms</span></td>
+                        <td><span class="status-pass">✓ APROBADO</span></td>
+                    </tr>
+                
+                    <tr>
+                        <td><code>GET /api/catalogo</code></td>
+                        <td>Disponibilidad con Filtros</td>
+                        <td>103.30ms</td>
+                        <td>96-123ms</td>
+                        <td><span class="threshold-ok">500ms</span></td>
+                        <td><span class="status-pass">✓ APROBADO</span></td>
+                    </tr>
+                
+                    <tr>
+                        <td><code>GET /api/catalogo/search</code></td>
+                        <td>Búsqueda Textual</td>
+                        <td>98.60ms</td>
+                        <td>N/A</td>
+                        <td><span class="threshold-ok">500ms</span></td>
+                        <td><span class="status-pass">✓ APROBADO</span></td>
+                    </tr>
+                
+                    <tr>
+                        <td><code>GET /api/catalogo/search</code></td>
+                        <td>Búsqueda Textual</td>
+                        <td>99.00ms</td>
+                        <td>N/A</td>
+                        <td><span class="threshold-ok">500ms</span></td>
+                        <td><span class="status-pass">✓ APROBADO</span></td>
+                    </tr>
+                
+                    <tr>
+                        <td><code>GET /api/catalogo/search</code></td>
+                        <td>Búsqueda Textual</td>
+                        <td>100.60ms</td>
+                        <td>N/A</td>
+                        <td><span class="threshold-ok">500ms</span></td>
+                        <td><span class="status-pass">✓ APROBADO</span></td>
+                    </tr>
+                
+            </tbody>
+        </table>
+
+        <div class="chart">
+            <h3>📈 RNF Validados</h3>
+            <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                <li><strong>RNF-001:</strong> Tiempo de respuesta de API ≤ 200ms (consultas simples), ≤ 500ms (complejas)</li>
+                <li><strong>RNF-009:</strong> Disponibilidad de flota - verificación en tiempo real</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+            <h3 style="color: #2e7d32; margin-bottom: 10px;">✓ Conclusión</h3>
+            <p>Los tiempos de respuesta de verificación de disponibilidad ✓ cumplen con los requisitos de performance definidos en los RNF.</p>
+        </div>
+    </div>
+</body>
+</html>
+    

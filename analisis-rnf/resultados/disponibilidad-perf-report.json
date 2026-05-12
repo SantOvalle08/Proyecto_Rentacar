@@ -1,0 +1,114 @@
+{
+  "timestamp": "2026-05-12T17:32:48.500Z",
+  "summary": {
+    "totalTests": 7,
+    "passedTests": 7,
+    "passRate": "100.00"
+  },
+  "results": [
+    {
+      "endpoint": "GET /api/catalogo",
+      "tipo": "Disponibilidad Global",
+      "avgTime": "183.87",
+      "minTime": 113,
+      "maxTime": 404,
+      "stdDev": "70.48",
+      "threshold": 200,
+      "passed": true,
+      "rnf": "RNF-001 (Tiempo respuesta), RNF-009 (Disponibilidad flota)",
+      "timestamp": "2026-05-12T17:32:42.384Z",
+      "responseMetrics": {
+        "statusCodes": {
+          "200": 15
+        },
+        "autosCounts": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "endpoint": "GET /api/catalogo",
+      "tipo": "Disponibilidad con Filtros",
+      "filtros": {
+        "disponible": true
+      },
+      "avgTime": "105.10",
+      "minTime": 98,
+      "maxTime": 112,
+      "threshold": 500,
+      "passed": true,
+      "rnf": "RNF-001, RNF-009"
+    },
+    {
+      "endpoint": "GET /api/catalogo",
+      "tipo": "Disponibilidad con Filtros",
+      "filtros": {
+        "disponible": true,
+        "tipoCoche": "SUV"
+      },
+      "avgTime": "104.50",
+      "minTime": 97,
+      "maxTime": 124,
+      "threshold": 500,
+      "passed": true,
+      "rnf": "RNF-001, RNF-009"
+    },
+    {
+      "endpoint": "GET /api/catalogo",
+      "tipo": "Disponibilidad con Filtros",
+      "filtros": {
+        "disponible": true,
+        "marca": "Toyota",
+        "precioMin": 30,
+        "precioMax": 80
+      },
+      "avgTime": "103.30",
+      "minTime": 96,
+      "maxTime": 123,
+      "threshold": 500,
+      "passed": true,
+      "rnf": "RNF-001, RNF-009"
+    },
+    {
+      "endpoint": "GET /api/catalogo/search",
+      "tipo": "Búsqueda Textual",
+      "query": "Toyota",
+      "avgTime": "98.60",
+      "threshold": 500,
+      "passed": true,
+      "rnf": "RNF-001"
+    },
+    {
+      "endpoint": "GET /api/catalogo/search",
+      "tipo": "Búsqueda Textual",
+      "query": "SUV",
+      "avgTime": "99.00",
+      "threshold": 500,
+      "passed": true,
+      "rnf": "RNF-001"
+    },
+    {
+      "endpoint": "GET /api/catalogo/search",
+      "tipo": "Búsqueda Textual",
+      "query": "Gasolina",
+      "avgTime": "100.60",
+      "threshold": 500,
+      "passed": true,
+      "rnf": "RNF-001"
+    }
+  ]
+}
