@@ -2,6 +2,7 @@ import './globals.css';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import ClientInitializer from '@/components/ClientInitializer';
+import ProgressBar from '@/components/ProgressBar';
 
 export const metadata = {
   title: 'RentaCar - Renta de Autos',
@@ -13,6 +14,7 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body>
         <ClientInitializer />
+        <ProgressBar />
         <Header />
         {children}
         <footer className="footer">

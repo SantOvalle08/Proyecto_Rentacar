@@ -137,9 +137,10 @@ const entregaController = {
       await reserva.save();
 
       const auto = reserva.auto;
-      auto.disponible = false;
-      auto.estadoVehiculo = 'alquilado';
-      await auto.save();
+      await Auto.updateOne(
+        { _id: auto._id },
+        { disponible: false, estadoVehiculo: 'alquilado' }
+      );
 
       // Sync checklist to reflect delivery state
       try {
@@ -286,14 +287,12 @@ const entregaController = {
       await reserva.save();
 
       const auto = reserva.auto;
-      if (estadoFinal === 'mantenimiento') {
-        auto.disponible = false;
-        auto.estadoVehiculo = 'mantenimiento';
-      } else {
-        auto.disponible = true;
-        auto.estadoVehiculo = 'disponible';
-      }
-      await auto.save();
+      await Auto.updateOne(
+        { _id: auto._id },
+        estadoFinal === 'mantenimiento'
+          ? { disponible: false, estadoVehiculo: 'mantenimiento' }
+          : { disponible: true, estadoVehiculo: 'disponible' }
+      );
 
       // Sync checklist to reflect return state
       try {

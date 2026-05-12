@@ -67,50 +67,59 @@ describe('Control de Flota - GET /api/autos/:id', () => {
 
 describe('Control de Flota - POST /api/autos', () => {
   test('crea un auto con datos completos', async () => {
-    const res = await request(app).post('/api/autos').send({
-      marca: 'Ford',
-      modelo: 'Focus',
-      año: 2021,
-      tipoCoche: 'Compacto',
-      precioDia: 80,
-      matricula: 'XYZ-789',
-      color: 'Azul',
-      combustible: 'Gasolina',
-      transmision: 'Manual',
-      capacidad: 5
-    });
+    const res = await request(app)
+      .post('/api/autos')
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        marca: 'Ford',
+        modelo: 'Focus',
+        año: 2021,
+        tipoCoche: 'Compacto',
+        precioDia: 80,
+        matricula: 'XYZ-789',
+        color: 'Azul',
+        combustible: 'Gasolina',
+        transmision: 'Manual',
+        capacidad: 5
+      });
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveProperty('id');
   });
 
   test('rechaza auto sin marca', async () => {
-    const res = await request(app).post('/api/autos').send({
-      modelo: 'Focus',
-      año: 2021,
-      tipoCoche: 'Compacto',
-      precioDia: 80,
-      matricula: 'DEF-456',
-      combustible: 'Gasolina',
-      transmision: 'Manual',
-      capacidad: 5
-    });
+    const res = await request(app)
+      .post('/api/autos')
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        modelo: 'Focus',
+        año: 2021,
+        tipoCoche: 'Compacto',
+        precioDia: 80,
+        matricula: 'DEF-456',
+        combustible: 'Gasolina',
+        transmision: 'Manual',
+        capacidad: 5
+      });
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
   });
 
   test('rechaza tipo de vehículo inválido', async () => {
-    const res = await request(app).post('/api/autos').send({
-      marca: 'Ford',
-      modelo: 'Focus',
-      año: 2021,
-      tipoCoche: 'TipoInvalido',
-      precioDia: 80,
-      matricula: 'GHI-123',
-      combustible: 'Gasolina',
-      transmision: 'Manual',
-      capacidad: 5
-    });
+    const res = await request(app)
+      .post('/api/autos')
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        marca: 'Ford',
+        modelo: 'Focus',
+        año: 2021,
+        tipoCoche: 'TipoInvalido',
+        precioDia: 80,
+        matricula: 'GHI-123',
+        combustible: 'Gasolina',
+        transmision: 'Manual',
+        capacidad: 5
+      });
     expect([400, 500]).toContain(res.status);
     expect(res.body.success).toBe(false);
   });
@@ -119,10 +128,10 @@ describe('Control de Flota - POST /api/autos', () => {
 describe('Control de Flota - PUT /api/autos/:id', () => {
   test('actualiza datos de un auto existente', async () => {
     const auto = await crearAuto({ idAuto: 20 });
-    const res = await request(app).put(`/api/autos/${auto._id}`).send({
-      precioDia: 150,
-      color: 'Negro'
-    });
+    const res = await request(app)
+      .put(`/api/autos/${auto._id}`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({ precioDia: 150, color: 'Negro' });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.precioDia).toBe(150);
@@ -130,7 +139,10 @@ describe('Control de Flota - PUT /api/autos/:id', () => {
 
   test('retorna 404 al actualizar auto inexistente (ObjectId válido)', async () => {
     const fakeId = new mongoose.Types.ObjectId();
-    const res = await request(app).put(`/api/autos/${fakeId}`).send({ precioDia: 150 });
+    const res = await request(app)
+      .put(`/api/autos/${fakeId}`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({ precioDia: 150 });
     expect(res.status).toBe(404);
   });
 });
@@ -138,14 +150,18 @@ describe('Control de Flota - PUT /api/autos/:id', () => {
 describe('Control de Flota - DELETE /api/autos/:id', () => {
   test('elimina un auto existente', async () => {
     const auto = await crearAuto({ idAuto: 30 });
-    const res = await request(app).delete(`/api/autos/${auto._id}`);
+    const res = await request(app)
+      .delete(`/api/autos/${auto._id}`)
+      .set('Authorization', `Bearer ${tokenAdmin}`);
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
   });
 
   test('retorna 404 al eliminar auto inexistente (ObjectId válido)', async () => {
     const fakeId = new mongoose.Types.ObjectId();
-    const res = await request(app).delete(`/api/autos/${fakeId}`);
+    const res = await request(app)
+      .delete(`/api/autos/${fakeId}`)
+      .set('Authorization', `Bearer ${tokenAdmin}`);
     expect(res.status).toBe(404);
   });
 });

@@ -51,7 +51,7 @@
 
 .checklistButton {
   background-color: var(--success-600);
-  color: white;
+  color: var(--success-on);
   border: none;
   padding: var(--space-2) var(--space-4);
   border-radius: var(--border-radius-md);
@@ -68,7 +68,7 @@
 .checklistButton:hover {
   background-color: var(--success-700);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .checklistButton:active {
@@ -105,6 +105,15 @@
 .tagWarning {
   background-color: var(--warning-100);
   color: var(--warning-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  display: inline-block;
+}
+
+.tagInfo {
+  background-color: var(--primary-100);
+  color: var(--primary-700);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);

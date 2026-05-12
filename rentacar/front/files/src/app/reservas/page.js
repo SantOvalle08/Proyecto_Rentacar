@@ -16,6 +16,34 @@ export default function Reservas() {
   const [error, setError] = useState('');
   const [reservaFactura, setReservaFactura] = useState(null);
 
+  const getUserId = (userData) => {
+    if (!userData) return null;
+    return userData.id || userData._id || userData.usuarioId || null;
+  };
+
+  const getReservaUsuarioId = (reservaData) => {
+    if (!reservaData) return null;
+    if (reservaData.usuarioId) return reservaData.usuarioId;
+
+    if (typeof reservaData.usuario === 'string' || typeof reservaData.usuario === 'number') {
+      return reservaData.usuario;
+    }
+
+    return reservaData.usuario?.id || reservaData.usuario?._id || null;
+  };
+
+  const normalizeEstado = (estado = '') => {
+    const map = {
+      pendiente: 'pendiente',
+      activa: 'activa',
+      confirmada: 'activa',
+      completada: 'completada',
+      cancelada: 'cancelada'
+    };
+
+    return map[String(estado).toLowerCase()] || String(estado).toLowerCase();
+  };
+
   useEffect(() => {
     // Check if localStorage is available
     if (typeof window === 'undefined') {
@@ -33,10 +61,16 @@ export default function Reservas() {
       
       try {
         const parsedUser = JSON.parse(userData);
+        const currentUserId = getUserId(parsedUser);
+
+        if (!currentUserId) {
+          throw new Error('Usuario sin identificador válido');
+        }
+
         setUser(parsedUser);
         
         // Cargar las reservas del usuario
-        loadUserReservas(parsedUser.id);
+        loadUserReservas(currentUserId);
       } catch (error) {
         console.error('Error parsing user data:', error);
         // Clear invalid data
@@ -62,7 +96,10 @@ export default function Reservas() {
         const response = await apiService.reservas.getUserReservas(userId);
         
         if (response.success && response.data) {
-          setReservas(response.data);
+          setReservas(response.data.map(reserva => ({
+            ...reserva,
+            estado: normalizeEstado(reserva.estado)
+          })));
           setLoading(false);
           return;
         }
@@ -76,10 +113,16 @@ export default function Reservas() {
         if (localData) {
           const allReservas = JSON.parse(localData);
           // Filtrar solo las reservas del usuario actual
-          const userReservas = allReservas.filter(r => r.usuarioId == userId || (r.usuario && r.usuario.id == userId));
+          const userReservas = allReservas.filter((r) => {
+            const reservaUsuarioId = getReservaUsuarioId(r);
+            return reservaUsuarioId != null && String(reservaUsuarioId) === String(userId);
+          });
           
           if (userReservas.length > 0) {
-            setReservas(userReservas);
+            setReservas(userReservas.map(reserva => ({
+              ...reserva,
+              estado: normalizeEstado(reserva.estado)
+            })));
             setLoading(false);
             return;
           }
@@ -110,6 +153,11 @@ export default function Reservas() {
             r.id === reservaId ? { ...r, estado: 'cancelada' } : r
           )
         );
+
+        const currentUserId = getUserId(user);
+        if (currentUserId) {
+          await loadUserReservas(currentUserId);
+        }
       } else {
         throw new Error('No se pudo cancelar la reserva');
       }
@@ -196,13 +244,30 @@ export default function Reservas() {
                     <span className={styles.label}>Precio Total:</span>
                     <span className={styles.price}>${reserva.precioTotal}</span>
                   </div>
+
+                  <div className={styles.priceInfo}>
+                    <span className={styles.label}>Anticipo:</span>
+                    <span className={styles.price}>${Number(reserva.montoAnticipo ?? reserva.precioTotal * 0.3).toFixed(2)}</span>
+                  </div>
+
+                  <div className={styles.priceInfo}>
+                    <span className={styles.label}>Saldo pendiente:</span>
+                    <span className={styles.price}>${Number(reserva.saldoPendiente ?? reserva.precioTotal * 0.7).toFixed(2)}</span>
+                  </div>
+
+                  <div className={styles.status}>
+                    <span className={styles.label}>Pago:</span>
+                    <span className={`${styles.statusBadge} ${styles.pendiente}`}>
+                      {reserva.estadoPago || 'Anticipo pendiente'}
+                    </span>
+                  </div>
                   
                   <div className={styles.status}>
                     <span className={styles.label}>Estado:</span>
-                    <span className={`${styles.statusBadge} ${styles[reserva.estado]}`}>
-                      {reserva.estado === 'activa' ? 'Activa' : 
-                       reserva.estado === 'completada' ? 'Completada' : 
-                       reserva.estado === 'cancelada' ? 'Cancelada' : 'Pendiente'}
+                    <span className={`${styles.statusBadge} ${styles[normalizeEstado(reserva.estado)]}`}>
+                      {normalizeEstado(reserva.estado) === 'activa' ? 'Activa' : 
+                       normalizeEstado(reserva.estado) === 'completada' ? 'Completada' : 
+                       normalizeEstado(reserva.estado) === 'cancelada' ? 'Cancelada' : 'Pendiente'}
                     </span>
                   </div>
                 </div>
@@ -212,7 +277,7 @@ export default function Reservas() {
                     Ver Detalles
                   </Link>
                   
-                  {reserva.estado !== 'cancelada' && (
+                  {normalizeEstado(reserva.estado) !== 'cancelada' && (
                     <button 
                       className={styles.facturaButton}
                       onClick={() => setReservaFactura(reserva)}
@@ -222,7 +287,7 @@ export default function Reservas() {
                     </button>
                   )}
                   
-                  {(reserva.estado === 'activa' || reserva.estado === 'pendiente') && (
+                  {(normalizeEstado(reserva.estado) === 'activa' || normalizeEstado(reserva.estado) === 'pendiente') && (
                     <button 
                       className={styles.cancelButton}
                       onClick={() => handleCancelReservation(reserva.id)}

@@ -3,8 +3,15 @@
  * Ejecutar con: node init-admin.js
  */
 
+const path = require('path');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 const Usuario = require('./src/models/usuario');
+
+dotenv.config({
+  path: path.join(__dirname, '.env'),
+  override: true
+});
 
 const ADMIN_CREDENTIALS = {
   email: 'admin@rentacar.com',
@@ -65,6 +72,12 @@ async function initAdmin() {
 
   } catch (error) {
     console.error('✗ Error al inicializar administrador:', error);
+
+    if (error.code === 8000 || error.codeName === 'AtlasError') {
+      console.error('MongoDB Atlas rechazo la autenticacion. Verifica el usuario y la contraseña configurados en MONGODB_URI.');
+      console.error('Tambien confirma que el usuario de base de datos exista en Atlas y tenga permisos sobre el cluster.');
+    }
+
     process.exit(1);
   } finally {
     await mongoose.connection.close();

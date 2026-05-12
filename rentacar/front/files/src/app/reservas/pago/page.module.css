@@ -1,0 +1,411 @@
+.shell {
+  position: relative;
+  min-height: 100vh;
+  padding: 32px 16px 64px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(255, 122, 24, 0.14), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(0, 113, 188, 0.14), transparent 30%),
+    linear-gradient(180deg, #f6f8fb 0%, #eef2f7 100%);
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(14, 27, 45, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(14, 27, 45, 0.03) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.65), transparent 90%);
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.heroCard,
+.summaryCard,
+.gatewayCard,
+.loadingCard,
+.errorCard,
+.successCard {
+  border: 1px solid rgba(14, 27, 45, 0.08);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 20px 60px rgba(20, 29, 43, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.heroCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.kicker,
+.sectionLabel,
+.summaryLabel,
+.stepIntro {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: #5d6878;
+}
+
+.heroCard h1,
+.errorCard h1,
+.successCard h1,
+.stepBody h2 {
+  margin: 8px 0 12px;
+  color: #0f1f33;
+}
+
+.heroText,
+.successText,
+.noticeBox p,
+.stepIntro {
+  color: #4c596d;
+  line-height: 1.6;
+}
+
+.heroMeta {
+  display: grid;
+  gap: 14px;
+  min-width: 240px;
+  align-content: start;
+}
+
+.heroMeta > div,
+.vehicleCard,
+.noticeBox,
+.verificationList {
+  border-radius: 18px;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(8, 18, 34, 0.02), rgba(8, 18, 34, 0.04));
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.summaryCard,
+.gatewayCard {
+  padding: 24px;
+}
+
+.summaryHeader,
+.actionsRow,
+.successActions,
+.errorActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.methodChip,
+.successBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #0f1f33;
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+.vehicleCard {
+  margin: 18px 0;
+}
+
+.vehicleTitle {
+  font-weight: 700;
+  color: #0f1f33;
+  font-size: 1.15rem;
+}
+
+.vehicleSubtitle {
+  margin-top: 4px;
+  color: #607085;
+}
+
+.summaryList {
+  display: grid;
+  gap: 12px;
+}
+
+.summaryRow,
+.summaryRowHighlight {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(247, 249, 252, 0.9);
+}
+
+.summaryRowHighlight {
+  border: 1px solid rgba(255, 122, 24, 0.22);
+  background: rgba(255, 246, 237, 0.95);
+}
+
+.summaryRow strong,
+.summaryRowHighlight strong,
+.heroMeta strong {
+  color: #0f1f33;
+}
+
+.noticeBox {
+  margin-top: 18px;
+  border-left: 4px solid #ff7a18;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.step {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(243, 246, 250, 0.9);
+  color: #6a7482;
+}
+
+.stepActive {
+  background: linear-gradient(135deg, #0f1f33, #164166);
+  color: #fff;
+}
+
+.stepNumber {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 700;
+}
+
+.stepLabel {
+  font-weight: 600;
+}
+
+.stepBody h2 {
+  margin-top: 0;
+}
+
+.cardTypeChip {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #e8f0fe;
+  color: #1a56db;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+}
+
+.fieldsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.fieldGroup {
+  display: grid;
+  gap: 8px;
+  color: #0f1f33;
+}
+
+.fieldGroup span {
+  font-weight: 600;
+}
+
+.fieldGroup input {
+  width: 100%;
+  border: 1px solid rgba(14, 27, 45, 0.16);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #fff;
+  color: #0f1f33;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fieldGroup input:focus {
+  border-color: #0f1f33;
+  box-shadow: 0 0 0 4px rgba(15, 31, 51, 0.08);
+}
+
+.fieldGroup small,
+.inlineError {
+  color: #b42318;
+  font-size: 0.85rem;
+}
+
+.inputError {
+  border-color: #b42318 !important;
+}
+
+.verificationList {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0;
+  color: #0f1f33;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: none;
+  text-decoration: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #0f1f33, #164166);
+  color: #fff;
+}
+
+.secondaryButton {
+  background: #eef2f7;
+  color: #0f1f33;
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loadingCard,
+.errorCard,
+.successCard {
+  padding: 32px;
+  text-align: center;
+}
+
+.successGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+  text-align: left;
+}
+
+.successGrid > div {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(15, 31, 51, 0.04);
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(8, 18, 34, 0.55);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.modalCard {
+  background: #fff;
+  border-radius: 24px;
+  padding: 36px 32px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 32px 80px rgba(8, 18, 34, 0.22);
+  text-align: center;
+  animation: modalIn 0.2s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modalIconWrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0f1f33, #164166);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 20px;
+}
+
+.modalTitle {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  color: #0f1f33;
+}
+
+.modalDesc {
+  color: #4c596d;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 960px) {
+  .heroCard,
+  .contentGrid {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .fieldsGrid,
+  .successGrid,
+  .stepper {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding: 20px 12px 48px;
+  }
+
+  .summaryCard,
+  .gatewayCard,
+  .heroCard {
+    padding: 18px;
+  }
+
+  .summaryRow,
+  .summaryRowHighlight,
+  .successGrid > div {
+    padding: 12px;
+  }
+}

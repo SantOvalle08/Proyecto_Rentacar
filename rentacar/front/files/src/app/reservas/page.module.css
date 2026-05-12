@@ -41,8 +41,8 @@
 .primaryButton {
   display: inline-block;
   padding: var(--button-padding-y) var(--button-padding-x);
-  background-color: var(--primary-color);
-  color: white;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   text-decoration: none;
   border-radius: var(--button-border-radius);
   font-weight: var(--font-weight-medium);
@@ -50,7 +50,7 @@
 }
 
 .primaryButton:hover {
-  background-color: var(--primary-color-dark);
+  background-color: var(--btn-primary-hover);
   text-decoration: none;
 }
 
@@ -63,10 +63,11 @@
 .reservaCard {
   display: flex;
   flex-direction: column;
-  background-color: white;
+  background-color: var(--card-bg);
   border-radius: var(--card-border-radius);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  border: 1px solid var(--card-border);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -187,20 +188,21 @@
 }
 
 .facturaButton {
-  background: linear-gradient(135deg, var(--btn-primary-bg, #0066cc) 0%, #0052a3 100%);
-  color: white;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 102, 204, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .facturaButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+  box-shadow: var(--shadow-md);
+  background-color: var(--btn-primary-hover);
 }
 
 .cancelButton {
-  background-color: white;
+  background-color: var(--surface-bg);
   color: var(--error-600);
   border: 1px solid var(--error-200);
   cursor: pointer;

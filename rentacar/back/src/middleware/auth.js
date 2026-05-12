@@ -44,8 +44,8 @@ const verifyToken = async (req, res, next) => {
       });
     }
     
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secretkey');
+    // Verify token. JWT_SECRET is guaranteed by env.js validation at startup.
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Check if user exists
     const user = await Usuario.findById(decoded.id);

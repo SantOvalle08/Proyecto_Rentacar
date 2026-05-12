@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
 import apiService from '@/services/api';
 
-export default function Login() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   const [formData, setFormData] = useState({
     email: '',
     contraseña: ''
@@ -50,7 +52,9 @@ export default function Login() {
       window.dispatchEvent(new Event('storage'));
       
       // Redirect to appropriate page
-      if (userData && userData.rol === 'admin') {
+      if (returnTo && returnTo.startsWith('/')) {
+        router.push(returnTo);
+      } else if (userData && userData.rol === 'admin') {
         router.push('/dashboard');
       } else {
         router.push('/');
@@ -118,4 +122,12 @@ export default function Login() {
       </div>
     </div>
   );
-} 
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<div className="container">Cargando...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}

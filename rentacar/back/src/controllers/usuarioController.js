@@ -3,8 +3,67 @@
  * @description Controlador para operaciones relacionadas con usuarios
  */
 
+const mongoose = require('mongoose');
 const sistemaRentaAutos = require('../utils/SistemaRentaAutos');
 const Usuario = require('../models/usuario');
+
+const sanitizeAuthPayload = (payload = {}) => {
+  const sanitized = { ...payload };
+
+  if (Object.prototype.hasOwnProperty.call(sanitized, 'contraseña')) {
+    sanitized.contraseña = '***';
+  }
+
+  if (Object.prototype.hasOwnProperty.call(sanitized, 'password')) {
+    sanitized.password = '***';
+  }
+
+  return sanitized;
+};
+
+const buildUserLookupQuery = (identifier) => {
+  const normalizedIdentifier = String(identifier ?? '').trim();
+  const queryParts = [];
+
+  if (!normalizedIdentifier) {
+    return null;
+  }
+
+  if (mongoose.Types.ObjectId.isValid(normalizedIdentifier)) {
+    queryParts.push({ _id: normalizedIdentifier });
+  }
+
+  const numericIdentifier = Number(normalizedIdentifier);
+  if (Number.isInteger(numericIdentifier) && numericIdentifier > 0) {
+    queryParts.push({ idUser: numericIdentifier });
+  }
+
+  if (queryParts.length === 0) {
+    queryParts.push({ _id: normalizedIdentifier });
+  }
+
+  return queryParts.length === 1 ? queryParts[0] : { $or: queryParts };
+};
+
+const findUsuarioByIdentifier = async (identifier) => {
+  const query = buildUserLookupQuery(identifier);
+  if (!query) return null;
+
+  return Usuario.findOne(query);
+};
+
+const canManageUser = (reqUser, identifier) => {
+  if (!reqUser) return false;
+
+  if (String(reqUser.rol || '').toLowerCase() === 'admin') {
+    return true;
+  }
+
+  const normalizedIdentifier = String(identifier ?? '').trim();
+  return [reqUser.id, reqUser.idUser]
+    .filter((value) => value != null)
+    .some((value) => String(value) === normalizedIdentifier);
+};
 
 /**
  * @typedef {Object} UsuarioController
@@ -40,7 +99,7 @@ const usuarioController = {
     try {
       console.log('============================================');
       console.log('SOLICITUD DE REGISTRO RECIBIDA');
-      console.log('Body:', req.body);
+      console.log('Body:', sanitizeAuthPayload(req.body));
       console.log('Headers:', req.headers);
       console.log('============================================');
       
@@ -56,17 +115,23 @@ const usuarioController = {
       
       // Validate required fields
       if (!nombre || !email || !contraseña) {
-        console.log('Campos requeridos faltantes:', { nombre, email, contraseña });
+        console.log('Campos requeridos faltantes:', {
+          nombre: !!nombre,
+          email: !!email,
+          contraseña: !!contraseña
+        });
         return res.status(400).json({
           success: false,
           message: 'Nombre, email y contraseña son campos requeridos'
         });
       }
+
+      const normalizedEmail = email.toLowerCase().trim();
       
       // Check if user already exists
-      const existingUser = await Usuario.findOne({ email });
+      const existingUser = await Usuario.findOne({ email: normalizedEmail });
       if (existingUser) {
-        console.log('Email ya registrado:', email);
+        console.log('Email ya registrado:', normalizedEmail);
         return res.status(400).json({
           success: false,
           message: 'El correo electrónico ya está registrado'
@@ -79,7 +144,7 @@ const usuarioController = {
       // Register user using Singleton instance
       const result = await sistemaRentaAutos.registrarUsuario({
         nombre: nombreCompleto,
-        email,
+        email: normalizedEmail,
         telefono: telefono || '',
         contraseña,
         // Add additional fields to user metadata if needed
@@ -90,7 +155,7 @@ const usuarioController = {
       });
       
       if (result) {
-        console.log('Usuario registrado con éxito:', email);
+        console.log('Usuario registrado con éxito:', normalizedEmail);
         return res.status(201).json({
           success: true,
           message: 'Usuario registrado con éxito'
@@ -125,7 +190,7 @@ const usuarioController = {
     try {
       console.log('============================================');
       console.log('SOLICITUD DE LOGIN RECIBIDA');
-      console.log('Body:', req.body);
+      console.log('Body:', sanitizeAuthPayload(req.body));
       console.log('Headers:', req.headers);
       console.log('============================================');
       
@@ -188,10 +253,13 @@ const usuarioController = {
   async getAllUsers(req, res) {
     try {
       const users = await Usuario.find({}, { contraseña: 0 });
-      
+
+      // Normalizar TODOS los usuarios al mismo shape canónico.
+      // Esto garantiza que el dashboard y cualquier otro consumidor
+      // reciban exactamente los mismos campos que devuelve el login.
       res.status(200).json({
         success: true,
-        data: users
+        data: users.map((user) => user.toAuthJSON())
       });
     } catch (error) {
       console.error('Error en getAllUsers:', error);
@@ -214,18 +282,26 @@ const usuarioController = {
     try {
       const { id } = req.params;
       
-      const user = await Usuario.findOne({ idUser: id }, { contraseña: 0 });
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que el usuario solicitado sea el mismo o admin
+      if (!canManageUser(req.user, id)) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para ver datos de otro usuario'
+        });
+      }
       
+      const user = await findUsuarioByIdentifier(id);
+
       if (!user) {
         return res.status(404).json({
           success: false,
           message: 'Usuario no encontrado'
         });
       }
-      
+
       res.status(200).json({
         success: true,
-        data: user
+        data: user.toAuthJSON()
       });
     } catch (error) {
       console.error('Error en getUserById:', error);
@@ -251,14 +327,17 @@ const usuarioController = {
   async updateUser(req, res) {
     try {
       const { id } = req.params;
-      const { nombre, email, telefono } = req.body;
+      const { nombre, email, telefono, tipoDocumento, numeroDocumento, rol, apellido } = req.body;
       
-      // Find and update user
-      const user = await Usuario.findOneAndUpdate(
-        { idUser: id },
-        { nombre, email, telefono },
-        { new: true, runValidators: true }
-      );
+      // VALIDACIÓN DE AUTORIZACIÓN: Verificar que el usuario solicitado sea el mismo o admin
+      if (!canManageUser(req.user, id)) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para actualizar datos de otro usuario'
+        });
+      }
+      
+      const user = await findUsuarioByIdentifier(id);
       
       if (!user) {
         return res.status(404).json({
@@ -266,16 +345,21 @@ const usuarioController = {
           message: 'Usuario no encontrado'
         });
       }
-      
+
+      if (nombre !== undefined) user.nombre = nombre;
+      if (email !== undefined) user.email = String(email).toLowerCase();
+      if (telefono !== undefined) user.telefono = telefono;
+      if (tipoDocumento !== undefined) user.tipoDocumento = tipoDocumento;
+      if (numeroDocumento !== undefined) user.numeroDocumento = numeroDocumento;
+      if (apellido !== undefined) user.apellido = apellido;
+      if (rol !== undefined && req.user.rol === 'admin') user.rol = rol;
+
+      await user.save();
+
       res.status(200).json({
         success: true,
         message: 'Usuario actualizado con éxito',
-        data: {
-          idUser: user.idUser,
-          nombre: user.nombre,
-          email: user.email,
-          telefono: user.telefono
-        }
+        data: user.toAuthJSON()
       });
     } catch (error) {
       console.error('Error en updateUser:', error);
@@ -298,7 +382,14 @@ const usuarioController = {
     try {
       const { id } = req.params;
       
-      const user = await Usuario.findOneAndDelete({ idUser: id });
+      if (!canManageUser(req.user, id)) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para eliminar este usuario'
+        });
+      }
+
+      const user = await findUsuarioByIdentifier(id);
       
       if (!user) {
         return res.status(404).json({
@@ -306,6 +397,8 @@ const usuarioController = {
           message: 'Usuario no encontrado'
         });
       }
+
+      await Usuario.deleteOne({ _id: user._id });
       
       res.status(200).json({
         success: true,
@@ -337,65 +430,78 @@ const usuarioController = {
       console.log('============================================');
       console.log('SOLICITUD DE ACTUALIZACIÓN DE PERFIL');
       console.log('Body:', req.body);
-      console.log('Headers:', req.headers);
       console.log('============================================');
-      
+
       const { id } = req.params;
-      const { nombre, email, telefono } = req.body;
-      
-      // Validate required fields
+      const {
+        nombre,
+        email,
+        telefono,
+        apellido,
+        tipoDocumento,
+        numeroDocumento
+      } = req.body;
+
+      // Reuso de la regla central de autorización: dueño de la cuenta o admin.
+      // canManageUser ya soporta tanto _id como idUser, así que el perfil se
+      // puede editar pasando cualquiera de los dos identificadores.
+      if (!canManageUser(req.user, id)) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para actualizar el perfil de otro usuario'
+        });
+      }
+
+      // Validar campos mínimos del perfil.
       if (!nombre || !email) {
         return res.status(400).json({
           success: false,
           message: 'Nombre y email son campos requeridos'
         });
       }
-      
-      // Check if email is already taken by another user
-      const existingUser = await Usuario.findOne({ 
-        email: email.toLowerCase(),
-        _id: { $ne: id } // Exclude current user
-      });
-      
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'El correo electrónico ya está en uso por otro usuario'
-        });
-      }
-      
-      // Find and update user
-      const user = await Usuario.findByIdAndUpdate(
-        id,
-        { 
-          nombre,
-          email: email.toLowerCase(),
-          telefono: telefono || ''
-        },
-        { new: true, runValidators: true }
-      );
-      
+
+      // Buscar el usuario aceptando _id de Mongo o idUser numérico.
+      const user = await findUsuarioByIdentifier(id);
       if (!user) {
         return res.status(404).json({
           success: false,
           message: 'Usuario no encontrado'
         });
       }
-      
-      // Return updated user data (excluding password)
-      const userData = {
-        id: user._id,
-        idUser: user.idUser,
-        nombre: user.nombre,
-        email: user.email,
-        telefono: user.telefono,
-        rol: user.rol
-      };
-      
+
+      const normalizedEmail = String(email).toLowerCase().trim();
+
+      // Verificar que el email nuevo no esté tomado por OTRO usuario.
+      // Importante: comparar contra el _id real, no contra el identificador
+      // que vino por la URL (que podría ser idUser).
+      if (normalizedEmail !== user.email) {
+        const existingUser = await Usuario.findOne({
+          email: normalizedEmail,
+          _id: { $ne: user._id }
+        });
+
+        if (existingUser) {
+          return res.status(400).json({
+            success: false,
+            message: 'El correo electrónico ya está en uso por otro usuario'
+          });
+        }
+      }
+
+      // Actualizar solo los campos que vinieron en el body.
+      user.nombre = nombre;
+      user.email = normalizedEmail;
+      if (telefono !== undefined) user.telefono = telefono;
+      if (apellido !== undefined) user.apellido = apellido;
+      if (tipoDocumento !== undefined) user.tipoDocumento = tipoDocumento;
+      if (numeroDocumento !== undefined) user.numeroDocumento = numeroDocumento;
+
+      await user.save();
+
       res.status(200).json({
         success: true,
         message: 'Perfil actualizado con éxito',
-        data: userData
+        data: user.toAuthJSON()
       });
     } catch (error) {
       console.error('Error en updateProfile:', error);

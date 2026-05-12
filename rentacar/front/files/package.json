@@ -12,6 +12,7 @@
     "axios": "^1.4.0",
     "formik": "^2.4.3",
     "next": "15.3.2",
+    "next-nprogress-bar": "^2.4.7",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-datepicker": "^7.5.0",

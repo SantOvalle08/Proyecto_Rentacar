@@ -8,6 +8,7 @@ import apiService from '@/services/api';
 
 export default function Register() {
   const router = useRouter();
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -34,7 +35,7 @@ export default function Register() {
   // Function to check if server is running
   const checkServerStatus = async () => {
     try {
-      const response = await fetch('http://localhost:5001', {
+      const response = await fetch(`${API_BASE_URL}/`, {
         method: 'GET',
         mode: 'cors',
         cache: 'no-cache',
@@ -51,7 +52,7 @@ export default function Register() {
     } catch (error) {
       console.error('Error al verificar estado del servidor:', error);
       setServerStatus('offline');
-      setServerError('Error al conectar con el servidor. Verifique que esté en ejecución en http://localhost:5001');
+      setServerError('Error al conectar con el servidor. Verifique que el backend esté desplegado y accesible.');
     }
   };
 
@@ -124,7 +125,7 @@ export default function Register() {
       console.log('Probando conexión CORS...');
       
       // Usar fetch directamente con mode: 'cors' explícito
-      const response = await fetch('http://localhost:5001/api/test-cors', {
+      const response = await fetch(`${API_BASE_URL}/api/test-cors`, {
         method: 'GET',
         mode: 'cors',
         headers: {
@@ -165,7 +166,7 @@ export default function Register() {
       console.log('Probando conexión API básica...');
       
       // Usar fetch directo con configuración más permisiva
-      const response = await fetch('http://localhost:5001/api/test', {
+      const response = await fetch(`${API_BASE_URL}/api/test`, {
         method: 'GET',
         mode: 'cors',
         cache: 'no-cache',
@@ -210,7 +211,7 @@ export default function Register() {
       console.log('Enviando datos de registro:', userData);
       
       // Usar fetch con configuración explícita para CORS
-      const response = await fetch('http://localhost:5001/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         mode: 'cors',
         cache: 'no-cache',
@@ -346,7 +347,7 @@ export default function Register() {
           <div className={styles.serverOfflineMessage}>
             <p>El servidor parece estar desconectado. Por favor:</p>
             <ol>
-              <li>Verifique que el servidor esté ejecutándose en <code>http://localhost:5001</code></li>
+              <li>Verifique que el backend de AWS esté en estado Running y accesible</li>
               <li>Intente reiniciar el servidor</li>
               <li>Haga clic en &ldquo;Verificar conexión&rdquo; después de reiniciar el servidor</li>
             </ol>

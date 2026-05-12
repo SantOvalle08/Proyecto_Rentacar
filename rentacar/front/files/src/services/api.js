@@ -1,128 +1,148 @@
 // API Service for RentaCar app
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+const normalizeBaseUrl = (baseUrl) => {
+  if (!baseUrl) return '';
+  return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+};
+
+const getApiBaseCandidates = () => {
+  const explicitUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (explicitUrl) {
+    return [normalizeBaseUrl(explicitUrl)];
+  }
+  // Usar URL relativa: Next.js hace proxy de /api/* al backend (next.config.mjs rewrites).
+  // Esto evita problemas de CORS y conectividad entre puertos en el browser.
+  return [''];
+};
+
+const API_BASE_CANDIDATES = getApiBaseCandidates();
+let preferredApiBaseUrl = null;
+
+const getOrderedApiCandidates = () => {
+  if (!preferredApiBaseUrl || !API_BASE_CANDIDATES.includes(preferredApiBaseUrl)) {
+    return API_BASE_CANDIDATES;
+  }
+
+  return [
+    preferredApiBaseUrl,
+    ...API_BASE_CANDIDATES.filter((candidate) => candidate !== preferredApiBaseUrl)
+  ];
+};
 
 // Helper function for fetch requests
 const fetchWithAuth = async (url, options = {}) => {
   try {
-    console.log(`Realizando solicitud a: ${API_BASE_URL}${url}`, {
-      method: options.method || 'GET',
-      body: options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : undefined
-    });
-    
+    const requestBody = options.body
+      ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body))
+      : undefined;
+
     // Get the token from localStorage
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    
+
     // Set default headers
     const headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       ...options.headers
     };
-    
+
     // Add auth token if it exists
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
-    // Log detallado para depuración
-    console.log('Request completo:', {
-      url: `${API_BASE_URL}${url}`,
-      method: options.method || 'GET',
-      headers,
-      body: options.body
-    });
-    
-    // Añadir un timeout para la solicitud (reducido para detección rápida de backend offline)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 500); // 500ms - detección rápida
-    
-    // Make the request with CORS options
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      ...options,
-      headers,
-      mode: 'cors',
-      cache: 'no-cache',
-      credentials: 'same-origin',
-      signal: controller.signal
-    });
-    
-    // Clear timeout
-    clearTimeout(timeoutId);
-    
-    console.log('Respuesta recibida:', {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries([...response.headers])
-    });
-    
-    // Handle 204 No Content
+
+    let response;
+    let lastError;
+
+    for (const baseUrl of getOrderedApiCandidates()) {
+      const fullUrl = `${baseUrl}${url}`;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+      try {
+        response = await fetch(fullUrl, {
+          ...options,
+          headers,
+          mode: 'cors',
+          cache: 'no-cache',
+          credentials: 'same-origin',
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+        preferredApiBaseUrl = baseUrl;
+        break;
+      } catch (candidateError) {
+        clearTimeout(timeoutId);
+        lastError = candidateError;
+
+        const isNetworkIssue =
+          candidateError?.name === 'AbortError' ||
+          (candidateError instanceof TypeError && /fetch|network/i.test(candidateError.message));
+
+        if (!isNetworkIssue) {
+          throw candidateError;
+        }
+
+        console.warn(`No se pudo conectar a ${fullUrl}:`, candidateError.message);
+      }
+    }
+
+    if (!response) {
+      throw lastError || new Error('No se pudo establecer conexion con la API');
+    }
+
     if (response.status === 204) {
       return { success: true };
     }
-    
-    // Capture non-JSON responses
+
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
-      console.log('Respuesta JSON:', data);
-      
-      // If response is not ok, throw an error
+
       if (!response.ok) {
         console.warn('Error en respuesta del servidor:', data);
-        throw new Error(data.message || 'Ocurrió un error en la solicitud');
+        throw new Error(data.message || 'Ocurrio un error en la solicitud');
       }
-      
+
       return data;
     } else {
       const text = await response.text();
-      console.log('Respuesta texto (no JSON):', text.substring(0, 100));
-      
+
       if (!response.ok) {
-        // Proporcionar más contexto del error
         const errorMsg = text || `Error del servidor: ${response.status} ${response.statusText}`;
-        console.warn('Error en respuesta del servidor:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorMsg.substring(0, 200)
-        });
+        console.warn('Error en respuesta del servidor:', response.status, errorMsg.substring(0, 200));
         throw new Error(errorMsg);
       }
-      
-      // Try to parse as JSON if possible
+
       try {
         return JSON.parse(text);
       } catch (e) {
-        // Return text response as success
         return { success: true, message: text };
       }
     }
   } catch (error) {
-    // Check if it's a timeout error
     if (error.name === 'AbortError') {
       console.warn('Timeout en la solicitud');
-      throw new Error('La solicitud ha excedido el tiempo de espera. Verifique que el servidor esté respondiendo.');
+      throw new Error('La solicitud ha excedido el tiempo de espera. Verifique que el servidor esta respondiendo.');
     }
-    
-    // Check if it's a network error
+
     if (error instanceof TypeError && error.message.includes('NetworkError')) {
       console.warn('Error de red:', error.message);
-      throw new Error('Error de conexión con el servidor. Verifique que el servidor esté en ejecución y accesible.');
+      throw new Error('Error de conexion con el servidor. Verifique que el servidor esta en ejecucion y accesible.');
     }
-    
-    // Check if it's a CORS error
+
     if (error instanceof DOMException && error.name === 'NetworkError') {
       console.warn('Error CORS:', error.message);
-      throw new Error('Error de CORS. Verifique la configuración del servidor.');
+      throw new Error('Error de CORS. Verifique la configuracion del servidor.');
     }
-    
-    // Check if it's a JSON parsing error
+
     if (error instanceof SyntaxError && error.message.includes('JSON')) {
       console.warn('Error al analizar respuesta JSON:', error.message);
       throw new Error('Error en formato de respuesta del servidor');
     }
-    
-    // Re-throw other errors
+
     console.warn('Error general en fetch:', error.message);
     throw error;
   }
@@ -138,7 +158,7 @@ const localStorageKeys = {
 // Get data from localStorage
 const getLocalData = (key) => {
   if (typeof window === 'undefined') return null;
-  
+
   try {
     const data = localStorage.getItem(localStorageKeys[key]);
     return data ? JSON.parse(data) : null;
@@ -151,7 +171,7 @@ const getLocalData = (key) => {
 // Save data to localStorage
 const saveLocalData = (key, data) => {
   if (typeof window === 'undefined') return;
-  
+
   try {
     localStorage.setItem(localStorageKeys[key], JSON.stringify(data));
   } catch (error) {
@@ -175,168 +195,87 @@ const auth = {
 };
 
 // Usuarios endpoints
+//
+// IMPORTANTE: este módulo NO debe escribir ni leer datos de usuarios desde
+// localStorage. La única fuente de verdad es MongoDB a través del backend.
+// localStorage sólo se usa para persistir la sesión (token + user actual)
+// desde el flujo de login y desde la página de perfil tras una actualización
+// confirmada por el servidor. Cualquier "fallback" silencioso a localStorage
+// vuelve a introducir los bugs de datos viejos / desactualizados que ya
+// resolvimos en el dashboard.
 const usuarios = {
   getAll: async () => {
-    try {
-      // Try to get from API first
-      const response = await fetchWithAuth('/api/usuarios');
-      
-      if (response.success && response.data) {
-        // If successful, update localStorage
-        saveLocalData('usuarios', response.data);
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.warn('Error in usuarios.getAll, using localStorage:', error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('usuarios');
-      if (localData) {
-        return { success: true, data: localData };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
-    }
+    // Sin fallback: si la API falla, propagamos el error para que la UI
+    // pueda mostrar un mensaje real ("Error al conectar con el servidor")
+    // en lugar de pintar datos viejos.
+    return fetchWithAuth('/api/usuarios');
   },
-  
+
   getById: async (id) => {
-    try {
-      // Try to get from API first
-      const response = await fetchWithAuth(`/api/usuarios/${id}`);
-      
-      if (response.success && response.data) {
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in usuarios.getById(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('usuarios');
-      if (localData) {
-        const usuario = localData.find(u => u.id == id);
-        if (usuario) {
-          return { success: true, data: usuario };
-        }
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+    if (id === undefined || id === null || id === '') {
+      throw new Error('ID de usuario requerido');
     }
+    return fetchWithAuth(`/api/usuarios/${id}`);
   },
-  
+
   create: async (usuarioData) => {
-    try {
-      // Try to create in API first
-      const response = await fetchWithAuth('/api/usuarios', {
-        method: 'POST',
-        body: JSON.stringify(usuarioData)
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('usuarios') || [];
-        const newUsuario = response.data || { ...usuarioData, id: Date.now(), idUser: Date.now() };
-        saveLocalData('usuarios', [...localData, newUsuario]);
-        return { success: true, data: newUsuario };
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.warn('Error in usuarios.create, using localStorage:', error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('usuarios') || [];
-      const newUsuario = { ...usuarioData, id: Date.now(), idUser: Date.now() };
-      saveLocalData('usuarios', [...localData, newUsuario]);
-      
-      return { success: true, data: newUsuario };
-    }
+    // El backend expone /api/auth/register para alta de usuarios; lo dejamos
+    // como único punto de entrada. Si en el futuro se agrega POST /api/usuarios
+    // se puede ajustar aquí.
+    return fetchWithAuth('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(usuarioData)
+    });
   },
-  
+
   update: async (id, usuarioData) => {
-    try {
-      // Try to update in API first
-      const response = await fetchWithAuth(`/api/usuarios/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(usuarioData)
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('usuarios');
-        if (localData) {
-          const updatedData = localData.map(usuario => 
-            usuario.id == id ? { ...usuario, ...usuarioData } : usuario
-          );
-          saveLocalData('usuarios', updatedData);
-        }
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in usuarios.update(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('usuarios');
-      if (localData) {
-        const updatedData = localData.map(usuario => 
-          usuario.id == id ? { ...usuario, ...usuarioData } : usuario
-        );
-        saveLocalData('usuarios', updatedData);
-        return { success: true };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+    if (id === undefined || id === null || id === '') {
+      throw new Error('ID de usuario requerido para actualizar');
     }
+    return fetchWithAuth(`/api/usuarios/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(usuarioData)
+    });
   },
-  
+
   delete: async (id) => {
-    try {
-      // Try to delete in API first
-      const response = await fetchWithAuth(`/api/usuarios/${id}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('usuarios');
-        if (localData) {
-          const filteredData = localData.filter(usuario => usuario.id != id);
-          saveLocalData('usuarios', filteredData);
-        }
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in usuarios.delete(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('usuarios');
-      if (localData) {
-        const filteredData = localData.filter(usuario => usuario.id != id);
-        saveLocalData('usuarios', filteredData);
-        return { success: true };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+    if (id === undefined || id === null || id === '') {
+      throw new Error('ID de usuario requerido para eliminar');
     }
+    return fetchWithAuth(`/api/usuarios/${id}`, {
+      method: 'DELETE'
+    });
   },
-  
-  getProfile: () => fetchWithAuth('/api/usuarios/perfil'),
-  
-  updateProfile: (userData) => fetchWithAuth('/api/usuarios/perfil', {
-    method: 'PUT',
-    body: JSON.stringify(userData)
-  })
+
+  /**
+   * Re-hidrata el usuario actual desde el backend. Útil tras login o tras
+   * cualquier operación que pueda haber dejado el localStorage desfasado.
+   * @param {string|number} id - _id de Mongo o idUser numérico.
+   */
+  getProfile: (id) => {
+    if (id === undefined || id === null || id === '') {
+      throw new Error('ID de usuario requerido para obtener perfil');
+    }
+    return fetchWithAuth(`/api/usuarios/${id}`);
+  },
+
+  /**
+   * Actualiza el perfil del usuario indicado.
+   * El endpoint /:id/profile acepta tanto _id de Mongo como idUser numérico
+   * (gracias a findUsuarioByIdentifier en el backend). Devuelve siempre el
+   * usuario en su shape canónico (toAuthJSON).
+   * @param {string|number} id - _id o idUser del usuario.
+   * @param {Object} userData - Campos a actualizar (nombre, email, telefono, ...).
+   */
+  updateProfile: (id, userData) => {
+    if (id === undefined || id === null || id === '') {
+      throw new Error('ID de usuario requerido para actualizar perfil');
+    }
+    return fetchWithAuth(`/api/usuarios/${id}/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(userData)
+    });
+  }
 };
 
 // Auto endpoints with localStorage fallback/syncing
@@ -350,20 +289,18 @@ const autos = {
       if (localData && Array.isArray(localData) && localData.length > 0) {
         console.log('Usando datos de vehículos desde localStorage (carga rápida):', localData.length);
         
-        // Intentar sincronizar con backend en segundo plano (no bloqueante)
+        // Sincronizar con backend en segundo plano (sin disparar eventos para evitar bucles)
         setTimeout(async () => {
           try {
-            console.log('Sincronizando con backend en segundo plano...');
             const response = await fetchWithAuth('/api/autos');
             if (response.success && Array.isArray(response.data) && response.data.length > 0) {
-              console.log(`Backend retornó ${response.data.length} autos - actualizando localStorage`);
               saveLocalData('autos', response.data);
             }
           } catch (error) {
-            console.warn('No se pudo sincronizar con backend (modo offline)');
+            // offline — localStorage sigue siendo válido
           }
-        }, 100); // Esperar 100ms para no bloquear
-        
+        }, 500);
+
         return { success: true, data: localData, source: 'localStorage' };
       }
       
@@ -461,27 +398,14 @@ const autos = {
   
   getById: async (id) => {
     try {
-      // Try to get from API first
       const response = await fetchWithAuth(`/api/autos/${id}`);
-      
       if (response.success && response.data) {
         return response;
       }
-      
+
       throw new Error('API request failed or returned invalid data');
     } catch (error) {
-      console.error(`Error in autos.getById(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
-      const localData = getLocalData('autos');
-      if (localData) {
-        const auto = localData.find(a => a.id == id);
-        if (auto) {
-          return { success: true, data: auto };
-        }
-      }
-      
-      // If no localStorage data, throw the original error
+      console.error(`Error in autos.getById(${id}):`, error);
       throw error;
     }
   },
@@ -508,40 +432,12 @@ const autos = {
         saveLocalData('autos', [...localData, newAuto]);
         return { success: true, data: newAuto };
       } else {
-        console.error('La API devolvió éxito pero sin datos de vehículo');
-        throw new Error('La API no devolvió datos del vehículo creado');
+        throw new Error(response.message || 'Error al crear vehículo en el servidor');
       }
     } catch (error) {
-      console.warn('Error in autos.create, using localStorage:', error);
-      
-      // Fallback to localStorage - crear un ID numérico pequeño
-      const localData = getLocalData('autos') || [];
-      
-      // Encontrar el ID más alto en los datos locales y agregar 1
-      const highestId = localData.reduce((max, auto) => {
-        const autoId = parseInt(auto.id);
-        return isNaN(autoId) ? max : Math.max(max, autoId);
-      }, 0);
-      
-      const newId = highestId + 1;
-      
-      const newAuto = { 
-        ...autoData, 
-        id: newId, 
-        idAuto: newId,
-        // Asegurar que tenemos todos los campos necesarios con valores consistentes
-        anio: autoData.anio || autoData.año || new Date().getFullYear(),
-        año: autoData.anio || autoData.año || new Date().getFullYear(),
-        tipoCoche: autoData.tipoCoche || autoData.tipo || 'Sedan',
-        tipo: autoData.tipoCoche || autoData.tipo || 'Sedan',
-        precioDia: autoData.precioDia || autoData.precioBase || 0,
-        precioBase: autoData.precioDia || autoData.precioBase || 0
-      };
-      
-      saveLocalData('autos', [...localData, newAuto]);
-      console.log('Auto guardado en localStorage con ID:', newId);
-      
-      return { success: true, data: newAuto };
+      console.error('Error en autos.create:', error);
+      // NO FALLBACK - Propagar error para que UI lo maneje
+      return { success: false, error: error.message || 'Error al crear vehículo' };
     }
   },
   
@@ -565,22 +461,12 @@ const autos = {
         return response;
       }
       
-      throw new Error('API request failed or returned invalid data');
+      throw new Error(response.message || 'Error al actualizar veh\u00edculo');
     } catch (error) {
-      console.error(`Error in autos.update(${id}), using localStorage:`, error);
+      console.error(`Error in autos.update(${id}):`, error);
       
-      // Fallback to localStorage
-      const localData = getLocalData('autos');
-      if (localData) {
-        const updatedData = localData.map(auto => 
-          auto.id == id ? { ...auto, ...autoData } : auto
-        );
-        saveLocalData('autos', updatedData);
-        return { success: true };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+      // NO FALLBACK - Propagar error para que UI lo maneje
+      return { success: false, error: error.message || 'Error al actualizar veh\u00edculo' };
     }
   },
   
@@ -600,21 +486,13 @@ const autos = {
         }
         return response;
       }
-      
-      throw new Error('API request failed or returned invalid data');
+
+      throw new Error(response.message || 'Error al eliminar veh\u00edculo');
     } catch (error) {
-      console.error(`Error in autos.delete(${id}), using localStorage:`, error);
+      console.error(`Error in autos.delete(${id}):`, error);
       
-      // Fallback to localStorage
-      const localData = getLocalData('autos');
-      if (localData) {
-        const filteredData = localData.filter(auto => auto.id != id);
-        saveLocalData('autos', filteredData);
-        return { success: true };
-      }
-      
-      // If no localStorage data, throw the original error
-      throw error;
+      // NO FALLBACK - Propagar error para que UI lo maneje
+      return { success: false, error: error.message || 'Error al eliminar veh\u00edculo' };
     }
   },
   
@@ -651,91 +529,19 @@ const catalogo = {
 // Reservas endpoints
 const reservas = {
   getAll: async () => {
-    // OPTIMIZACIÓN: Usar localStorage primero para carga rápida
-    const localData = getLocalData('reservas');
-    if (localData && Array.isArray(localData)) {
-      console.log('Usando reservas desde localStorage:', localData.length);
-      
-      // Sincronizar con backend en segundo plano
-      setTimeout(async () => {
-        try {
-          const response = await fetchWithAuth('/api/reservas');
-          if (response.success && Array.isArray(response.data)) {
-            console.log('Actualizando reservas desde backend');
-            saveLocalData('reservas', response.data);
-          }
-        } catch (error) {
-          console.warn('No se pudo sincronizar reservas con backend');
-        }
-      }, 100);
-      
-      return { success: true, data: localData, source: 'localStorage' };
+    const response = await fetchWithAuth('/api/reservas');
+    if (response.success && Array.isArray(response.data)) {
+      saveLocalData('reservas', response.data);
     }
-    
-    // Si no hay datos locales, intentar obtener del backend
-    try {
-      console.log('Obteniendo reservas desde backend');
-      const response = await fetchWithAuth('/api/reservas');
-      
-      if (response.success && response.data) {
-        saveLocalData('reservas', response.data);
-        return response;
-      }
-      
-      console.warn('Backend no retornó reservas válidas');
-      return { success: true, data: [] };
-    } catch (error) {
-      console.warn('Error in reservas.getAll:', error.message);
-      // Retornar array vacío si hay error y no hay datos locales
-      return { success: true, data: [] };
-    }
+    return response;
   },
   
   getUserReservas: async (userId) => {
-    // OPTIMIZACIÓN: Intentar localStorage primero para carga rápida
-    const localData = getLocalData('reservas');
-    if (localData && Array.isArray(localData)) {
-      const userReservas = localData.filter(r => r.usuario && r.usuario.id == userId);
-      console.log(`Usando reservas desde localStorage para usuario ${userId}:`, userReservas.length);
-      
-      // Intentar sincronizar con backend en segundo plano
-      setTimeout(async () => {
-        try {
-          const response = await fetchWithAuth(`/api/reservas/usuario/${userId}`);
-          if (response.success && Array.isArray(response.data)) {
-            console.log('Actualizando reservas desde backend');
-            // Actualizar solo las reservas de este usuario en localStorage
-            const allReservas = getLocalData('reservas') || [];
-            const otherReservas = allReservas.filter(r => r.usuario && r.usuario.id != userId);
-            const updatedReservas = [...otherReservas, ...response.data];
-            saveLocalData('reservas', updatedReservas);
-          }
-        } catch (error) {
-          console.warn('No se pudo sincronizar reservas con backend');
-        }
-      }, 100);
-      
-      return { success: true, data: userReservas, source: 'localStorage' };
+    const response = await fetchWithAuth(`/api/usuarios/${userId}/reservas`);
+    if (response.success && Array.isArray(response.data)) {
+      saveLocalData('reservas', response.data);
     }
-    
-    // Si no hay datos locales, intentar obtener del backend
-    try {
-      console.log(`Obteniendo reservas desde backend para usuario ${userId}`);
-      const response = await fetchWithAuth(`/api/reservas/usuario/${userId}`);
-      
-      if (response.success && response.data) {
-        // Guardar en localStorage
-        saveLocalData('reservas', response.data);
-        return response;
-      }
-      
-      console.warn('Backend no retornó datos válidos');
-      return { success: true, data: [] }; // Retornar array vacío si no hay datos
-    } catch (error) {
-      console.warn(`Error obteniendo reservas del backend:`, error.message);
-      // Retornar array vacío en caso de error
-      return { success: true, data: [] };
-    }
+    return response;
   },
   
   getById: async (id) => {
@@ -795,144 +601,90 @@ const reservas = {
   },
   
   create: async (reservaData) => {
-    try {
-      // Try to create in API first
-      const response = await fetchWithAuth('/api/reservas', {
-        method: 'POST',
-        body: JSON.stringify(reservaData)
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('reservas') || [];
-        // Usar el ID generado por la API o el proporcionado en los datos de la reserva
-        const newReserva = response.data || reservaData;
-        saveLocalData('reservas', [...localData, newReserva]);
-        return { success: true, data: newReserva };
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.warn('Error in reservas.create, using localStorage:', error);
-      
-      // Fallback to localStorage - usar el ID que ya viene en los datos
+    const payload = {
+      fechaInicio: reservaData.fechaInicio,
+      fechaFin: reservaData.fechaFin,
+      usuario: reservaData.usuario || reservaData.usuarioId,
+      autoId: reservaData.autoId,
+      metodoPago: reservaData.metodoPago,
+      datosPago: reservaData.datosPago,
+      porcentajeAnticipo: reservaData.porcentajeAnticipo,
+      montoAnticipo: reservaData.montoAnticipo,
+      saldoPendiente: reservaData.saldoPendiente,
+      estadoPago: reservaData.estadoPago,
+      pasarelaPago: reservaData.pasarelaPago,
+      referenciaPago: reservaData.referenciaPago
+    };
+
+    const response = await fetchWithAuth('/api/reservas', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    if (response.success && response.data && response.data.reserva) {
       const localData = getLocalData('reservas') || [];
-      const newReserva = reservaData; // Ya incluye un ID generado en el cliente
-      saveLocalData('reservas', [...localData, newReserva]);
-      
-      return { success: true, data: newReserva };
+      saveLocalData('reservas', [...localData, response.data.reserva]);
+      return { success: true, data: response.data.reserva };
     }
+
+    return response;
   },
   
   update: async (id, reservaData) => {
-    try {
-      // Try to update in API first
-      const response = await fetchWithAuth(`/api/reservas/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(reservaData)
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('reservas');
-        if (localData) {
-          const updatedData = localData.map(reserva => 
-            reserva.id == id ? { ...reserva, ...reservaData } : reserva
-          );
-          saveLocalData('reservas', updatedData);
-        }
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in reservas.update(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
+    return reservas.actualizarEstadoAdmin(id, reservaData.estado);
+  },
+
+  actualizarEstadoAdmin: async (id, estado) => {
+    const response = await fetchWithAuth(`/api/reservas/${id}/estado`, {
+      method: 'PUT',
+      body: JSON.stringify({ estado })
+    });
+
+    if (response.success && response.data) {
       const localData = getLocalData('reservas');
-      if (localData) {
-        const updatedData = localData.map(reserva => 
-          reserva.id == id ? { ...reserva, ...reservaData } : reserva
+      if (localData && Array.isArray(localData)) {
+        const updatedData = localData.map(reserva =>
+          reserva.id == id ? { ...reserva, estado: response.data.estado } : reserva
         );
         saveLocalData('reservas', updatedData);
-        return { success: true };
       }
-      
-      // If no localStorage data, throw the original error
-      throw error;
     }
+
+    return response;
   },
   
   delete: async (id) => {
-    try {
-      // Try to delete in API first
-      const response = await fetchWithAuth(`/api/reservas/${id}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('reservas');
-        if (localData) {
-          const filteredData = localData.filter(reserva => reserva.id != id);
-          saveLocalData('reservas', filteredData);
-        }
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in reservas.delete(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
+    const response = await fetchWithAuth(`/api/reservas/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (response.success) {
       const localData = getLocalData('reservas');
       if (localData) {
         const filteredData = localData.filter(reserva => reserva.id != id);
         saveLocalData('reservas', filteredData);
-        return { success: true };
       }
-      
-      // If no localStorage data, throw the original error
-      throw error;
     }
+
+    return response;
   },
   
   cancelar: async (id) => {
-    try {
-      // Try to cancel in API first
-      const response = await fetchWithAuth(`/api/reservas/${id}/cancelar`, {
-        method: 'PUT'
-      });
-      
-      if (response.success) {
-        // If successful, update localStorage
-        const localData = getLocalData('reservas');
-        if (localData) {
-          const updatedData = localData.map(reserva => 
-            reserva.id == id ? { ...reserva, estado: 'cancelada' } : reserva
-          );
-          saveLocalData('reservas', updatedData);
-        }
-        return response;
-      }
-      
-      throw new Error('API request failed or returned invalid data');
-    } catch (error) {
-      console.error(`Error in reservas.cancelar(${id}), using localStorage:`, error);
-      
-      // Fallback to localStorage
+    const response = await fetchWithAuth(`/api/reservas/${id}/cancelar`, {
+      method: 'PUT'
+    });
+
+    if (response.success) {
       const localData = getLocalData('reservas');
       if (localData) {
-        const updatedData = localData.map(reserva => 
-          reserva.id == id ? { ...reserva, estado: 'cancelada' } : reserva
+        const updatedData = localData.map(reserva =>
+          reserva.id == id ? { ...reserva, estado: 'Cancelada' } : reserva
         );
         saveLocalData('reservas', updatedData);
-        return { success: true };
       }
-      
-      // If no localStorage data, throw the original error
-      throw error;
     }
+
+    return response;
   },
   
   generarFactura: (id) => fetchWithAuth(`/api/reservas/${id}/factura`),
@@ -984,17 +736,50 @@ const uploads = {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      
-      console.log('Subiendo imagen al servidor backend:', `${API_BASE_URL}/api/upload`);
-      
-      // Enviar la petición al servidor BACKEND (no al servidor Next.js)
-      const response = await fetch(`${API_BASE_URL}/api/upload`, {
-        method: 'POST',
-        body: formData,
-        headers: headers,
-        mode: 'cors',
-        credentials: 'same-origin'
-      });
+
+      let response;
+      let lastError;
+
+      for (const baseUrl of getOrderedApiCandidates()) {
+        const fullUrl = `${baseUrl}/api/upload`;
+        console.log('Subiendo imagen al servidor backend:', fullUrl);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        try {
+          response = await fetch(fullUrl, {
+            method: 'POST',
+            body: formData,
+            headers,
+            mode: 'cors',
+            credentials: 'same-origin',
+            cache: 'no-cache',
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+          preferredApiBaseUrl = baseUrl;
+          break;
+        } catch (candidateError) {
+          clearTimeout(timeoutId);
+          lastError = candidateError;
+
+          const isNetworkIssue =
+            candidateError?.name === 'AbortError' ||
+            (candidateError instanceof TypeError && /fetch|network/i.test(candidateError.message));
+
+          if (!isNetworkIssue) {
+            throw candidateError;
+          }
+
+          console.warn(`No se pudo conectar a ${fullUrl}:`, candidateError.message);
+        }
+      }
+
+      if (!response) {
+        throw lastError || new Error('No se pudo establecer conexión con la API');
+      }
       
       if (!response.ok) {
         let errorMessage = 'Error al subir la imagen';
@@ -1288,36 +1073,24 @@ const checklists = {
   }
 };
 
-// Entregas: checkout / checkin / incidencias
+// Entregas endpoints (checkout / checkin / alquileres activos)
 const entregas = {
-  // Active rentals (Alquilado)
   getAlquiladosActivos: () => fetchWithAuth('/api/alquileres'),
-
-  // Confirmed reservations waiting for checkout
   getPendientesCheckout: () => fetchWithAuth('/api/alquileres/pendientes-checkout'),
-
-  // Check-out
-  checkout: (reservaId, datos) => fetchWithAuth(`/api/reservas/${reservaId}/checkout`, {
+  checkout: (reservaId, data) => fetchWithAuth(`/api/reservas/${reservaId}/checkout`, {
     method: 'POST',
-    body: JSON.stringify(datos)
+    body: JSON.stringify(data)
   }),
-
   getCheckout: (reservaId) => fetchWithAuth(`/api/reservas/${reservaId}/checkout`),
-
-  // Check-in
-  checkin: (reservaId, datos) => fetchWithAuth(`/api/reservas/${reservaId}/checkin`, {
+  checkin: (reservaId, data) => fetchWithAuth(`/api/reservas/${reservaId}/checkin`, {
     method: 'POST',
-    body: JSON.stringify(datos)
+    body: JSON.stringify(data)
   }),
-
   getCheckin: (reservaId) => fetchWithAuth(`/api/reservas/${reservaId}/checkin`),
-
-  // Incidencias
-  reportarIncidencia: (reservaId, datos) => fetchWithAuth(`/api/reservas/${reservaId}/incidencias`, {
+  reportarIncidencia: (reservaId, data) => fetchWithAuth(`/api/reservas/${reservaId}/incidencias`, {
     method: 'POST',
-    body: JSON.stringify(datos)
+    body: JSON.stringify(data)
   }),
-
   getIncidencias: (reservaId) => fetchWithAuth(`/api/reservas/${reservaId}/incidencias`)
 };
 
@@ -1330,6 +1103,7 @@ const apiService = {
   catalogo,
   uploads,
   checklists,
+  dashboard,
   entregas
 };
 

@@ -1,0 +1,25 @@
+# Configuración para Google App Engine
+# Documentación: https://cloud.google.com/appengine/docs/standard/nodejs/config/appref
+
+runtime: nodejs18
+
+# Variables de entorno
+# IMPORTANTE: Configura MONGODB_URI antes de desplegar
+env_variables:
+  NODE_ENV: "production"
+  # Descomenta y agrega tu URI de MongoDB Atlas:
+  # MONGODB_URI: "mongodb+srv://usuario:password@cluster.mongodb.net/rentacar?retryWrites=true&w=majority"
+  
+  # Opcional: JWT Secret
+  # JWT_SECRET: "tu-secreto-jwt-seguro"
+
+# Configuración de escalamiento automático
+automatic_scaling:
+  min_instances: 1        # Mantener al menos 1 instancia activa
+  max_instances: 10       # Máximo 10 instancias bajo carga alta
+  target_cpu_utilization: 0.65  # Escalar cuando CPU > 65%
+
+# Tiempo de espera para peticiones (en segundos)
+# Aumentar si tienes operaciones largas
+# scaling_parameters:
+#   max_concurrent_requests: 80

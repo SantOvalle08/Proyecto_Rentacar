@@ -1,0 +1,67 @@
+name: CI — Validate PR
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─── Backend: run full test suite ──────────────────────────────────────────
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rentacar/back
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: rentacar/back/package-lock.json
+
+      # mongodb-memory-server downloads a MongoDB binary on first run.
+      # Caching it prevents a ~1 min download on every CI run.
+      - name: Cache MongoDB binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-bin-${{ runner.os }}-v20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+          # Tests use mongodb-memory-server; no real URI needed.
+          # JWT_SECRET must match what authHelpers uses to sign tokens.
+          JWT_SECRET: test-jwt-secret-ci-only
+
+  # ─── Frontend: lint + build verification ───────────────────────────────────
+  lint-frontend:
+    name: Frontend Lint & Build Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rentacar/front/files
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: rentacar/front/files/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+        env:
+          NEXT_PUBLIC_API_URL: https://pappspypbd.us-east-2.awsapprunner.com

@@ -1,0 +1,37 @@
+{
+  "total": 5,
+  "passed": 1,
+  "failed": 4,
+  "percentage": "20.00",
+  "results": [
+    {
+      "test": "Successful Login",
+      "error": "",
+      "passed": false,
+      "rnf": "RNF-018"
+    },
+    {
+      "test": "Failed Login",
+      "status": "N/A",
+      "rnf": "RNF-018"
+    },
+    {
+      "test": "Access Without Token",
+      "status": "N/A",
+      "rnf": "RNF-018, RNF-019"
+    },
+    {
+      "test": "Access With Invalid Token",
+      "status": "N/A",
+      "rnf": "RNF-018"
+    },
+    {
+      "test": "Token Expiration Config",
+      "expectedExpiration": "24 horas",
+      "recommendation": "Verificar en código que JWT_EXPIRES_IN esté configurado",
+      "passed": true,
+      "note": "Test conceptual - verificar manualmente en .env o código",
+      "rnf": "RNF-018"
+    }
+  ]
+}

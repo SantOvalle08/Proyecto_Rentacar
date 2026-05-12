@@ -6,7 +6,14 @@ const mongoose = require('mongoose');
  */
 const connectDB = async () => {
   try {
-    const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/rentacar';
+    const isProduction = process.env.NODE_ENV === 'production';
+    const dbUri = process.env.MONGODB_URI || (!isProduction ? 'mongodb://localhost:27017/rentacar' : null);
+
+    if (!dbUri) {
+      console.error('MONGODB_URI no está configurada en producción.');
+      console.error('Defina MONGODB_URI en las variables de entorno del servicio en AWS.');
+      return null;
+    }
     
     console.log(`Intentando conectar a MongoDB en: ${dbUri}`);
     
@@ -31,15 +38,14 @@ const connectDB = async () => {
       console.error('Error de red: Verifique que MongoDB esté en ejecución y accesible');
     } else if (error.name === 'MongoServerSelectionError') {
       console.error('Error al seleccionar servidor: Verifique la configuración y que MongoDB esté en ejecución');
+    } else if (error.code === 8000 || error.codeName === 'AtlasError') {
+      console.error('Error de autenticacion con MongoDB Atlas: revise el usuario y la contraseña de MONGODB_URI.');
+      console.error('Asegurese tambien de que el usuario exista en Database Access dentro de Atlas.');
     }
     
-    // Don't exit process during development to allow fallback to localStorage
-    if (process.env.NODE_ENV === 'production') {
-      process.exit(1);
-    } else {
-      console.warn('Continuando sin conexión a MongoDB. Los datos se almacenarán solo en localStorage.');
-      return null;
-    }
+    // Keep process alive so container can pass health checks and retry later.
+    console.warn('Continuando sin conexión a MongoDB. Se reintentará en segundo plano.');
+    return null;
   }
 };
 

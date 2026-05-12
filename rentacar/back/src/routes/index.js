@@ -9,6 +9,8 @@ const router = express.Router();
 const usuarioController = require('../controllers/usuarioController');
 const autoController = require('../controllers/autoController');
 const reservaController = require('../controllers/reservaController');
+const dashboardController = require('../controllers/dashboardController');
+const uploadController = require('../controllers/uploadController');
 const checklistController = require('../controllers/checklistController');
 const entregaController = require('../controllers/entregaController');
 const { verifyToken, isAdmin } = require('../middleware/auth');
@@ -39,15 +41,20 @@ router.get('/api/test-cors', (req, res) => {
 // IMPORTANTE: Rutas públicas temporales para pruebas de la aplicación
 // Para producción, estas rutas deben ser protegidas con autenticación
 
+// Dashboard routes
+router.get('/api/dashboard/estadisticas', verifyToken, isAdmin, dashboardController.getEstadisticas);
+
 // Auto routes - Orden específico para evitar conflictos
 // Rutas específicas primero
 router.get('/api/autos/search', autoController.searchAutos); // Ruta sin autenticación para pruebas
 router.get('/api/autos/:id', autoController.getAutoById); // Ruta sin autenticación para pruebas
 // Rutas genéricas después
 router.get('/api/autos', autoController.getAllAutos); // Ruta sin autenticación para pruebas
-router.post('/api/autos', autoController.createAuto); // Ruta sin autenticación para pruebas
-router.put('/api/autos/:id', autoController.updateAuto); // Ruta sin autenticación para pruebas
-router.delete('/api/autos/:id', autoController.deleteAuto); // Ruta sin autenticación para pruebas
+
+// Rutas protegidas para crear/modificar/eliminar vehículos
+router.post('/api/autos', verifyToken, isAdmin, autoController.createAuto);
+router.put('/api/autos/:id', verifyToken, isAdmin, autoController.updateAuto);
+router.delete('/api/autos/:id', verifyToken, isAdmin, autoController.deleteAuto);
 
 // Catalog routes - también con orden específico
 router.get('/api/catalogo/search', autoController.searchAutos);
@@ -128,6 +135,13 @@ router.get('/api/reservas', verifyToken, isAdmin, reservaController.getAllReserv
 router.get('/api/reservas/:id', verifyToken, reservaController.getReservaById);
 
 /**
+ * @route DELETE /api/reservas/:id
+ * @description Eliminar una reserva (solo admin)
+ * @access Private/Admin
+ */
+router.delete('/api/reservas/:id', verifyToken, isAdmin, reservaController.deleteReserva);
+
+/**
  * @route GET /api/usuarios/:usuarioId/reservas
  * @description Obtener reservas de un usuario
  * @access Private
@@ -142,11 +156,25 @@ router.get('/api/usuarios/:usuarioId/reservas', verifyToken, reservaController.g
 router.post('/api/reservas/calcular-precio', verifyToken, reservaController.calcularPrecio);
 
 /**
+ * @route POST /api/upload
+ * @description Subir una imagen al servidor
+ * @access Private
+ */
+router.post('/api/upload', verifyToken, uploadController.uploadSingle, uploadController.uploadImage);
+
+/**
  * @route PUT /api/reservas/:id/cancelar
  * @description Cancelar una reserva
  * @access Private
  */
 router.put('/api/reservas/:id/cancelar', verifyToken, reservaController.cancelarReserva);
+
+/**
+ * @route PUT /api/reservas/:id/estado
+ * @description Actualizar estado de reserva (solo admin)
+ * @access Private/Admin
+ */
+router.put('/api/reservas/:id/estado', verifyToken, isAdmin, reservaController.actualizarEstadoReserva);
 
 /**
  * @route GET /api/reservas/:id/factura
