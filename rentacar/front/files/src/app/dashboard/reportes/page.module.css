@@ -1,0 +1,494 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.16), transparent 28%),
+    radial-gradient(circle at right top, rgba(245, 158, 11, 0.12), transparent 24%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  color: #0f172a;
+}
+
+.backgroundGlow {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+  mask-image: radial-gradient(circle at center, black 50%, transparent 100%);
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 24px 56px;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.backLink {
+  color: #0f766e;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: rgba(15, 23, 42, 0.08);
+  color: #1f2937;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.95fr);
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+.heroCopy,
+.heroPanel,
+.legendCard,
+.missingBanner,
+.card,
+.footer {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+}
+
+.heroCopy {
+  border-radius: 28px;
+  padding: 32px;
+  background: linear-gradient(135deg, #0f172a 0%, #134e4a 55%, #1e293b 100%);
+  color: #f8fafc;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 4.3rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.subtitle {
+  margin: 18px 0 0;
+  max-width: 68ch;
+  font-size: 1.04rem;
+  line-height: 1.65;
+  color: rgba(226, 232, 240, 0.86);
+}
+
+.heroActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.primaryAction,
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 12px 18px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.primaryAction {
+  background: #f59e0b;
+  color: #111827;
+}
+
+.secondaryAction {
+  border: 1px solid rgba(248, 250, 252, 0.22);
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.heroPanel {
+  border-radius: 28px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+}
+
+.panelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.panelLabel {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #475569;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.metricCard,
+.legendCard {
+  border-radius: 20px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+}
+
+.metricCard span,
+.legendCard span {
+  display: block;
+  font-size: 0.84rem;
+  color: #64748b;
+}
+
+.metricCard strong,
+.legendCard strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.75rem;
+  color: #0f172a;
+}
+
+.legendRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.missingBanner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 20px;
+  align-items: center;
+  border-radius: 28px;
+  padding: 24px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #fff7ed 0%, #fff1f2 100%);
+}
+
+.bannerKicker {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #b45309;
+  font-weight: 700;
+}
+
+.missingBanner h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #111827;
+}
+
+.missingBanner p {
+  margin: 12px 0 0;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.missingChips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.missingChip {
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(180, 83, 9, 0.12);
+  color: #92400e;
+  font-weight: 800;
+}
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filterButton {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #334155;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.filterButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(15, 23, 42, 0.24);
+}
+
+.filterButtonActive {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #0f172a;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.card {
+  border-radius: 24px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+}
+
+.evidence {
+  border-top: 3px solid rgba(20, 184, 166, 0.5);
+}
+
+.partial {
+  border-top: 3px solid rgba(245, 158, 11, 0.75);
+}
+
+.missing {
+  border-top: 3px solid rgba(239, 68, 68, 0.75);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.cardId {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #64748b;
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.statusEvidence {
+  background: rgba(20, 184, 166, 0.12);
+  color: #0f766e;
+}
+
+.statusPartial {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+}
+
+.statusMissing {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+.processTag {
+  margin: 12px 0 0;
+  color: #0f766e;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.cardSummary {
+  margin: 12px 0 0;
+  color: #334155;
+  line-height: 1.65;
+}
+
+.sectionLabel {
+  margin: 20px 0 10px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.stepList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.stepItem {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.stepItem p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.55;
+}
+
+.stepDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 6px;
+  background: linear-gradient(180deg, #14b8a6, #0f766e);
+  box-shadow: 0 0 0 6px rgba(20, 184, 166, 0.12);
+}
+
+.evidenceBox {
+  margin-top: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(248, 250, 252, 0.92);
+  overflow: hidden;
+}
+
+.evidenceBox summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 16px 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.evidenceBox summary::-webkit-details-marker {
+  display: none;
+}
+
+.evidenceContent {
+  padding: 0 18px 18px;
+}
+
+.evidenceList {
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.evidenceRow {
+  display: grid;
+  gap: 6px;
+}
+
+.evidenceRow dt {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.evidenceRow dd {
+  margin: 0;
+  color: #0f172a;
+  line-height: 1.55;
+}
+
+.footer {
+  margin-top: 22px;
+  border-radius: 24px;
+  padding: 18px 22px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.footer p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+@media (max-width: 1100px) {
+  .hero,
+  .missingBanner,
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .legendRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .inner {
+    padding: 20px 16px 40px;
+  }
+
+  .topBar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .heroCopy,
+  .heroPanel,
+  .missingBanner,
+  .card,
+  .footer {
+    border-radius: 20px;
+    padding: 18px;
+  }
+
+  .metricGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+  }
+
+  .statusBadge {
+    align-self: flex-start;
+  }
+}

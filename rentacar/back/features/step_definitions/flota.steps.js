@@ -12,6 +12,9 @@ const crearAutoBase = (overrides = {}) => ({
   año: overrides.año || 2022,
   tipoCoche: overrides.tipoCoche || 'Sedan',
   precioDia: overrides.precioDia || 100,
+  combustible: overrides.combustible || 'Gasolina',
+  transmision: overrides.transmision || 'Automática',
+  capacidad: overrides.capacidad || 5,
   disponible: overrides.disponible !== undefined ? overrides.disponible : true,
   estadoVehiculo: overrides.estadoVehiculo || 'disponible',
   matricula: overrides.matricula || `MAT-${Date.now()}`

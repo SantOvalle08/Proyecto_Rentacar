@@ -425,6 +425,45 @@ const usuarioController = {
    * @param {Object} res - Objeto de respuesta Express
    * @returns {Object} Respuesta JSON con el resultado de la actualización
    */
+  async verificarEmail(req, res) {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ success: false, message: 'El correo es requerido' });
+      }
+      const usuario = await Usuario.findOne({ email: email.toLowerCase().trim() });
+      if (!usuario) {
+        return res.status(404).json({ success: false, message: 'No existe una cuenta con ese correo electrónico' });
+      }
+      return res.status(200).json({ success: true, message: 'Correo verificado' });
+    } catch (error) {
+      console.error('Error en verificarEmail:', error);
+      res.status(500).json({ success: false, message: 'Error interno del servidor' });
+    }
+  },
+
+  async resetPassword(req, res) {
+    try {
+      const { email, nuevaContraseña } = req.body;
+      if (!email || !nuevaContraseña) {
+        return res.status(400).json({ success: false, message: 'Correo y nueva contraseña son requeridos' });
+      }
+      if (nuevaContraseña.length < 6) {
+        return res.status(400).json({ success: false, message: 'La contraseña debe tener al menos 6 caracteres' });
+      }
+      const usuario = await Usuario.findOne({ email: email.toLowerCase().trim() });
+      if (!usuario) {
+        return res.status(404).json({ success: false, message: 'No existe una cuenta con ese correo electrónico' });
+      }
+      usuario.contraseña = nuevaContraseña;
+      await usuario.save();
+      return res.status(200).json({ success: true, message: 'Contraseña actualizada con éxito' });
+    } catch (error) {
+      console.error('Error en resetPassword:', error);
+      res.status(500).json({ success: false, message: 'Error interno del servidor' });
+    }
+  },
+
   async updateProfile(req, res) {
     try {
       console.log('============================================');

@@ -24,7 +24,7 @@
       [
         "jest-html-reporters",
         {
-          "publicPath": "reports",
+            "publicPath": ".test-reports/jest",
           "filename": "jest-report.html",
           "openReport": false,
           "pageTitle": "RentaCar - Reporte de Tests Backend"

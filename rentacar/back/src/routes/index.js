@@ -75,6 +75,8 @@ router.post('/api/auth/register', usuarioController.register);
  * @access Public
  */
 router.post('/api/auth/login', usuarioController.login);
+router.post('/api/auth/verificar-email', usuarioController.verificarEmail);
+router.post('/api/auth/reset-password', usuarioController.resetPassword);
 
 // User routes - Orden específico para evitar conflictos
 /**

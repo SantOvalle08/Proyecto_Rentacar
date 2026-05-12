@@ -41,11 +41,45 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
+      - name: Run Jest tests
+        id: jest
+        run: npm test -- --json --outputFile=jest-results.json
+        continue-on-error: true
         env:
           NODE_ENV: test
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Run BDD tests
+        id: bdd
+        run: |
+          npx cucumber-js 'features/**/*.feature' \
+            --require features/support/hooks.js \
+            --require features/support/world.js \
+            --require 'features/step_definitions/**/*.steps.js' \
+            --parallel 1 \
+            --format progress \
+            --format 'json:cucumber-results.json'
+        continue-on-error: true
+        env:
+          NODE_ENV: test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Report to TestRail
+        if: always()
+        run: node ../../.github/scripts/testrail-report.js
+        env:
+          TESTRAIL_URL: ${{ secrets.TESTRAIL_URL }}
+          TESTRAIL_USER: ${{ secrets.TESTRAIL_USER }}
+          TESTRAIL_PASSWORD: ${{ secrets.TESTRAIL_APIKEY }}
+          JEST_RESULTS_PATH: jest-results.json
+          BDD_RESULTS_PATH: cucumber-results.json
+          CI_SHA: ${{ github.sha }}
+          CI_REF: ${{ github.ref_name }}
+          CI_RUN_ID: ${{ github.run_id }}
+
+      - name: Fail if tests failed
+        if: steps.jest.outcome == 'failure' || steps.bdd.outcome == 'failure'
+        run: exit 1
 
   # ─── Deploy backend ─────────────────────────────────────────────────────────
   deploy-backend:

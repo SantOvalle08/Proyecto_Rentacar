@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  # ─── Backend: run full test suite ──────────────────────────────────────────
+  # ─── Backend: Jest + BDD ────────────────────────────────────────────────────
   test-backend:
     name: Backend Tests
     runs-on: ubuntu-latest
@@ -22,8 +22,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: rentacar/back/package-lock.json
 
-      # mongodb-memory-server downloads a MongoDB binary on first run.
-      # Caching it prevents a ~1 min download on every CI run.
       - name: Cache MongoDB binaries
         uses: actions/cache@v4
         with:
@@ -33,13 +31,45 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
+      - name: Run Jest tests
+        id: jest
+        run: npm test -- --json --outputFile=jest-results.json
+        continue-on-error: true
         env:
           NODE_ENV: test
-          # Tests use mongodb-memory-server; no real URI needed.
-          # JWT_SECRET must match what authHelpers uses to sign tokens.
           JWT_SECRET: test-jwt-secret-ci-only
+
+      - name: Run BDD tests
+        id: bdd
+        run: |
+          npx cucumber-js 'features/**/*.feature' \
+            --require features/support/hooks.js \
+            --require features/support/world.js \
+            --require 'features/step_definitions/**/*.steps.js' \
+            --parallel 1 \
+            --format progress \
+            --format 'json:cucumber-results.json'
+        continue-on-error: true
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-jwt-secret-ci-only
+
+      - name: Report to TestRail
+        if: always()
+        run: node ../../.github/scripts/testrail-report.js
+        env:
+          TESTRAIL_URL: ${{ secrets.TESTRAIL_URL }}
+          TESTRAIL_USER: ${{ secrets.TESTRAIL_USER }}
+          TESTRAIL_PASSWORD: ${{ secrets.TESTRAIL_APIKEY }}
+          JEST_RESULTS_PATH: jest-results.json
+          BDD_RESULTS_PATH: cucumber-results.json
+          CI_SHA: ${{ github.sha }}
+          CI_REF: ${{ github.head_ref || github.ref_name }}
+          CI_RUN_ID: ${{ github.run_id }}
+
+      - name: Fail if tests failed
+        if: steps.jest.outcome == 'failure' || steps.bdd.outcome == 'failure'
+        run: exit 1
 
   # ─── Frontend: lint + build verification ───────────────────────────────────
   lint-frontend:

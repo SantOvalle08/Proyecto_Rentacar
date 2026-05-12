@@ -191,7 +191,17 @@ const auth = {
     body: JSON.stringify(credentials)
   }),
   
-  verifyToken: () => fetchWithAuth('/api/auth/verify')
+  verifyToken: () => fetchWithAuth('/api/auth/verify'),
+
+  verificarEmail: (email) => fetchWithAuth('/api/auth/verificar-email', {
+    method: 'POST',
+    body: JSON.stringify({ email })
+  }),
+
+  resetPassword: (email, nuevaContraseña) => fetchWithAuth('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, nuevaContraseña })
+  })
 };
 
 // Usuarios endpoints
