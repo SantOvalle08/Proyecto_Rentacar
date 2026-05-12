@@ -1,6 +1,10 @@
 const { Before, After, BeforeAll, AfterAll } = require('@cucumber/cucumber');
 const mongoose = require('mongoose');
 const { MongoMemoryReplSet } = require('mongodb-memory-server');
+const path = require('path');
+
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+if (!process.env.JWT_SECRET) process.env.JWT_SECRET = 'secretkey';
 
 let mongod;
 

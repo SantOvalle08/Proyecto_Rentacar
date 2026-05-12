@@ -16,6 +16,9 @@ Given('existe un vehículo disponible con idAuto {int}', async function (idAuto)
       año: 2023,
       tipoCoche: 'Sedan',
       precioDia: 90,
+      combustible: 'Gasolina',
+      transmision: 'Automática',
+      capacidad: 5,
       disponible: true,
       estadoVehiculo: 'disponible',
       matricula: `INC-${idAuto}`

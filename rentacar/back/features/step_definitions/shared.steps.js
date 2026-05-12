@@ -24,6 +24,9 @@ Given('existe un vehículo disponible con idAuto {int} y precio por día de {int
     año: 2022,
     tipoCoche: 'Sedan',
     precioDia: precio,
+    combustible: 'Gasolina',
+    transmision: 'Automática',
+    capacidad: 5,
     disponible: true,
     estadoVehiculo: 'disponible',
     matricula: `MAT-${idAuto}`
